@@ -2,7 +2,7 @@ unit glvg;
 
 interface
 
-uses DGLOpenGL, classes;
+uses DGLOpenGL, classes, vectorfont; //Remove vectorfont asap
 
 type
 TPoint = packed record
@@ -19,6 +19,7 @@ TContour= array of TPoint;
 
 //TODO: use TPath inside svg group?
 //TODO: implement basic svg shapes using paths.
+//http://www.w3.org/TR/SVG11/paths.html
 
 TPath = class
 private
@@ -103,9 +104,25 @@ public
   property GradColorPoint2: TPoint read FGradColorPoint2 write FGradColorPoint2;
 end;
 
+TPolygonFont = class
+     private
+        FCharGlyph: array[0..255] of TPolygon;
+        FCharWidth: array[0..255] of integer;
+        FName: string;
+        FPrecision: integer;
+        FScale: single;
+     public
+        procedure Generate();
+        procedure RenderChar(value: char);
+        procedure RenderString(value: string);
+        property Name: string read FName write FName;
+        property Precision: integer read FPrecision write FPrecision;
+        property Scale: single read FScale write FScale;
+     end;
+
 implementation
 
-uses math, sysutils;
+uses math, sysutils, windows, graphics; //remove need for windows and graphics asap
 
 type
      TGLArrayd6 = array[0..5] of GLDouble;
@@ -1166,6 +1183,115 @@ begin
   FTesselated := true;
 
   FOutline := false;
+end;
+
+//TPolygonFont
+
+procedure TPolygonFont.RenderChar(value: char);
+begin
+  FCharGlyph[ord(value)].Render;
+  glTranslatef((FCharWidth[ord(value)]*fscale)/1000, 0, 0);
+end;
+
+procedure TPolygonFont.RenderString(value: string);
+var
+  i: integer;
+begin
+  for i :=1 to length(value) do
+  begin
+    RenderChar(value[i]);
+  end;
+end;
+
+procedure TPolygonFont.Generate();
+var
+  loop,loop2: integer;
+//  glyphs: TStrokeCollection;
+  cbounds: TRect;
+  x1, y1, x2, y2, xm, ym: integer;
+  sx, sy: double; // Scaling factors
+  i, j, k, sog: integer;
+  stroke: TFontStroke;
+  //scale: integer;
+
+    TTF2Vector: TTTFToVectorConverter;
+
+  //new font generator
+  dummyPtr: pointer;
+flatPts: array of TPoint;
+  types: array of byte;
+
+   ptCnt: integer;
+
+   memhandle: HDC;
+   handle: HDC;
+
+   mem_bmp : HBITMAP;
+   h_font: HFONT;
+
+begin
+
+
+
+ //vectorfont test
+  TTF2Vector := TTTFToVectorConverter.Create(nil);
+  TTF2Vector.Font := TFont.Create();
+  TTF2Vector.Font.Name := FName;
+  // Setup spline precision (1 min, 100 max)
+  TTF2Vector.Precision := FPrecision;
+
+  for loop := 0 to 255 do
+  begin
+    FCharGlyph[loop] := TPolygon.Create(nil);
+    //FCharGlyph[loop].Outline := true;
+    FCharGlyph[loop].SetColor(0.0,1.0,0.0,0.0);
+
+    // Get glyphs' strokes per char
+    if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) then
+    begin
+      //glyphs := TTF2Vector.GetCharacterGlyphs( loop );
+      FCharGlyph[loop].FPath := TTF2Vector.GetCharacterPath( loop );
+      FCharGlyph[loop].Tesselate;
+      (*
+      // Get character bounds
+      //cbounds := glyphs.Bounds;
+      xm := (cbounds.Right-cbounds.Left+1) div 2;
+      ym := (cbounds.Bottom-cbounds.Top+1) div 2;
+
+      // Compute the scaling factors
+      sx := fscale;
+      sy := fscale;
+
+      for i := 0 to glyphs.Count-1 do
+      begin
+        // Get a stroke
+        stroke := glyphs.Stroke[i];
+
+        x1 := 10 + round( (stroke.Pt1.X-cbounds.Left) * sx );
+        x2 := 10 + round( (stroke.Pt2.X-cbounds.Left) * sx );
+        y1 := 10 + round( (stroke.Pt1.Y-cbounds.Top) * sy );
+        y2 := 10 + round( (stroke.Pt2.Y-cbounds.Top) * sy );
+
+        FCharGlyph[loop].Add(x1/1000, (y1-1)/1000);
+        FCharGlyph[loop].Add(x2/1000, (y2-1)/1000);
+
+    end;
+       *)
+       
+  // Free the glyphs
+  //glyphs.Free;
+
+  FCharWidth[loop] := cbounds.Right;
+  FCharGlyph[loop].CalculateBoundBox();
+  FCharGlyph[loop].ApplyGradFill();
+  FCharGlyph[loop].Tesselate();
+
+  FCharGlyph[loop].Extrude();
+  end;
+
+  end;
+
+  TTF2Vector.Free;
 end;
 
 end.

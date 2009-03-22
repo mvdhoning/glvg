@@ -50,6 +50,7 @@ uses glvg;
 
 var
   polystar: TPolygon;
+  polyfont: TPolygonFont;
 
 //TOpenGLRender
 destructor TOpenGLRender.Destroy;
@@ -72,7 +73,7 @@ procedure TOpenGLRender.Init;
 const
   light0_position:TGLArrayf4=( -8.0, 8.0, -16.0, 0.0);
   ambient:  TGLArrayf4=( 0.3, 0.3, 0.3, 0.3);
-  
+
 begin
 
   InitOpenGL;
@@ -122,18 +123,18 @@ begin
   polystar.ExtrudeDepth := 0.2;
   polystar.Extrude();
   *)
-  
+
   //PATHPOLYGON TEST
   polystar := TPolygon.Create(nil);
   polystar.Path := 'M100,200 C100,100 400,100 400,200';
 
-  (*
+
   polyfont := TPolygonfont.Create();
   polyfont.Name := 'Times New Roman';
   polyfont.Precision := 25;
   polyfont.Scale := 4;
   polyfont.Generate();
-  *)
+
 
 end;
 
@@ -172,12 +173,12 @@ begin
 
   //vector font
 
-  //glTranslatef(0.0, 0.0, -12.0);
+  glTranslatef(0.0, 0.0, -12.0);
   glColor3f(1.0, 1.0, 1.0);
   //RenderChar('a');
   //RenderChar('b');
 
-  //polyfont.RenderChar('i');
+  polyfont.RenderChar('i');
   //polyfont.RenderString('misc.');
 
   //polyfont.RenderString(text); //tijdelijk uit;
@@ -192,7 +193,7 @@ end;
 
 procedure TOpenGLRender.Stop;
 begin
-//  polyfont.Free;
+  polyfont.Free;
   polystar.Free;
   DeactivateRenderingContext; // Deactivate RenderContext
   wglDeleteContext(RC); //Delete RenderContext
