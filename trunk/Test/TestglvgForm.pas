@@ -178,7 +178,7 @@ begin
   //RenderChar('a');
   //RenderChar('b');
 
-  polyfont.RenderChar('i');
+  polyfont.RenderChar('A');
   //polyfont.RenderString('misc.');
 
   //polyfont.RenderString(text); //tijdelijk uit;
