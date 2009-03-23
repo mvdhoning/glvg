@@ -122,7 +122,7 @@ TPolygonFont = class
 
 implementation
 
-uses math, sysutils, windows, graphics; //remove need for windows and graphics asap
+uses math, sysutils;//, windows, graphics; //remove need for windows and graphics asap
 
 type
      TGLArrayd6 = array[0..5] of GLDouble;
@@ -1207,7 +1207,7 @@ procedure TPolygonFont.Generate();
 var
   loop,loop2: integer;
 //  glyphs: TStrokeCollection;
-  cbounds: TRect;
+  //cbounds: TRect;
   x1, y1, x2, y2, xm, ym: integer;
   sx, sy: double; // Scaling factors
   i, j, k, sog: integer;
@@ -1223,22 +1223,25 @@ flatPts: array of TPoint;
 
    ptCnt: integer;
 
-   memhandle: HDC;
-   handle: HDC;
+   //memhandle: HDC;
+   //handle: HDC;
 
-   mem_bmp : HBITMAP;
-   h_font: HFONT;
+   //mem_bmp : HBITMAP;
+   //h_font: HFONT;
 
+   fs: TStringList;
 begin
 
-
+   fs := TStringList.Create;
+   fs.NameValueSeparator := ':';
+   fs.LoadFromFile('font.txt');
 
  //vectorfont test
-  TTF2Vector := TTTFToVectorConverter.Create(nil);
-  TTF2Vector.Font := TFont.Create();
-  TTF2Vector.Font.Name := FName;
+//  TTF2Vector := TTTFToVectorConverter.Create(nil);
+//  TTF2Vector.Font := TFont.Create();
+//  TTF2Vector.Font.Name := FName;
   // Setup spline precision (1 min, 100 max)
-  TTF2Vector.Precision := FPrecision;
+//  TTF2Vector.Precision := FPrecision;
 
   for loop := 0 to 255 do
   begin
@@ -1250,7 +1253,9 @@ begin
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) then
     begin
       //glyphs := TTF2Vector.GetCharacterGlyphs( loop );
-      FCharGlyph[loop].FPath := TTF2Vector.GetCharacterPath( loop );
+
+      FCharGlyph[loop].FPath := fs.Values[inttostr(loop)];
+      //TTF2Vector.GetCharacterPath( loop );
       FCharGlyph[loop].Tesselate;
       (*
       // Get character bounds
@@ -1277,11 +1282,12 @@ begin
 
     end;
        *)
-       
+
   // Free the glyphs
   //glyphs.Free;
 
-  FCharWidth[loop] := cbounds.Right;
+  //FCharWidth[loop] := cbounds.Right;
+  FCharWidth[loop] := 1;
   FCharGlyph[loop].CalculateBoundBox();
   FCharGlyph[loop].ApplyGradFill();
   FCharGlyph[loop].Tesselate();
@@ -1291,7 +1297,7 @@ begin
 
   end;
 
-  TTF2Vector.Free;
+  //TTF2Vector.Free;
 end;
 
 end.

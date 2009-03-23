@@ -1,0 +1,44 @@
+program ConvertFont;
+
+{$APPTYPE CONSOLE}
+
+uses
+  SysUtils, Classes, VectorFont, Graphics;
+
+var
+  fsl: TStringList;
+  path: string;
+  loop: integer;
+  TTF2Vector:  TTTFToVectorConverter;
+
+begin
+  { TODO -oUser -cConsole Main : Insert code here }
+
+    DecimalSeparator:='.'; //always use . as decimal seperator
+
+  TTF2Vector := TTTFToVectorConverter.Create(nil);
+  TTF2Vector.Font := TFont.Create();
+  TTF2Vector.Font.Name := 'Times New Roman';
+  // Setup spline precision (1 min, 100 max)
+  TTF2Vector.Precision := 1;
+
+
+  fsl := TStringList.Create();
+
+
+
+  for loop := 0 to 255 do
+  begin
+    // Get glyphs' strokes per char
+    if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) then
+    begin
+      //glyphs := TTF2Vector.GetCharacterGlyphs( loop );
+      Path := TTF2Vector.GetCharacterPath( loop );
+      fsl.Add(IntToStr(loop)+':'+Path);
+    end;
+  end;
+  fsl.SaveToFile('font.txt');
+  fsl.Free;
+
+  TTF2Vector.Free;
+end.
