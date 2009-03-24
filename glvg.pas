@@ -48,7 +48,8 @@ end;
 TPolygon = class(TComponent)
 private
   FOutline: boolean;
-  FPath: string;
+  //FPath: string;
+  FcPath: TPath;
   FPoints: array of TPoint; //polygon point
   FVertex: array of TPoint; //triangulated data
 //  FContour: array of TPoint; //outline
@@ -81,6 +82,8 @@ private
   procedure tessBegin(which: GLenum);
   procedure tessEnd();
   procedure tessVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
+  function GetPathText: string;
+  procedure SetPathText(AValue: string);
 public
   constructor Create(AOwner: TComponent); reintroduce; overload;
   destructor Destroy(); reintroduce; overload;
@@ -90,12 +93,13 @@ public
   procedure Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single); overload;
   procedure Render();
   procedure RenderOutline();
+  procedure RenderPath();
   procedure Tesselate();
   procedure Extrude();
   procedure RenderExtruded();
   procedure CalculateBoundBox();
   procedure ApplyGradFill();
-  property Path: string read FPath write FPath;
+  property Path: string read GetPathText write SetPathText;
   property Points[I: integer]: TPoint read GetPoint write SetPoint;
   property Count: integer read GetCount;
   property ExtrudeDepth: single read FExtrudeDepth write FExtrudeDepth;
@@ -620,6 +624,32 @@ end;
 
 //TPolygon
 
+  function TPolygon.GetPathText: string;
+  begin
+    result := FcPath.Text;
+  end;
+
+  procedure TPolygon.SetPathText(AValue: string);
+  begin
+    FcPath.Text := AValue;
+    if FcPath.Text <> '' then
+      FcPath.Parse;
+  end;
+
+  procedure TPolygon.RenderPath;
+  var
+    loop: integer;
+  begin
+      //Draw Path
+  glBegin(GL_LINES);
+    for loop:=0 to fcpath.Count-1 do
+    begin
+      glVertex2f(fcpath.Points[loop].x, fcpath.Points[loop].y);
+    end;
+  glEnd();
+
+  end;
+
 procedure TPolygon.SetColor(R: single; G: single; B: single;A: single);
 begin
   FColor.r := R;
@@ -697,7 +727,9 @@ begin
   Init; //Grad Color Hack
 
   Inherited Create(AOwner);
-  FPath:='';
+
+  FcPath := TPath.Create;
+  FcPath.Text:='';
   FCount := 0;
   FVertexCount := 0;
   FTesselated := false;
@@ -728,6 +760,7 @@ end;
 
 destructor TPolygon.Destroy();
 begin
+  FcPath.Free;
   FTesselated := false;
   FCount := 0;
   FVertexCount := 0;
@@ -1084,15 +1117,15 @@ end;
 
 begin
 
-  if fpath<>'' then
+  if FcPath.Text<>'' then
   begin
-    parsepath := TPath.Create;
-    parsepath.Text := fpath;
-    parsepath.Parse;
+    //parsepath := TPath.Create;
+    //FcPath.Text := fpath;
+    //parsepath.Parse;
 
-    for i := 0 to parsepath.Count-1 do
+    for i := 0 to FcPath.Count-1 do
     begin
-      self.Add(parsepath.Points[i].x, parsepath.Points[i].y);
+      self.Add(FcPath.Points[i].x, FcPath.Points[i].y);
     end;
 
   end;
@@ -1254,7 +1287,7 @@ begin
     begin
       //glyphs := TTF2Vector.GetCharacterGlyphs( loop );
 
-      FCharGlyph[loop].FPath := fs.Values[inttostr(loop)];
+      FCharGlyph[loop].Path := fs.Values[inttostr(loop)];
       //TTF2Vector.GetCharacterPath( loop );
       FCharGlyph[loop].Tesselate;
       (*

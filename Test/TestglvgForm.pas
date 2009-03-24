@@ -126,11 +126,17 @@ begin
 
   //PATHPOLYGON TEST
   polystar := TPolygon.Create(nil);
-  polystar.Path := 'M100,200 C100,100 400,100 400,200';
+//  polystar.Path := 'M100,200 C100,100 400,100 400,200';
+
+  //cubic spline curve example
+  polystar.Path := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
+
+  //quadratic Bezier curve example
+  //polystar.Path := 'M200,300 Q400,50 600,300 T1000,300';
 
 
   polyfont := TPolygonfont.Create();
-  polyfont.Name := 'Times New Roman';
+  //polyfont.Name := 'Times New Roman';
   polyfont.Precision := 25;
   polyfont.Scale := 4;
   polyfont.Generate();
@@ -178,14 +184,15 @@ begin
   //RenderChar('a');
   //RenderChar('b');
 
-  polyfont.RenderChar('A');
-  //polyfont.RenderString('misc.');
+  //polyfont.RenderChar('A');
+  polyfont.RenderString('misc.');
 
   //polyfont.RenderString(text); //tijdelijk uit;
   //RenderString('misc.'); //ook testen met polygon render method.
 
   //polygon render
-  polystar.Render;
+  //polystar.Render;
+  polystar.RenderPath;
 
   //swap buffer (aka draw)
   SwapBuffers(DC);
