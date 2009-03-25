@@ -1,8 +1,33 @@
 unit glvg;
 
+(* Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the glvg main unit.
+ *
+ * The Initial Developer of the Original Code is
+ * M van der Honing.
+ * Portions created by the Initial Developer are Copyright (C) 2002-2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ *  M van der Honing
+ *
+ *)
+
 interface
 
-uses DGLOpenGL, classes, vectorfont; //Remove vectorfont asap
+uses DGLOpenGL, classes;
 
 type
 TPoint = packed record
@@ -48,7 +73,6 @@ end;
 TPolygon = class(TComponent)
 private
   FOutline: boolean;
-  //FPath: string;
   FcPath: TPath;
   FPoints: array of TPoint; //polygon point
   FVertex: array of TPoint; //triangulated data
@@ -113,15 +137,13 @@ TPolygonFont = class
         FCharGlyph: array[0..255] of TPolygon;
         FCharWidth: array[0..255] of integer;
         FName: string;
-        FPrecision: integer;
-        FScale: single;
+        //FScale: single;
      public
         procedure Generate();
         procedure RenderChar(value: char);
         procedure RenderString(value: string);
         property Name: string read FName write FName;
-        property Precision: integer read FPrecision write FPrecision;
-        property Scale: single read FScale write FScale;
+        //property Scale: single read FScale write FScale;
      end;
 
 implementation
@@ -397,26 +419,21 @@ procedure TPath.Parse();
 var
   MyParser: TParser; //moet hier eigenlijk wat documentatie over verzamelen!!!!
   MS: TMemoryStream;
-//  MyStr: string;
-
   str: string;
-//  Pos: integer;
-//  Line: integer;
   CurToken: char;
-//  PrevToken: char;
   CurCommand: char;
   PrevCommand: char;
-
   Params: array[0..7] of single;
   ParamsPoint: array[0..2] of TPoint;
-  //PrevParamsPoint: array[0..2] of TPoint;
   ParamCount: byte;
-
   CurPoint: TPoint;
   PrevControlPoint: TPoint;
   FirstPoint: TPoint;
 
 begin
+  paramcount := 0;
+  CurCommand := '-';
+
   MS := TMemoryStream.Create;
   MS.Position := 0;
   MS.Write(FCommandText[1], Length(FCommandText));
@@ -1057,10 +1074,6 @@ var
   test: TGLArrayd3;
   pol: PGLArrayd6;
 
-//  MyTest: string;
-
-  ParsePath: TPath;
-
 procedure iTessBeginCB(which: GLenum); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
 begin
   PolygonClass.tessBegin(which);
@@ -1223,7 +1236,6 @@ end;
 procedure TPolygonFont.RenderChar(value: char);
 begin
   FCharGlyph[ord(value)].Render;
-  glTranslatef((FCharWidth[ord(value)]*fscale)/1000, 0, 0);
 end;
 
 procedure TPolygonFont.RenderString(value: string);
@@ -1233,104 +1245,38 @@ begin
   for i :=1 to length(value) do
   begin
     RenderChar(value[i]);
+    glTranslatef((FCharWidth[ord(value[i])]), 0, 0);
   end;
 end;
 
 procedure TPolygonFont.Generate();
 var
-  loop,loop2: integer;
-//  glyphs: TStrokeCollection;
-  //cbounds: TRect;
-  x1, y1, x2, y2, xm, ym: integer;
-  sx, sy: double; // Scaling factors
-  i, j, k, sog: integer;
-  stroke: TFontStroke;
-  //scale: integer;
-
-    TTF2Vector: TTTFToVectorConverter;
-
-  //new font generator
-  dummyPtr: pointer;
-flatPts: array of TPoint;
-  types: array of byte;
-
-   ptCnt: integer;
-
-   //memhandle: HDC;
-   //handle: HDC;
-
-   //mem_bmp : HBITMAP;
-   //h_font: HFONT;
-
-   fs: TStringList;
+  loop: integer;
+  fs: TStringList;
 begin
 
-   fs := TStringList.Create;
-   fs.NameValueSeparator := ':';
-   fs.LoadFromFile('font.txt');
-
- //vectorfont test
-//  TTF2Vector := TTTFToVectorConverter.Create(nil);
-//  TTF2Vector.Font := TFont.Create();
-//  TTF2Vector.Font.Name := FName;
-  // Setup spline precision (1 min, 100 max)
-//  TTF2Vector.Precision := FPrecision;
+  fs := TStringList.Create;
+  fs.NameValueSeparator := ':';
+  fs.LoadFromFile('font.txt');
 
   for loop := 0 to 255 do
   begin
     FCharGlyph[loop] := TPolygon.Create(nil);
-    //FCharGlyph[loop].Outline := true;
     FCharGlyph[loop].SetColor(0.0,1.0,0.0,0.0);
 
     // Get glyphs' strokes per char
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) then
     begin
-      //glyphs := TTF2Vector.GetCharacterGlyphs( loop );
-
       FCharGlyph[loop].Path := fs.Values[inttostr(loop)];
-      //TTF2Vector.GetCharacterPath( loop );
       FCharGlyph[loop].Tesselate;
-      (*
-      // Get character bounds
-      //cbounds := glyphs.Bounds;
-      xm := (cbounds.Right-cbounds.Left+1) div 2;
-      ym := (cbounds.Bottom-cbounds.Top+1) div 2;
-
-      // Compute the scaling factors
-      sx := fscale;
-      sy := fscale;
-
-      for i := 0 to glyphs.Count-1 do
-      begin
-        // Get a stroke
-        stroke := glyphs.Stroke[i];
-
-        x1 := 10 + round( (stroke.Pt1.X-cbounds.Left) * sx );
-        x2 := 10 + round( (stroke.Pt2.X-cbounds.Left) * sx );
-        y1 := 10 + round( (stroke.Pt1.Y-cbounds.Top) * sy );
-        y2 := 10 + round( (stroke.Pt2.Y-cbounds.Top) * sy );
-
-        FCharGlyph[loop].Add(x1/1000, (y1-1)/1000);
-        FCharGlyph[loop].Add(x2/1000, (y2-1)/1000);
-
+      FCharGlyph[loop].CalculateBoundBox();
+      FCharWidth[loop] := Round(FCharGlyph[loop].FBoundBoxMaxPoint.x);
+      FCharGlyph[loop].ApplyGradFill();
+      FCharGlyph[loop].Tesselate();
+      FCharGlyph[loop].Extrude();
     end;
-       *)
-
-  // Free the glyphs
-  //glyphs.Free;
-
-  //FCharWidth[loop] := cbounds.Right;
-  FCharWidth[loop] := 1;
-  FCharGlyph[loop].CalculateBoundBox();
-  FCharGlyph[loop].ApplyGradFill();
-  FCharGlyph[loop].Tesselate();
-
-  FCharGlyph[loop].Extrude();
   end;
 
-  end;
-
-  //TTF2Vector.Free;
 end;
 
 end.
