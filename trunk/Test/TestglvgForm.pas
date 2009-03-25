@@ -137,8 +137,8 @@ begin
 
   polyfont := TPolygonfont.Create();
   //polyfont.Name := 'Times New Roman';
-  polyfont.Precision := 25;
-  polyfont.Scale := 4;
+  //polyfont.Precision := 25;
+  //polyfont.Scale := 4;
   polyfont.Generate();
 
 
@@ -167,19 +167,19 @@ begin
 
 
 
-  angle:=angle+1;
+  //angle:=angle+1;
 
 
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   glLoadIdentity;
 
-  glTranslatef(0.0, 0.0, -12.0);
+//  glTranslatef(0.0, 0.0, -12.0);
 
-  glRotatef(angle, 0.0, 1.0, 0.0);
+//  glRotatef(angle, 0.0, 1.0, 0.0);
 
   //vector font
 
-  glTranslatef(0.0, 0.0, -12.0);
+  glTranslatef(-10.0, 0.0, -20.0);
   glColor3f(1.0, 1.0, 1.0);
   //RenderChar('a');
   //RenderChar('b');
@@ -192,7 +192,7 @@ begin
 
   //polygon render
   //polystar.Render;
-  polystar.RenderPath;
+  //polystar.RenderPath;
 
   //swap buffer (aka draw)
   SwapBuffers(DC);
