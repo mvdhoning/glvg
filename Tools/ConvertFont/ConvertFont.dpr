@@ -18,13 +18,14 @@ begin
 
   TTF2Vector := TTTFToVectorConverter.Create(nil);
   TTF2Vector.Font := TFont.Create();
-  TTF2Vector.Font.Name := 'Times New Roman';
+  //TTF2Vector.Font.Name := 'Times New Roman';
+  TTF2Vector.Font.Name := 'Arial';
   // Setup spline precision (1 min, 100 max)
   TTF2Vector.Precision := 1;
 
 
   fsl := TStringList.Create();
-
+  fsl.Add(TTF2Vector.Font.Name);
 
 
   for loop := 0 to 255 do

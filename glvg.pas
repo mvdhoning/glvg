@@ -139,9 +139,9 @@ TPolygonFont = class
         FName: string;
         //FScale: single;
      public
-        procedure Generate();
-        procedure RenderChar(value: char);
-        procedure RenderString(value: string);
+        procedure LoadFromFile(AValue: string);
+        procedure RenderChar(AValue: char);
+        procedure RenderString(AValue: string);
         property Name: string read FName write FName;
         //property Scale: single read FScale write FScale;
      end;
@@ -1233,23 +1233,25 @@ end;
 
 //TPolygonFont
 
-procedure TPolygonFont.RenderChar(value: char);
+procedure TPolygonFont.RenderChar(AValue: char);
 begin
-  FCharGlyph[ord(value)].Render;
+  FCharGlyph[ord(AValue)].Render;
+  glColor3f(1.0, 1.0, 1.0);
+  FCharGlyph[ord(AValue)].RenderPath;
 end;
 
-procedure TPolygonFont.RenderString(value: string);
+procedure TPolygonFont.RenderString(AValue: string);
 var
   i: integer;
 begin
-  for i :=1 to length(value) do
+  for i :=1 to length(AValue) do
   begin
-    RenderChar(value[i]);
-    glTranslatef((FCharWidth[ord(value[i])]), 0, 0);
+    RenderChar(AValue[i]);
+    glTranslatef((FCharWidth[ord(AValue[i])]), 0, 0);
   end;
 end;
 
-procedure TPolygonFont.Generate();
+procedure TPolygonFont.LoadFromFile(AValue: string);
 var
   loop: integer;
   fs: TStringList;
@@ -1257,7 +1259,9 @@ begin
 
   fs := TStringList.Create;
   fs.NameValueSeparator := ':';
-  fs.LoadFromFile('font.txt');
+  fs.LoadFromFile(AValue);
+
+  FName := fs[0];
 
   for loop := 0 to 255 do
   begin
