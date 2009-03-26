@@ -110,89 +110,46 @@ begin
   // Set clear background color
   glClearColor(0,0,0,0);
 
-
-  (*
-  //POLYGON TEST
-  polystar := TPolygon.Create(nil);
-  polystar.Add(0.0, 3.0, 0.0, 1.0, 0.0, 0.0, 0.0 );
-  polystar.Add(-1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
-  polystar.Add(1.6, 1.9, 0.0, 1.0, 0.0, 1.0, 0.0);
-  polystar.Add(-1.6, 1.9, 0.0, 1.0, 1.0, 0.0, 0.0);
-  polystar.Add(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-  polystar.Tesselate;
-  polystar.ExtrudeDepth := 0.2;
-  polystar.Extrude();
-  *)
-
   //PATHPOLYGON TEST
   polystar := TPolygon.Create(nil);
-//  polystar.Path := 'M100,200 C100,100 400,100 400,200';
+  polystar.Path := 'M100,200 C100,100 400,100 400,200';
 
   //cubic spline curve example
-  polystar.Path := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
+//  polystar.Path := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   //quadratic Bezier curve example
   //polystar.Path := 'M200,300 Q400,50 600,300 T1000,300';
 
 
   polyfont := TPolygonfont.Create();
-  //polyfont.Name := 'Times New Roman';
-  //polyfont.Precision := 25;
-  //polyfont.Scale := 4;
-  polyfont.Generate();
+  polyfont.LoadFromFile('arial.txt');
 
 
 end;
 
-//tesselation result should be saved in tmesh!!!! gl3ds compatible!!!
-
 procedure TOpenGLRender.Draw;
 begin
 
-// Idee voor circular elips fill
-
-// Teken een circular triangulated mesh maar beperk naar buiten toe
-// met de omtrek van de te vormen figuur. Eerst met een vierkant.
-
-// ( simpeler eerst met stencil of clipmap )
-
-// Lees ook dit: http://www.devmaster.net/forums/showthread.php?t=7183
-
-//http://davis.wpi.edu/~matt/courses/clipping/
-
-//hmmm beide polygons dus door tess halen en dan dus overlappend deel bepalen
-//op het plaatje zie je het maar in code?
-
-
-
-
-
-  //angle:=angle+1;
-
+  angle:=angle+1;
 
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   glLoadIdentity;
 
 //  glTranslatef(0.0, 0.0, -12.0);
-
 //  glRotatef(angle, 0.0, 1.0, 0.0);
 
   //vector font
 
   glTranslatef(-10.0, 0.0, -20.0);
   glColor3f(1.0, 1.0, 1.0);
-  //RenderChar('a');
-  //RenderChar('b');
 
   //polyfont.RenderChar('A');
-  polyfont.RenderString('misc.');
-
-  //polyfont.RenderString(text); //tijdelijk uit;
-  //RenderString('misc.'); //ook testen met polygon render method.
+  polyfont.RenderString(polyfont.Name);
 
   //polygon render
-  //polystar.Render;
-  //polystar.RenderPath;
+  polystar.Render;
+  glColor3f(1.0, 1.0, 1.0);
+  polystar.RenderPath;
 
   //swap buffer (aka draw)
   SwapBuffers(DC);
