@@ -148,7 +148,7 @@ TPolygonFont = class
 
 implementation
 
-uses math, sysutils;//, windows, graphics; //remove need for windows and graphics asap
+uses math, sysutils;
 
 type
      TGLArrayd6 = array[0..5] of GLDouble;
@@ -647,10 +647,18 @@ end;
   end;
 
   procedure TPolygon.SetPathText(AValue: string);
+  var
+    i: integer;
   begin
     FcPath.Text := AValue;
     if FcPath.Text <> '' then
+    begin
       FcPath.Parse;
+      for i := 0 to FcPath.Count-1 do
+      begin
+        self.Add(FcPath.Points[i].x, FcPath.Points[i].y);
+      end;
+    end;
   end;
 
   procedure TPolygon.RenderPath;
@@ -813,8 +821,8 @@ begin
   FPoints[FCount-1].Y := Y;
   FPoints[FCount-1].Z := 0.0;
 
-  //CurColor:=FColor;
-  CurColor:=CalcGradColor(X, Y, FGradColorPoint1, FGradColorPoint2, FGradColorPoint1.x, FGradColorPoint1.y, FGradColorPoint2.x, FGradColorPoint2.y, FGradColorAngle);
+  CurColor:=FColor;
+  //CurColor:=CalcGradColor(X, Y, FGradColorPoint1, FGradColorPoint2, FGradColorPoint1.x, FGradColorPoint1.y, FGradColorPoint2.x, FGradColorPoint2.y, FGradColorAngle);
 
   FPoints[FCount-1].R := CurColor.R;
   FPoints[FCount-1].G := CurColor.G;
@@ -1129,25 +1137,7 @@ begin
 end;
 
 begin
-
-  if FcPath.Text<>'' then
-  begin
-    //parsepath := TPath.Create;
-    //FcPath.Text := fpath;
-    //parsepath.Parse;
-
-    for i := 0 to FcPath.Count-1 do
-    begin
-      self.Add(FcPath.Points[i].x, FcPath.Points[i].y);
-    end;
-
-  end;
-
-
-  CalculateBoundBox();
-
   PolygonClass := Self;
-
 
   tess := gluNewTess();
 
@@ -1266,18 +1256,17 @@ begin
   for loop := 0 to 255 do
   begin
     FCharGlyph[loop] := TPolygon.Create(nil);
-    FCharGlyph[loop].SetColor(0.0,1.0,0.0,0.0);
+    FCharGlyph[loop].SetColor(0.0,0.0,1.0,0.0);
 
     // Get glyphs' strokes per char
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) then
     begin
       FCharGlyph[loop].Path := fs.Values[inttostr(loop)];
-      FCharGlyph[loop].Tesselate;
       FCharGlyph[loop].CalculateBoundBox();
       FCharWidth[loop] := Round(FCharGlyph[loop].FBoundBoxMaxPoint.x);
       FCharGlyph[loop].ApplyGradFill();
-      FCharGlyph[loop].Tesselate();
-      FCharGlyph[loop].Extrude();
+      //FCharGlyph[loop].Tesselate; //Do automatic tesselate...
+      //FCharGlyph[loop].Extrude(); //Only flat font by default
     end;
   end;
 

@@ -122,7 +122,7 @@ begin
 
 
   polyfont := TPolygonfont.Create();
-  polyfont.LoadFromFile('arial.txt');
+  polyfont.LoadFromFile('times.txt');
 
 
 end;
