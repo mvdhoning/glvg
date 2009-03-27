@@ -587,7 +587,7 @@ begin
   m2.eM11.value := 1; m2.eM11.fract := 1; { Identity matrix }
   m2.eM12.value := 0; m2.eM12.fract := 1; { |1,0|           }
   m2.eM21.value := 0; m2.eM21.fract := 1; { |0,1|           }
-  m2.eM22.value := 1; m2.eM22.fract := 1;
+  m2.eM22.value := -1; m2.eM22.fract := 1;
 
   {$IFDEF WIN32}
   if not FUNICODE then
@@ -665,7 +665,7 @@ begin
   while not done do
   begin
     ps.X := Fix2Double( buf^.pfxStart.X );
-    ps.Y := Fix2Double( buf^.pfxStart.Y );
+    ps.Y := Fix2Double( buf^.pfxStart.Y )-100;
     Result := Result + ' M ' +FloatToStr(ps.x);
     Result := Result + ' ' +FloatToStr(ps.y);
 

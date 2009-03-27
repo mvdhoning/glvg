@@ -79,12 +79,13 @@ private
 //  FContour: array of TPoint; //outline
   FContour : array of TContour;
   FContourCount: array of integer;
-//  FExtrudePath: array of TPoint; //extruding path  //TODO
+//FExtrudePath: array of TPoint; //extruding path  //TODO
 //  FExtrudePathCount: integer;                      //TODO
   FExtrudeDepth: single;
   F3DVertex: array of TPoint; //3d extruded mesh
   F3DVertexCount: integer;
   FColor: TPoint;
+  FLineColor: TPoint;
   FCount: integer;
   FVertexCount: integer;
   FTesselated: boolean;
@@ -98,6 +99,8 @@ private
 
   FBoundBoxMinPoint: TPoint;
   FBoundBoxMaxPoint: TPoint;
+
+  FLineWidth: single;
 
   procedure SetPoint(I: integer; Value: TPoint);
   procedure AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
@@ -116,7 +119,7 @@ public
   procedure Add(X: single; Y: single; Z: single); overload;
   procedure Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single); overload;
   procedure Render();
-  procedure RenderOutline();
+//  procedure RenderOutline();
   procedure RenderPath();
   procedure Tesselate();
   procedure Extrude();
@@ -130,6 +133,8 @@ public
   property GradColorAngle: single read FGradColorAngle write FGradColorAngle;
   property GradColorPoint1: TPoint read FGradColorPoint1 write FGradColorPoint1;
   property GradColorPoint2: TPoint read FGradColorPoint2 write FGradColorPoint2;
+  property LineWidth: single read FLineWidth  write FLineWidth;
+  procedure SetLineColor(R: single; G: single; B: single;A: single);
 end;
 
 TPolygonFont = class
@@ -389,9 +394,9 @@ procedure TPath.AddPoint(AValue: TPoint);
 begin
   FCount := FCount + 1;
   SetLength(FPoints, FCount);
-  FPoints[FCount-1].X := AValue.X/100;
-  FPoints[FCount-1].Y := AValue.Y/100;
-  FPoints[FCount-1].Z := AValue.Z/100;
+  FPoints[FCount-1].X := AValue.X;
+  FPoints[FCount-1].Y := AValue.Y;
+  FPoints[FCount-1].Z := AValue.Z;
 end;
 
 procedure TPath.SetPoint(I: integer; AValue: TPoint);
@@ -665,14 +670,16 @@ end;
   var
     loop: integer;
   begin
-      //Draw Path
-  glBegin(GL_LINES);
+    glcolor3f(FLineColor.R,FLineColor.G,FLineColor.B);
+    glLineWidth(FLineWidth);
+
+    //Draw Path
+    glBegin(GL_LINES);
     for loop:=0 to fcpath.Count-1 do
     begin
       glVertex2f(fcpath.Points[loop].x, fcpath.Points[loop].y);
     end;
-  glEnd();
-
+    glEnd();
   end;
 
 procedure TPolygon.SetColor(R: single; G: single; B: single;A: single);
@@ -682,6 +689,15 @@ begin
   FColor.b := B;
   FColor.a := A;
 end;
+
+procedure TPolygon.SetLineColor(R: single; G: single; B: single;A: single);
+begin
+  FLineColor.r := R;
+  FLineColor.g := G;
+  FLineColor.b := B;
+  FLineColor.a := A;
+end;
+
 
 procedure TPolygon.tessBegin(which: GLenum);
 begin
@@ -701,6 +717,7 @@ begin
     glcolor3f(r,g,b);
     glVertex3f(x,y,z);
 end;
+
 
 procedure TPolygon.AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
 begin
@@ -762,7 +779,7 @@ begin
   FColor.G := 0.0;
   FColor.B := 0.0;
   FColor.A := 0.0;
-  FOutline := false;
+//  FOutline := false;
   FExtrudeDepth := 1.0;
   FNewContour := 0;
 
@@ -926,6 +943,7 @@ begin
   glend;
 end;
 
+(*
 Procedure TPolygon.RenderOutline();
 var
   loop: integer;
@@ -986,6 +1004,7 @@ begin
   end;
 
 end;
+*)
 
 procedure TPolygon.Extrude();
 var
@@ -1214,7 +1233,6 @@ begin
   gluTessEndPolygon(tess);
   gluDeleteTess(tess);        // delete after tessellation
 
-
   PolygonClass := nil;
   FTesselated := true;
 
@@ -1226,7 +1244,6 @@ end;
 procedure TPolygonFont.RenderChar(AValue: char);
 begin
   FCharGlyph[ord(AValue)].Render;
-  glColor3f(1.0, 1.0, 1.0);
   FCharGlyph[ord(AValue)].RenderPath;
 end;
 
@@ -1257,6 +1274,8 @@ begin
   begin
     FCharGlyph[loop] := TPolygon.Create(nil);
     FCharGlyph[loop].SetColor(0.0,0.0,1.0,0.0);
+    FCharGlyph[loop].SetLineColor(1.0,1.0,1.0,1.0);
+    FCharGlyph[loop].LineWidth:= 1.0;
 
     // Get glyphs' strokes per char
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) then
