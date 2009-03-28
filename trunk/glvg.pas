@@ -528,7 +528,29 @@ begin
           CurPoint := ParamsPoint[0];
         end;
       End;
-      'z':
+      'H':
+      Begin
+        if paramcount = 1 then
+        begin
+          ParamsPoint[0].x := params[0];
+          ParamsPoint[0].y := CurPoint.y;
+          NewStroke( CurPoint, ParamsPoint[0]);
+          paramcount :=0;
+          CurPoint := ParamsPoint[0];
+        end;
+      End;
+      'V':
+      Begin
+        if paramcount = 1 then
+        begin
+          ParamsPoint[0].x := CurPoint.x;
+          ParamsPoint[0].y := params[0];
+          NewStroke( CurPoint, ParamsPoint[0]);
+          paramcount :=0;
+          CurPoint := ParamsPoint[0];
+        end;
+      End;
+      'Z':
       Begin
         //lijn terug naar eerste punt
         NewStroke( CurPoint, FirstPoint);
