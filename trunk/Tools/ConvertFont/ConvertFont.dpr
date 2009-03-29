@@ -19,7 +19,7 @@ begin
   TTF2Vector := TTTFToVectorConverter.Create(nil);
   TTF2Vector.Font := TFont.Create();
   //TTF2Vector.Font.Name := 'Times New Roman';
-  TTF2Vector.Font.Name := 'Arial';
+  TTF2Vector.Font.Name := 'Euphorigenic-Regular';
   // Setup spline precision (1 min, 100 max)
   TTF2Vector.Precision := 1;
 

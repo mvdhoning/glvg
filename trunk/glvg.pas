@@ -287,6 +287,9 @@ begin
 
   //parse string (remove linebreaks etc
 
+  //FCommandText := WrapText (FCommandText , 1023 );
+  FCommandText := WrapText(FCommandText, #13#10, [' '], 1); //TODO: find better way to break up large paths
+
   MS := TMemoryStream.Create;
   MS.Position := 0;
   MS.Write(FCommandText[1], Length(FCommandText));
