@@ -665,7 +665,7 @@ begin
   while not done do
   begin
     ps.X := Fix2Double( buf^.pfxStart.X );
-    ps.Y := Fix2Double( buf^.pfxStart.Y )-100;
+    ps.Y := Fix2Double( buf^.pfxStart.Y );
     Result := Result + ' M ' +FloatToStr(ps.x);
     Result := Result + ' ' +FloatToStr(ps.y);
 
@@ -735,10 +735,10 @@ begin
       pchar(buf) := pchar(pc);
       inc( polyN );
     end;
-//  Result:=Result+' Z';
+  Result:=Result+' Z ';
   end;
 
-  Result:=Result+' Z';
+//  Result:=Result+' Z';
   {$IFDEF WIN32}
   FreeMem( bufPtr );
   {$ELSE}

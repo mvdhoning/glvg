@@ -123,8 +123,15 @@ begin
 //  mypath := 'M35,1 H 18 V 564 H 355 V 420 H 125 V 144 H 248 V 211 H 156 V 355 H 355 V 1 Z';
 
 mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
-//mypath := 'M 95 712 c 41 0 66 -28 66 -67 c 0 -7 -1 -12 -2 -19 c -19 -117 -44 -249 -47 -327 c -1 -28 -2 -57 -2 -93 h -29 c 0 127 -8 177 -29 295 c -24 132 -26 135 -26 143 c 0 40 30 68 69 68 z ';
-//mypath := mypath + ' M 97 138 c 36 0 62 -32 62 -68 c 0 -37 -26 -70 -62 -70 s -63 33 -63 70 c 0 36 27 68 63 68 z';
+mypath := 'M 95 712 c 41 0 66 -28 66 -67 c 0 -7 -1 -12 -2 -19 c -19 -117 -44 -249 -47 -327 c -1 -28 -2 -57 -2 -93 h -29 c 0 127 -8 177 -29 295 c -24 132 -26 135 -26 143 c 0 40 30 68 69 68 z ';
+mypath := mypath + ' M 97 138 c 36 0 62 -32 62 -68 c 0 -37 -26 -70 -62 -70 s -63 33 -63 70 c 0 36 27 68 63 68 z';
+
+mypath := 'M 420 -75 L 420 -75 L 420 0 L 420 0 L 34 0 L 34 0 L 34 25 L 34 25 L 65.921875 25 C 65.921875 25 121.765625';
+mypath := mypath + ' 25 147.046875 57.59375 C 147.046875 57.59375 163 78.859375 163 160 L 163 160 L 163 744 C 163 744 163';
+mypath := mypath + ' 812.5 154.359375 834.4375 C 154.359375 834.4375 147.703125 851.0625 127.09375 863.046875 C 127.09375 863.046875';
+mypath := mypath + ' 97.828125 879 65.921875 879 L 65.921875 879 L 34 879 L 34 879 L 34 904 L 34 904 L 420 904 L 420 904 L 420 879 L 420';
+mypath := mypath + ' 879 L 387.578125 879 C 387.578125 879 332.671875 879 307.53125 846.40625 C 307.53125 846.40625 291 825.140625 291 744';
+mypath := mypath + ' L 291 744 L 291 160 C 291 160 291 91.5 299.59375 69.5625 C 299.59375 69.5625 306.21875 52.9375 327.390625 40.953125 C 327.390625 40.953125 355.828125 25 387.578125 25 L 387.578125 25 Z';
 
   polystar.Path := mypath;
 
@@ -137,25 +144,25 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   polyfont := TPolygonfont.Create();
   polyfont.LoadFromFile('font.txt');
-
+  polyfont.Scale := 0.1;
 
 end;
 
 procedure TOpenGLRender.Draw;
 begin
-  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 6400, 4800, 0);
+  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (-100, 640, 480, -100);
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
   angle:=angle+1;
 
-  glpushmatrix();
-  //vector font
-    gltranslatef(0,100,0);
-    glscalef(0.1,-0.1,0);
 
-  //  polyfont.RenderChar('R');
+  //vector font
+//    gltranslatef(0,100,0);
+//    glscalef(0.1,-0.1,0);
+
+    polyfont.RenderChar('A');
   polyfont.RenderString(polyfont.Name);
-  glpopmatrix();
+
 
 //  glTranslatef(-80.3122, -226.2716, 0.0); //for cat drawing
 
