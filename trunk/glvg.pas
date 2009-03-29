@@ -652,8 +652,8 @@ begin
       Begin
         if paramcount = 2 then
         begin
-          ParamsPoint[0].x:=CurPoint.x-PrevControlPoint.x;
-          ParamsPoint[0].y:=CurPoint.y-PrevControlPoint.y;
+          ParamsPoint[0].x:=CurPoint.x+CurPoint.x-PrevControlPoint.x;
+          ParamsPoint[0].y:=CurPoint.y+CurPoint.y-PrevControlPoint.y;
           ParamsPoint[1].x := params[0];
           ParamsPoint[1].y := params[1];
           DrawQSpline(CurPoint, ParamsPoint[1], ParamsPoint[0]);
@@ -720,8 +720,8 @@ begin
           else
           begin
             //mirrored 2nd ctrlpoint
-            ParamsPoint[0].x:=CurPoint.x-PrevControlPoint.x;
-            ParamsPoint[0].y:=CurPoint.y-PrevControlPoint.y;
+            ParamsPoint[0].x:=CurPoint.x+CurPoint.x-PrevControlPoint.x;
+            ParamsPoint[0].y:=CurPoint.y+CurPoint.y-PrevControlPoint.y;
           end;
           ParamsPoint[1].x:=params[0];
           ParamsPoint[1].y:=params[1];
