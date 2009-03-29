@@ -146,6 +146,7 @@ TPolygonFont = class
         FName: string;
         FScale: single;
         FFontHeight: single;
+        FFontWidth: single;
      public
         procedure LoadFromFile(AValue: string);
         procedure RenderChar(AValue: char);
@@ -1271,16 +1272,15 @@ procedure TPolygonFont.RenderChar(AValue: char);
 begin
   glpushmatrix();
 
-    gltranslatef(0,- (FFontHeight * FSCALE)  ,0);
-
     glscalef(FSCALE,-FSCALE,0);
 
     gltranslatef(0,-FFontHeight  ,0);
 
     FCharGlyph[ord(AValue)].Render;
-    FCharGlyph[ord(AValue)].RenderPath;
+    //FCharGlyph[ord(AValue)].RenderPath;
 
   glpopmatrix();
+  
   glTranslatef((FCharWidth[ord(AValue)]*FSCALE), 0, 0);
   end;
 
@@ -1292,7 +1292,6 @@ begin
   for i :=1 to length(AValue) do
   begin
     RenderChar(AValue[i]);
-    //glTranslatef((FCharWidth[ord(i)])*FSCALE, 0, 0);
   end;
   glpopmatrix();
 end;
@@ -1303,7 +1302,7 @@ var
   fs: TStringList;
 begin
 
-  FFontHeight := 1000.0;
+  FFontHeight := 0.0;
 
   fs := TStringList.Create;
   fs.NameValueSeparator := ':';
@@ -1324,6 +1323,10 @@ begin
       FCharGlyph[loop].Path := fs.Values[inttostr(loop)];
       FCharGlyph[loop].CalculateBoundBox();
       FCharWidth[loop] := Round(FCharGlyph[loop].FBoundBoxMaxPoint.x);
+
+      if FFontHeight < FCharGlyph[loop].FBoundBoxMaxPoint.y then
+        FFontHeight := FCharGlyph[loop].FBoundBoxMaxPoint.y;
+
       FCharGlyph[loop].ApplyGradFill();
       //FCharGlyph[loop].Tesselate; //Do automatic tesselate...
       //FCharGlyph[loop].Extrude(); //Only flat font by default
