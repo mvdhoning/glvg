@@ -587,7 +587,7 @@ begin
   m2.eM11.value := 1; m2.eM11.fract := 1; { Identity matrix }
   m2.eM12.value := 0; m2.eM12.fract := 1; { |1,0|           }
   m2.eM21.value := 0; m2.eM21.fract := 1; { |0,1|           }
-  m2.eM22.value := -1; m2.eM22.fract := 1;
+  m2.eM22.value := 1; m2.eM22.fract := 1;
 
   {$IFDEF WIN32}
   if not FUNICODE then
@@ -735,10 +735,10 @@ begin
       pchar(buf) := pchar(pc);
       inc( polyN );
     end;
-//  Result:=Result+' z';
+//  Result:=Result+' Z';
   end;
 
-  Result:=Result+' z';
+  Result:=Result+' Z';
   {$IFDEF WIN32}
   FreeMem( bufPtr );
   {$ELSE}
