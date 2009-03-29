@@ -163,6 +163,8 @@ begin
   glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 640, 480, 0);
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+
   //AntiAlias (may or may not work)
   glEnable (GL_BLEND);
   glEnable (GL_POLYGON_SMOOTH);
@@ -189,6 +191,7 @@ begin
   polystar.Render;
   polystar.RenderPath;
 
+  glrotatef(angle,0,0,1);
   polyrect.Render;
 
   //swap buffer (aka draw)
