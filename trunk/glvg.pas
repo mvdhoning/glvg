@@ -48,8 +48,6 @@ TContour= array of TPoint;
 
 TPath = class
 private
-//  FCurrentCommand: char;
-//  FCurrentPoint: TPoint;
   FCommandText: string;
   FCount: integer;
   FPoints: array of TPoint;
@@ -90,10 +88,9 @@ private
   FVertexCount: integer;
   FTesselated: boolean;
 
-  FGradColorAngle: single;
-  FGradColorPoint1: TPoint; //moet eigenlijk dynamic array zijn
-  FGradColorPoint2: TPoint; //moet eigenlijk dynamic array zijn
-  //FGradColorBar: array of TPoint;
+  FGradColorAngle: single;  //TODO: consider gradient to be a seperate class
+  FGradColorPoint1: TPoint; //TODO: should be dynamic array to support better gradients
+  FGradColorPoint2: TPoint; //TODO: should be dynamic array to support better gradients
 
   FNewContour : integer;
 
@@ -111,6 +108,11 @@ private
   procedure tessVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
   function GetPathText: string;
   procedure SetPathText(AValue: string);
+
+  function TrigGLTriangle(value: single): single;
+  function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
+  function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
+
 public
   constructor Create(AOwner: TComponent); reintroduce; overload;
   destructor Destroy(); reintroduce; overload;
@@ -142,13 +144,14 @@ TPolygonFont = class
         FCharGlyph: array[0..255] of TPolygon;
         FCharWidth: array[0..255] of integer;
         FName: string;
-        //FScale: single;
+        FScale: single;
+        FFontHeight: single;
      public
         procedure LoadFromFile(AValue: string);
         procedure RenderChar(AValue: char);
         procedure RenderString(AValue: string);
         property Name: string read FName write FName;
-        //property Scale: single read FScale write FScale;
+        property Scale: single read FScale write FScale;
      end;
 
 implementation
@@ -165,104 +168,6 @@ type
 threadvar
   PolygonClass: TPolygon;
 
-//Color gradient temp hack
-
-const
- TRIG_FUNCTABLE_SIZE: integer =	1024;
- TRIG_FUNCTABLE_MASK: integer =	1023;
-
-var
-  glTriangleTable: array[0..1023] of single;		//special table in ranges 0..1
-
-procedure init(); //prepare trig table...
-var
-  i: integer;
-begin
-   for i := 0 to TRIG_FUNCTABLE_SIZE-1 do
-   begin
-    		if ( i < TRIG_FUNCTABLE_SIZE / 2 ) then
-    		begin
-    			glTriangleTable[i] := i / ( TRIG_FUNCTABLE_SIZE / 2 );
-    		end
-    		else
-   		begin
-    			glTriangleTable[i] := 1.0 - glTriangleTable[i - TRIG_FUNCTABLE_SIZE div 2];
-    		end;
-   end;
-end;
-
-function TrigGLTriangle(value: single): single;
-var
-  temp: integer;
-begin
-    temp := ROund(value * ( TRIG_FUNCTABLE_SIZE / 360 ) );
-  	result:= glTriangleTable[ temp    ];
-end;
-
-function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
-var
-  HeightDistance: single;
-  WidthDistance: single;
-  CurPos: single;
-  CurPosH: single;
-  CurPosW: single;
-begin
- CurPos := 0.0;
-    GradAngle := GradAngle * 2.0; //the gltriangle size is 2PI
-    HeightDistance:= GradY2 - GradY1; //absolute?
-    WidthDistance:= GradX2 - GradX1; //absolute?
-    CurPosH := (ypos - GradY1) / HeightDistance;
-    CurPosW := (xpos - GradX1) / WidthDistance;
-    if (gradangle >=0) and (gradangle < 180) then
-      CurPos := CurPosH * TrigGLTriangle( gradangle + 180) + CurPosW * TrigGLTriangle(gradangle)
-    else
-    if (gradangle >=180) and (gradangle < 360) then
-      CurPos := (1.0 - CurPosH) * TrigGLTriangle( gradangle + 180) + CurPosW * TrigGLTriangle(gradangle)
-    else
-    if (gradangle >=360) and (gradangle < 540) then
-      CurPos := (1.0-CurPosH) * TrigGLTriangle( gradangle + 180) + (1.0-CurPosW) * TrigGLTriangle(gradangle)
-    else
-    if (gradangle >=540) then
-      CurPos := CurPosH * TrigGLTriangle( gradangle + 180) + (1.0-CurPosW) * TrigGLTriangle(gradangle);
-
-  result.R:=gradbeginColor.R *  (1.0 - CurPos) + GradEndColor.R * CurPos;
-  result.G:=gradbeginColor.G *  (1.0 - CurPos) + GradEndColor.G * CurPos;
-  result.B:=gradbeginColor.B *  (1.0 - CurPos) + GradEndColor.B * CurPos;
-
-end;
-
-function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
-var
-  HeightDistance: single;
-  WidthDistance: single;
-  CurPos: single;
-  CurPosH: single;
-  CurPosW: single;
-begin
-CurPos:=0.0;
-    GradAngle := GradAngle * 2.0; //the gltriangle size is 2PI
-    HeightDistance:= GradY2 - GradY1; //absolute?
-    WidthDistance:= GradX2 - GradX1; //absolute?
-    CurPosH := (ypos - GradY1) / HeightDistance;
-    CurPosW := (xpos - GradX1) / WidthDistance;
-    if (gradangle >=0) and (gradangle < 180) then
-      CurPos := CurPosH * TrigGLTriangle( gradangle + 180) + CurPosW * TrigGLTriangle(gradangle)
-    else
-    if (gradangle >=180) and (gradangle < 360) then
-      CurPos := (1.0 - CurPosH) * TrigGLTriangle( gradangle + 180) + CurPosW * TrigGLTriangle(gradangle)
-    else
-    if (gradangle >=360) and (gradangle < 540) then
-      CurPos := (1.0-CurPosH) * TrigGLTriangle( gradangle + 180) + (1.0-CurPosW) * TrigGLTriangle(gradangle)
-    else
-    if (gradangle >=540) then
-      CurPos := CurPosH * TrigGLTriangle( gradangle + 180) + (1.0-CurPosW) * TrigGLTriangle(gradangle);
-
-  result:=gradbeginAlpha *  (1.0 - CurPos) + GradEndAlpha * CurPos;
-end;
-
-//End Color gradient temp hack
-
-
 //TPath
 
 //http://www.w3.org/TR/2008/WD-SVGMobile12-20080915/paths.html#PathData
@@ -278,40 +183,12 @@ begin
   Result := (APoint1.X = APoint2.X) and (APoint1.Y = APoint2.Y);
 end;
 
-//http://en.wikipedia.org/wiki/B%C3%A9zier_curve
-
-//TODO: Parameters hernoemen
 //cubic bezier line ( (1-i)^3*pa+3*i(1-i)^2*pb+3*i^2*(1-i)*pc+i^3*pd  )
 procedure TPath.DrawCSpline( AFrom, ATo, AFromControlPoint, AToControlPoint: TPoint );
 var
   di, i : Double;
   p1, p2: TPoint;
 begin
-  //as quadratic with additional points?
-
-  //quadratic degree n =2 ?
-
-  //cubic degree n = 3
-
-//  http://ibiblio.org/e-notes/Splines/Intro.htm
-//generic bezier spline N control points. ? (http://ibiblio.org/e-notes/Splines/Bezier.htm)
-//  for (j = N-1; j > 0; j--) //control points
-//    for (i = 0; i < j; i++){ //i=abcd
-//     Px[i] = (1-t)*Px[i] + t*Px[i+1];
-//     Py[i] = (1-t)*Py[i] + t*Py[i+1];
-//    }
-
-//OK dit is de manier om uit te werken!!! zie url
-//http://www.paultondeur.com/2008/03/09/drawing-a-cubic-bezier-curve-using-actionscript-3/
-// posx = Math.pow(u,3)*(anchor2.x+3*(control1.x-control2.x)-anchor1.x)
-//           +3*Math.pow(u,2)*(anchor1.x-2*control1.x+control2.x)
-//           +3*u*(control1.x-anchor1.x)+anchor1.x;
-
-//pa = control1;
-//pb = control2;
-//pc = anchor1;  x1,y1
-//pd = anchor2;  x2,y2
-
     di := 1.0 / FSplinePrecision;
     i := di;
     p2 := AFrom;
@@ -332,39 +209,8 @@ begin
     end;
 
     NewStroke( p2, ATo);
-
-    //TODO: werkt moet alleen nog params hernoemen voor leesbaarheid
 end;
 
-                                                    (*
-//quadratic bezier line ( (1-i)^2*pa+2*i(1-i)*pb+i^2*pc )
-procedure TPath.DrawQSpline( AFrom, AControlPoint, A: TPoint );
-  var di, i: double;
-      p1,p2: TPoint;
-  begin
-   // AddPoint(AFrom);
-
-    di := 1.0 / FSplinePrecision;
-    i := di;
-    p2 := AFrom;
-    while i<=1.0 do
-    begin
-      if i-di/2 > 1.0-di then
-        i := 1.0;
-      p1 := p2;
-      //p2.x := power(1-i,2)*AFrom.x+2*i*(1-i)*ATo.x+power(i,2)*AControlPoint.x;
-      //p2.y := power(1-i,2)*AFrom.y+2*i*(1-i)*ATo.y+power(i,2)*AControlPoint.y;
-      p2.X := (AFrom.X-2*ATo.X+AControlPoint.X)*sqr(i) + (2*ATo.X-2*AFrom.X)*i + AFrom.X;
-      p2.Y := (AFrom.Y-2*ATo.Y+AControlPoint.Y)*sqr(i) + (2*ATo.Y-2*AFrom.Y)*i + AFrom.Y;
-      if not EqualPoints( p1, p2 ) then
-        NewStroke( p1, p2 );  //line
-      i := i + di;
-    end;
-    //pc := p2; ?
-
-    NewStroke( p2, ATo);
-  end;
-     *)
 //quadratic bezier line ( (1-i)^2*pa+2*i(1-i)*pb+i^2*pc )
 procedure TPath.DrawQSpline( AFrom, ATo, AControlPoint: TPoint );
   var di, i: double;
@@ -384,10 +230,10 @@ procedure TPath.DrawQSpline( AFrom, ATo, AControlPoint: TPoint );
         NewStroke( p1, p2 );  //line
       i := i + di;
     end;
-    //pc := p2; ?
+  //pc := p2; ?
 
-    NewStroke( p2, ATo);
-  end;
+  NewStroke( p2, ATo);
+end;
 
 
 procedure TPath.AddPoint(AValue: TPoint);
@@ -422,7 +268,7 @@ end;
 
 procedure TPath.Parse();
 var
-  MyParser: TParser; //moet hier eigenlijk wat documentatie over verzamelen!!!!
+  MyParser: TParser; //TODO: collect info on TParser!!!!
   MS: TMemoryStream;
   str: string;
   CurToken: char;
@@ -439,30 +285,20 @@ begin
   paramcount := 0;
   CurCommand := '-';
 
+  //parse string (remove linebreaks etc
+
   MS := TMemoryStream.Create;
   MS.Position := 0;
   MS.Write(FCommandText[1], Length(FCommandText));
   MS.Position := 0;
   MyParser := TParser.Create(MS);
-  //MyStr := MyParser.TokenString;
-  //ShowMessage(MyStr);
 
   prevcommand := '-';
-//  prevtoken := ' ';
   curtoken := ' ';
   while curtoken <> toEOF do
   begin
-    //MyParser.NextToken; //
-
     //Get Token
     str := MyParser.TokenString();
-
-
-    //PrevToken:= CurToken;
-    //Get the position in the stream
-//    Pos := MyParser.SourcePos();
-    //Get the line number
-//    Line := MyParser.SourceLine;
     //Get token type
     case(MyParser.Token) of
       toSymbol:
@@ -475,26 +311,19 @@ begin
             str := str+MyParser.TokenString;
           end;
         end;
-
-        curCommand := str[1]; //Huidig commando is eerste teken string;
-        Delete(str,1,1); //verwijder commando uit string
-
-
+        curCommand := str[1]; //first char of the string is the current command;
+        Delete(str,1,1); //remove command from string
         paramcount:=1;
         if str <> '' then
         begin
           if UpperCase(curcommand) <> 'Z' then
             params[paramcount-1]:=StrToFloat(str);
         end;
-
-        //ShowMessage(str+' is a symbol at line : '+IntToStr(Line)+'   position : '+IntToStr(Pos)+ '  curenttoken: '+prevtoken );
-        //ShowMessage(curCommand);
       end;
       toInteger:
       begin
         if UpperCase(curcommand) <> 'Z' then
         begin
-          //ShowMessage(str+' is an integer at line : '+IntToStr(Line)+' position : '+IntToStr(Pos)+ '  curenttoken: '+prevtoken );
           params[paramcount]:=StrToFloat(str);
           paramcount := paramcount +1;
         end;
@@ -503,21 +332,16 @@ begin
       begin
         if UpperCase(curcommand) <> 'Z' then
         begin
-          //ShowMessage(str+' is a float at line : '+IntToStr(Line)+' position : '+IntToStr(Pos)+ '  curenttoken: '+prevtoken );
           params[paramcount]:=StrToFloat(str);
           paramcount := paramcount +1;
         end;
       end;
       toString:
-      //note: TParser is designed for DFM's so that toString only works with
-      //'single quoted' strings
-        //ShowMessage(str+' is a string at line : '+IntToStr(Line)+' position : '+IntToStr(Pos)+ '  curenttoken: '+prevtoken );
-    //else
-    //  PrevToken:=CurToken; //
     end;
 
-    //How to detect if i have enough data?
+    //detect command: (Uppercase is absolute coords vs Lowercase relative coords)
     Case CurCommand of
+      // Move To (M m)
       'M':
       Begin
         if paramcount = 2 then
@@ -540,6 +364,7 @@ begin
           FirstPoint := CurPoint;
         end;
       End;
+      // Line To (L l H h V v)
       'L':
       Begin
         if paramcount = 2 then
@@ -606,18 +431,20 @@ begin
           CurPoint := ParamsPoint[0];
         end;
       End;
+      // Close Path  (Z z)
       'Z':
       Begin
-        //lijn terug naar eerste punt
+        //line back to the first point
         NewStroke( CurPoint, FirstPoint);
-        FirstPoint:=CurPoint; //optioneel?
+        FirstPoint:=CurPoint; //optional?
       End;
       'z':
       Begin
-        //lijn terug naar eerste punt
+        //line back to the first point
         NewStroke( CurPoint, FirstPoint);
-        FirstPoint:=CurPoint; //optioneel?
+        FirstPoint:=CurPoint; //optional?
       End;
+      // Quadratic Bezier (Q q T t)
       'Q':
       Begin
         if paramcount = 4 then
@@ -676,6 +503,7 @@ begin
           CurPoint := ParamsPoint[1];
         end;
       End;
+      // Cubic Bezier (C c S s)
       'C':
       Begin
         if paramcount = 6 then
@@ -762,32 +590,91 @@ begin
     end;
 
     PrevCommand:=CurCommand;
-//    PrevToken:=CurToken; //save the previous token to detect ,
     curtoken := MyParser.NextToken;
-
-
-
-  //parse string (remove linebreaks etc
-
-  //detect command: (Uppercase is absolute coords vs Lowercase relative coords)
-
-  // Move To (M m)
-
-  // Close Path  (Z z)
-
-  // Line To (L l H h V v)
-
-  // Curves
-
-  // Cubic Bezier (C c S s)
-
-  // Quadratic Bezier (Q q T t)
-
-  //values
   end;
 end;
 
 //TPolygon
+
+const
+ TRIG_FUNCTABLE_SIZE: integer =	1024;
+
+function TPolygon.TrigGLTriangle(value: single): single;
+var
+  temp: integer;
+begin
+    temp := ROund(value * ( TRIG_FUNCTABLE_SIZE / 360 ) );
+
+    if temp < TRIG_FUNCTABLE_SIZE /2 then
+    begin
+      result := temp / ( TRIG_FUNCTABLE_SIZE / 2 );
+    end
+    else
+    begin
+      result := 1.0 - ((temp - TRIG_FUNCTABLE_SIZE / 2) / ( TRIG_FUNCTABLE_SIZE / 2 ));
+    end;
+
+end;
+
+function TPolygon.CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
+var
+  HeightDistance: single;
+  WidthDistance: single;
+  CurPos: single;
+  CurPosH: single;
+  CurPosW: single;
+begin
+  CurPos := 0.0;
+  GradAngle := GradAngle * 2.0; //the gltriangle size is 2PI
+  HeightDistance:= GradY2 - GradY1; //absolute?
+  WidthDistance:= GradX2 - GradX1; //absolute?
+  CurPosH := (ypos - GradY1) / HeightDistance;
+  CurPosW := (xpos - GradX1) / WidthDistance;
+  if (gradangle >=0) and (gradangle < 180) then
+    CurPos := CurPosH * TrigGLTriangle( gradangle + 180) + CurPosW * TrigGLTriangle(gradangle)
+    else
+    if (gradangle >=180) and (gradangle < 360) then
+      CurPos := (1.0 - CurPosH) * TrigGLTriangle( gradangle + 180) + CurPosW * TrigGLTriangle(gradangle)
+    else
+    if (gradangle >=360) and (gradangle < 540) then
+      CurPos := (1.0-CurPosH) * TrigGLTriangle( gradangle + 180) + (1.0-CurPosW) * TrigGLTriangle(gradangle)
+    else
+    if (gradangle >=540) then
+      CurPos := CurPosH * TrigGLTriangle( gradangle + 180) + (1.0-CurPosW) * TrigGLTriangle(gradangle);
+
+  result.R:=gradbeginColor.R *  (1.0 - CurPos) + GradEndColor.R * CurPos;
+  result.G:=gradbeginColor.G *  (1.0 - CurPos) + GradEndColor.G * CurPos;
+  result.B:=gradbeginColor.B *  (1.0 - CurPos) + GradEndColor.B * CurPos;
+
+end;
+
+function TPolygon.CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
+var
+  HeightDistance: single;
+  WidthDistance: single;
+  CurPos: single;
+  CurPosH: single;
+  CurPosW: single;
+begin
+  CurPos:=0.0;
+  GradAngle := GradAngle * 2.0; //the gltriangle size is 2PI
+  HeightDistance:= GradY2 - GradY1; //absolute?
+  WidthDistance:= GradX2 - GradX1; //absolute?
+  CurPosH := (ypos - GradY1) / HeightDistance;
+  CurPosW := (xpos - GradX1) / WidthDistance;
+  if (gradangle >=0) and (gradangle < 180) then
+    CurPos := CurPosH * TrigGLTriangle( gradangle + 180) + CurPosW * TrigGLTriangle(gradangle)
+  else
+    if (gradangle >=180) and (gradangle < 360) then
+      CurPos := (1.0 - CurPosH) * TrigGLTriangle( gradangle + 180) + CurPosW * TrigGLTriangle(gradangle)
+    else
+    if (gradangle >=360) and (gradangle < 540) then
+      CurPos := (1.0-CurPosH) * TrigGLTriangle( gradangle + 180) + (1.0-CurPosW) * TrigGLTriangle(gradangle)
+    else
+    if (gradangle >=540) then
+      CurPos := CurPosH * TrigGLTriangle( gradangle + 180) + (1.0-CurPosW) * TrigGLTriangle(gradangle);
+  result:=gradbeginAlpha *  (1.0 - CurPos) + GradEndAlpha * CurPos;
+end;
 
   function TPolygon.GetPathText: string;
   begin
@@ -906,11 +793,6 @@ end;
 
 constructor TPolygon.Create(AOwner: TComponent);
 begin
-
-
-
-  Init; //Grad Color Hack
-
   Inherited Create(AOwner);
 
   FcPath := TPath.Create;
@@ -982,7 +864,6 @@ begin
   FPoints[FCount-1].Z := 0.0;
 
   CurColor:=FColor;
-  //CurColor:=CalcGradColor(X, Y, FGradColorPoint1, FGradColorPoint2, FGradColorPoint1.x, FGradColorPoint1.y, FGradColorPoint2.x, FGradColorPoint2.y, FGradColorAngle);
 
   FPoints[FCount-1].R := CurColor.R;
   FPoints[FCount-1].G := CurColor.G;
@@ -1239,7 +1120,7 @@ end;
 
 procedure TPolygon.Tesselate();
 var
-  i,loop: integer;
+  loop: integer;
   tess: pointer;
   test: TGLArrayd3;
   pol: PGLArrayd6;
@@ -1272,7 +1153,6 @@ var
   vertex: PGLArrayd6;
   loop: integer;
   colorloop: integer;
-//  color: double;
 begin
   new(vertex);
 
@@ -1386,19 +1266,32 @@ end;
 
 procedure TPolygonFont.RenderChar(AValue: char);
 begin
-  FCharGlyph[ord(AValue)].Render;
-  FCharGlyph[ord(AValue)].RenderPath;
-end;
+  glpushmatrix();
+
+    gltranslatef(0,- (FFontHeight * FSCALE)  ,0);
+
+    glscalef(FSCALE,-FSCALE,0);
+
+    gltranslatef(0,-FFontHeight  ,0);
+
+    FCharGlyph[ord(AValue)].Render;
+    FCharGlyph[ord(AValue)].RenderPath;
+
+  glpopmatrix();
+  glTranslatef((FCharWidth[ord(AValue)]*FSCALE), 0, 0);
+  end;
 
 procedure TPolygonFont.RenderString(AValue: string);
 var
   i: integer;
 begin
+  glpushmatrix();
   for i :=1 to length(AValue) do
   begin
     RenderChar(AValue[i]);
-    glTranslatef((FCharWidth[ord(AValue[i])]), 0, 0);
+    //glTranslatef((FCharWidth[ord(i)])*FSCALE, 0, 0);
   end;
+  glpopmatrix();
 end;
 
 procedure TPolygonFont.LoadFromFile(AValue: string);
@@ -1406,6 +1299,8 @@ var
   loop: integer;
   fs: TStringList;
 begin
+
+  FFontHeight := 1000.0;
 
   fs := TStringList.Create;
   fs.NameValueSeparator := ':';
