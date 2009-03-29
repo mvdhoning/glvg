@@ -85,7 +85,7 @@ begin
   // Activate RenderContext
   ActivateRenderingContext(DC, RC);
 
-  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 640, 0, 480);
+  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 6400, 0, 4800);
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
   // track material ambient and diffuse from surface color, call it before glEnable(GL_COLOR_MATERIAL)
@@ -107,7 +107,7 @@ begin
   polystar.LineWidth := 1.0;
   polystar.SetLineColor(1,1,1,1);
 
-  polystar.Path := 'M100,200 C100,100 400,100 400,200'; //only then path
+//  polystar.Path := 'M100,200 C100,100 400,100 400,200'; //only then path
 
   //  http://commons.wikimedia.org/wiki/File:Cat_drawing.svg
   mypath := 'M 380.76986,379.21038 C 380.76986,439.81681 324.84665,489.00463 255.94126,489.00463';
@@ -121,7 +121,12 @@ begin
   mypath := 'M371,1 H 29 V144 H264 Q 264,151 264,166 Q265,180 265, 188 Q 265,212 249,212 H 132 Q 83,212 55,247 Q 29,279 29,329 V 566 H 335 V 422 H 136 V 375 Q 136,360 144,356 Q 148,355 168,355 H 279 Q 327,355 352,309 Q 371,273 371,221 V 1 Z';
 //  mypath := 'M365,563 L 183,-33 L 0,563 H 101 L 183, 296 L 270, 563 H365 Z';
 //  mypath := 'M35,1 H 18 V 564 H 355 V 420 H 125 V 144 H 248 V 211 H 156 V 355 H 355 V 1 Z';
-//  polystar.Path := mypath;
+
+mypath := '';
+mypath := 'M 95 712 c 41 0 66 -28 66 -67 c 0 -7 -1 -12 -2 -19 c -19 -117 -44 -249 -47 -327 c -1 -28 -2 -57 -2 -93 h -29 c 0 127 -8 177 -29 295 c -24 132 -26 135 -26 143 c 0 40 30 68 69 68 z ';
+mypath := mypath + ' M 97 138 c 36 0 62 -32 62 -68 c 0 -37 -26 -70 -62 -70 s -63 33 -63 70 c 0 36 27 68 63 68 z';
+
+  polystar.Path := mypath;
 
   //cubic spline curve example
 //  polystar.Path := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
@@ -131,23 +136,31 @@ begin
 
 
   polyfont := TPolygonfont.Create();
-  polyfont.LoadFromFile('arial.txt');
+  polyfont.LoadFromFile('font.txt');
 
 
 end;
 
 procedure TOpenGLRender.Draw;
 begin
-  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 640, 0, 480);
+  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 6400, 4800, 0);
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
   angle:=angle+1;
 
+  glpushmatrix();
   //vector font
-  polyfont.RenderChar('R');
-  //polyfont.RenderString(polyfont.Name);
+    gltranslatef(0,100,0);
+    glscalef(0.1,-0.1,0);
+
+  //  polyfont.RenderChar('R');
+  polyfont.RenderString(polyfont.Name);
+  glpopmatrix();
 
 //  glTranslatef(-80.3122, -226.2716, 0.0); //for cat drawing
+
+    gltranslatef(100,100,0);
+//    glscalef(0.1,0.1,0);
 
   //polygon render
   polystar.Render;

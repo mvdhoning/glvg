@@ -469,32 +469,44 @@ begin
       begin
         if length(str) = 1 then
         begin
-          MyParser.NextToken;
-          str := str+MyParser.TokenString;
-
+          if UpperCase(str) <> 'Z' then //z Z does not have parameters...
+          begin
+            MyParser.NextToken;
+            str := str+MyParser.TokenString;
+          end;
         end;
 
         curCommand := str[1]; //Huidig commando is eerste teken string;
         Delete(str,1,1); //verwijder commando uit string
+
+
         paramcount:=1;
         if str <> '' then
         begin
-          params[paramcount-1]:=StrToFloat(str);
+          if UpperCase(curcommand) <> 'Z' then
+            params[paramcount-1]:=StrToFloat(str);
         end;
+
         //ShowMessage(str+' is a symbol at line : '+IntToStr(Line)+'   position : '+IntToStr(Pos)+ '  curenttoken: '+prevtoken );
         //ShowMessage(curCommand);
       end;
       toInteger:
       begin
-        //ShowMessage(str+' is an integer at line : '+IntToStr(Line)+' position : '+IntToStr(Pos)+ '  curenttoken: '+prevtoken );
-        params[paramcount]:=StrToFloat(str);
-        paramcount := paramcount +1;
+        if UpperCase(curcommand) <> 'Z' then
+        begin
+          //ShowMessage(str+' is an integer at line : '+IntToStr(Line)+' position : '+IntToStr(Pos)+ '  curenttoken: '+prevtoken );
+          params[paramcount]:=StrToFloat(str);
+          paramcount := paramcount +1;
+        end;
       end;
       toFloat:
       begin
-        //ShowMessage(str+' is a float at line : '+IntToStr(Line)+' position : '+IntToStr(Pos)+ '  curenttoken: '+prevtoken );
-        params[paramcount]:=StrToFloat(str);
-        paramcount := paramcount +1;
+        if UpperCase(curcommand) <> 'Z' then
+        begin
+          //ShowMessage(str+' is a float at line : '+IntToStr(Line)+' position : '+IntToStr(Pos)+ '  curenttoken: '+prevtoken );
+          params[paramcount]:=StrToFloat(str);
+          paramcount := paramcount +1;
+        end;
       end;
       toString:
       //note: TParser is designed for DFM's so that toString only works with
@@ -510,11 +522,22 @@ begin
       Begin
         if paramcount = 2 then
         begin
-          CurPoint.x:=params[0];
-          CurPoint.y:=params[1];
+          ParamsPoint[0].x:=params[0];
+          ParamsPoint[0].y:=params[1];
           paramcount := 0;
+          CurPoint := ParamsPoint[0];
           FirstPoint := CurPoint;
-//        AddPoint(CurPoint);
+        end;
+      End;
+      'm':
+      Begin
+        if paramcount = 2 then
+        begin
+          ParamsPoint[0].x:=CurPoint.x + params[0];
+          ParamsPoint[0].y:=CurPoint.y + params[1];
+          paramcount := 0;
+          CurPoint := ParamsPoint[0];
+          FirstPoint := CurPoint;
         end;
       End;
       'L':
@@ -528,11 +551,33 @@ begin
           CurPoint := ParamsPoint[0];
         end;
       End;
+      'l':
+      Begin
+        if paramcount = 2 then
+        begin
+          ParamsPoint[0].x :=CurPoint.x + params[0];
+          ParamsPoint[0].y :=CurPoint.y + params[1];
+          NewStroke( CurPoint, ParamsPoint[0]);
+          paramcount :=0;
+          CurPoint := ParamsPoint[0];
+        end;
+      End;
       'H':
       Begin
         if paramcount = 1 then
         begin
           ParamsPoint[0].x := params[0];
+          ParamsPoint[0].y := CurPoint.y;
+          NewStroke( CurPoint, ParamsPoint[0]);
+          paramcount :=0;
+          CurPoint := ParamsPoint[0];
+        end;
+      End;
+      'h':
+      Begin
+        if paramcount = 1 then
+        begin
+          ParamsPoint[0].x := CurPoint.x+params[0];
           ParamsPoint[0].y := CurPoint.y;
           NewStroke( CurPoint, ParamsPoint[0]);
           paramcount :=0;
@@ -550,7 +595,24 @@ begin
           CurPoint := ParamsPoint[0];
         end;
       End;
+      'v':
+      Begin
+        if paramcount = 1 then
+        begin
+          ParamsPoint[0].x := CurPoint.x;
+          ParamsPoint[0].y := CurPoint.y+params[0];
+          NewStroke( CurPoint, ParamsPoint[0]);
+          paramcount :=0;
+          CurPoint := ParamsPoint[0];
+        end;
+      End;
       'Z':
+      Begin
+        //lijn terug naar eerste punt
+        NewStroke( CurPoint, FirstPoint);
+        FirstPoint:=CurPoint; //optioneel?
+      End;
+      'z':
       Begin
         //lijn terug naar eerste punt
         NewStroke( CurPoint, FirstPoint);
@@ -567,18 +629,21 @@ begin
           ParamsPoint[1].y := params[3];
           DrawQSpline(CurPoint, ParamsPoint[1], ParamsPoint[0]);
           paramcount := 0;
+          PrevControlPoint := ParamsPoint[0];
+          CurPoint := ParamsPoint[1];
+        end;
+      End;
+      'q':
+      Begin
+        if paramcount = 4 then
+        begin
 
-        (*  if prevcommand = curcommand then
-          begin
-            DrawQSpline(ParamsPoint[1], CurPoint, CurPoint);
-            DrawQSpline(CurPoint, ParamsPoint[1], ParamsPoint[0]);
-          end
-          else
-          begin
-            DrawQSpline(CurPoint, ParamsPoint[1], ParamsPoint[0]);
-          end; *)
-
-
+          ParamsPoint[0].x := CurPoint.x+params[0];
+          ParamsPoint[0].y := CurPoint.y+params[1];
+          ParamsPoint[1].x := CurPoint.x+params[2];
+          ParamsPoint[1].y := CurPoint.y+params[3];
+          DrawQSpline(CurPoint, ParamsPoint[1], ParamsPoint[0]);
+          paramcount := 0;
           PrevControlPoint := ParamsPoint[0];
           CurPoint := ParamsPoint[1];
         end;
@@ -587,10 +652,24 @@ begin
       Begin
         if paramcount = 2 then
         begin
-          ParamsPoint[0].x:=CurPoint.x+CurPoint.x-PrevControlPoint.x;
-          ParamsPoint[0].y:=CurPoint.y+CurPoint.y-PrevControlPoint.y;
+          ParamsPoint[0].x:=CurPoint.x-PrevControlPoint.x;
+          ParamsPoint[0].y:=CurPoint.y-PrevControlPoint.y;
           ParamsPoint[1].x := params[0];
           ParamsPoint[1].y := params[1];
+          DrawQSpline(CurPoint, ParamsPoint[1], ParamsPoint[0]);
+          paramcount:=0;
+          PrevControlPoint := ParamsPoint[0];
+          CurPoint := ParamsPoint[1];
+        end;
+      End;
+      't':
+      Begin
+        if paramcount = 2 then
+        begin
+          ParamsPoint[0].x:=CurPoint.x+CurPoint.x-PrevControlPoint.x;
+          ParamsPoint[0].y:=CurPoint.y+CurPoint.y-PrevControlPoint.y;
+          ParamsPoint[1].x :=CurPoint.x+ params[0];
+          ParamsPoint[1].y :=CurPoint.y+ params[1];
           DrawQSpline(CurPoint, ParamsPoint[1], ParamsPoint[0]);
           paramcount:=0;
           PrevControlPoint := ParamsPoint[0];
@@ -613,6 +692,22 @@ begin
           PrevControlPoint := ParamsPoint[1];
         End;
       End;
+      'c':
+      Begin
+        if paramcount = 6 then
+        Begin
+          ParamsPoint[0].x:=CurPoint.x+params[0];
+          ParamsPoint[0].y:=CurPoint.y+params[1];
+          ParamsPoint[1].x:=CurPoint.x+params[2];
+          ParamsPoint[1].y:=CurPoint.y+params[3];
+          ParamsPoint[2].x:=CurPoint.x+params[4];
+          ParamsPoint[2].y:=CurPoint.y+params[5];
+          DrawCSpline( CurPoint, ParamsPoint[2], ParamsPoint[0], ParamsPoint[1]);
+          paramcount := 0; //prevent drawing again
+          CurPoint:=ParamsPoint[2];
+          PrevControlPoint := ParamsPoint[1];
+        End;
+      End;
       'S':
       Begin
         if paramcount = 4 then
@@ -625,8 +720,8 @@ begin
           else
           begin
             //mirrored 2nd ctrlpoint
-            ParamsPoint[0].x:=CurPoint.x+CurPoint.x-PrevControlPoint.x;
-            ParamsPoint[0].y:=CurPoint.y+CurPoint.y-PrevControlPoint.y;
+            ParamsPoint[0].x:=CurPoint.x-PrevControlPoint.x;
+            ParamsPoint[0].y:=CurPoint.y-PrevControlPoint.y;
           end;
           ParamsPoint[1].x:=params[0];
           ParamsPoint[1].y:=params[1];
@@ -638,6 +733,32 @@ begin
           PrevControlPoint := ParamsPoint[1];
         End;
       End;
+      's':
+      Begin
+        if paramcount = 4 then
+        Begin
+          if prevcommand = ' ' then
+          begin
+            ParamsPoint[0].x:=CurPoint.x+params[0];
+            ParamsPoint[0].y:=CurPoint.y+params[1];
+          end
+          else
+          begin
+            //mirrored 2nd ctrlpoint
+            ParamsPoint[0].x:=CurPoint.x+CurPoint.x-PrevControlPoint.x;
+            ParamsPoint[0].y:=CurPoint.y+CurPoint.y-PrevControlPoint.y;
+          end;
+          ParamsPoint[1].x:=CurPoint.x+params[0];
+          ParamsPoint[1].y:=CurPoint.y+params[1];
+          ParamsPoint[2].x:=CurPoint.x+params[2];
+          ParamsPoint[2].y:=CurPoint.y+params[3];
+          DrawCSpline( CurPoint, ParamsPoint[2], ParamsPoint[0], ParamsPoint[1]);
+          paramcount := 0; //prevent drawing again
+          CurPoint:=ParamsPoint[2];
+          PrevControlPoint := ParamsPoint[1];
+        End;
+      End;
+
     end;
 
     PrevCommand:=CurCommand;
