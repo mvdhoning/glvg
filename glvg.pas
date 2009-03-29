@@ -155,6 +155,28 @@ TPolygonFont = class
         property Scale: single read FScale write FScale;
      end;
 
+TglvgRect = class
+  private
+    FPolyShape: TPolygon;
+    Fx: Single;
+    Fy: Single;
+    Fwidth: Single;
+    Fheight: Single;
+    Frx: Single;
+    Fry: Single;
+  public
+    Constructor Create();
+    Destructor Destroy();
+    property X: single read Fx write Fx;
+    property Y: single read Fy write Fy;
+    property Width: single read Fwidth write Fwidth;
+    property Height: single read Fheight write Fheight;
+    property Rx: single read Frx write Frx;
+    property Ry: single read Fry write Fry;
+    procedure Init;
+    procedure Render;
+end;
+
 implementation
 
 uses math, sysutils;
@@ -168,6 +190,60 @@ type
 
 threadvar
   PolygonClass: TPolygon;
+
+//TglvgRect
+constructor TglvgRect.Create();
+begin
+  inherited create();
+  FPolyShape:= TPolygon.Create(nil);
+  Fx:= 0.0;
+  Fy:= 0.0;
+  Fwidth:= 0.0;
+  Fheight:= 0.0;
+  Frx:= 0.0;
+  Fry:= 0.0;
+
+  FPolyShape.SetColor(1,0,0,1);     //first set color etc
+  FPolyShape.LineWidth := 1.0;
+  FPolyShape.SetLineColor(1,1,1,1);
+end;
+
+destructor TglvgRect.Destroy;
+begin
+  FPolyShape.Free;
+  inherited Destroy;
+end;
+
+procedure TglvgRect.Init;
+begin
+  FPolyShape.Path:=
+
+    'M '+FloatToStr(Fx+Frx)+' '+FloatToStr(Fy)+
+    ' Q '+FloatToStr(Fx)+' '+FloatToStr(Fy)+
+    ' '+FloatToStr(Fx)+' '+FloatToStr(Fy+Fry)+
+    ' L '+FloatToStr(Fx)+' '+FloatToStr(Fy+FHeight-Fry)+
+
+    ' Q '+FloatToStr(Fx)+' '+FloatToStr(Fy+FHeight)+
+    ' '+FloatToStr(Fx+Frx)+' '+FloatToStr(Fy+FHeight)+
+
+    ' L '+FloatToStr(Fx+FWidth-Frx)+' '+FloatToStr(Fy+FHeight)+
+
+    ' Q '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy+FHeight)+
+    ' '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy+FHeight-Fry)+
+
+    ' L '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy+Fry) +
+
+    ' Q '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy)+
+    ' '+FloatToStr(Fx+FWidth-Frx)+' '+FloatToStr(Fy)+
+
+    ' Z';
+end;
+
+procedure TglvgRect.Render;
+begin
+  FPolyShape.Render;
+  FPolyShape.RenderPath;
+end;
 
 //TPath
 

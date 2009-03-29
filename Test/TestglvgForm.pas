@@ -51,6 +51,7 @@ uses glvg;
 var
   polystar: TPolygon;
   polyfont: TPolygonFont;
+  polyrect: TglvgRect;
 
 //TOpenGLRender
 destructor TOpenGLRender.Destroy;
@@ -144,7 +145,16 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   polyfont := TPolygonfont.Create();
   polyfont.LoadFromFile('font.txt');
-  polyfont.Scale := 0.1;
+  polyfont.Scale := 0.05; //TODO: Should be related to font-size?
+
+  polyrect := TglvgRect.Create;
+  polyrect.X:= 1.0;
+  polyrect.Y:= 1.0;
+  polyrect.Width:=100.0;
+  polyrect.Height:=200.0;
+  polyrect.Rx:=10.0;
+  polyrect.Ry:=10.0; //Optional
+  polyrect.Init;
 
 end;
 
@@ -153,25 +163,33 @@ begin
   glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 640, 480, 0);
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
+  //AntiAlias (may or may not work)
+  glEnable (GL_BLEND);
+  glEnable (GL_POLYGON_SMOOTH);
+  glDisable (GL_DEPTH_TEST);
+
+
   angle:=angle+1;
 
-
   //vector font
-//    gltranslatef(0,100,0);
-//    glscalef(0.1,-0.1,0);
-
+  gltranslatef(10,10,0);
   //polyfont.RenderChar('A');
   polyfont.RenderString(polyfont.Name);
+
+  gltranslatef(10,100,0);
+  polyfont.RenderString('Hello World');
 
 
 //  glTranslatef(-80.3122, -226.2716, 0.0); //for cat drawing
 
-//    gltranslatef(100,100,0);
+
 //    glscalef(0.1,0.1,0);
 
   //polygon render
   polystar.Render;
   polystar.RenderPath;
+
+  polyrect.Render;
 
   //swap buffer (aka draw)
   SwapBuffers(DC);
