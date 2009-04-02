@@ -184,6 +184,8 @@ uses math, sysutils;
 type
      TGLArrayd6 = array[0..5] of GLDouble;
      PGLArrayd6 = ^TGLArrayd6;
+     TGLArrayd7 = array[0..6] of GLDouble;
+     PGLArrayd7 = ^TGLArrayd7;
      TGLArrayvertex4 = array[0..3] of PGLArrayd6;
      PGLArrayvertex4 = ^TGLArrayvertex4;
      PGLArrayf4 = ^TGLArrayf4;
@@ -203,7 +205,7 @@ begin
   Frx:= 0.0;
   Fry:= 0.0;
 
-  FPolyShape.SetColor(1,0,0,1);     //first set color etc
+  FPolyShape.SetColor(1,0,0,0.5);     //first set color etc
   FPolyShape.LineWidth := 1.0;
   FPolyShape.SetLineColor(1,1,1,1);
 end;
@@ -849,6 +851,7 @@ begin
       FContour[FNewContour-1][FContourCount[FNewContour-1]-1].R := R;
       FContour[FNewContour-1][FContourCount[FNewContour-1]-1].G := G;
       FContour[FNewContour-1][FContourCount[FNewContour-1]-1].B := B;
+      FContour[FNewContour-1][FContourCount[FNewContour-1]-1].A := A;
 
       FContour[FNewContour-1][FContourCount[FNewContour-1]-1].X := X;
       FContour[FNewContour-1][FContourCount[FNewContour-1]-1].Y := Y;
@@ -864,6 +867,7 @@ begin
       FVertex[FVertexCount-1].R := R;
       FVertex[FVertexCount-1].G := G;
       FVertex[FVertexCount-1].B := B;
+      FVertex[FVertexCount-1].A := A;
 
       FVertex[FVertexCount-1].X := X;
       FVertex[FVertexCount-1].Y := Y;
@@ -1029,6 +1033,7 @@ begin
     FPoints[loop].r := CurColor.r;
     FPoints[loop].g := CurColor.g;
     FPoints[loop].b := CurColor.b;
+    //FPoints[loop].a := CurColor.a;
   end;
 end;
 
@@ -1041,7 +1046,8 @@ begin
   glbegin(GL_TRIANGLES);
   for loop:=0 to FVertexCount-1 do
   begin
-    glcolor3f(FVertex[loop].R,FVertex[loop].G,FVertex[loop].B);
+//    glcolor4f(FVertex[loop].R,FVertex[loop].G,FVertex[loop].B,0.8);//FVertex[loop].A);
+    glcolor4f(FVertex[loop].R,FVertex[loop].G,FVertex[loop].B,FVertex[loop].A);
     glvertex3f(FVertex[loop].X,FVertex[loop].Y,FVertex[loop].Z);
   end;
   glend;
@@ -1203,7 +1209,7 @@ var
   loop: integer;
   tess: pointer;
   test: TGLArrayd3;
-  pol: PGLArrayd6;
+  pol: PGLArrayd7;
 
 procedure iTessBeginCB(which: GLenum); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
 begin
@@ -1220,17 +1226,17 @@ begin
       //just do nothing to force GL_TRIANGLES !!!
 end;
 
-procedure iTessVertexCB(data: PGLArrayd6); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
+procedure iTessVertexCB(data: PGLArrayd7); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
 begin
   //PolygonClass.tessVertex(data[0], data[1], data[2], data[3], data[4], data[5],0);
-  PolygonClass.AddVertex(data[0], data[1], data[2], data[3], data[4], data[5],0);
+  PolygonClass.AddVertex(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
 end;
 
 
-procedure iTessCombineCB(newVertex : PGLArrayd6; neighborVertex : Pointer;
+procedure iTessCombineCB(newVertex : PGLArrayd7; neighborVertex : Pointer;
                       neighborWeight : Pointer; var outData : Pointer); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
 var
-  vertex: PGLArrayd6;
+  vertex: PGLArrayd7;
   loop: integer;
   colorloop: integer;
 begin
@@ -1240,7 +1246,7 @@ begin
   vertex[1] := newVertex^[1];
   vertex[2] := newVertex^[2];
 
-  for colorloop := 3 to 5 do
+  for colorloop := 3 to 6 do
   begin
     vertex[colorloop] := 0.0;
     for loop:=0 to 3 do
@@ -1280,6 +1286,7 @@ begin
       pol[3]:=FPoints[loop].R; //color
       pol[4]:=FPoints[loop].G;
       pol[5]:=FPoints[loop].B;
+      pol[6]:=FPoints[loop].A;
 
       pol[0]:=FPoints[loop].X;
       pol[1]:=FPoints[loop].Y;
@@ -1321,6 +1328,7 @@ begin
       pol[3]:=FPoints[loop].R; //color
       pol[4]:=FPoints[loop].G;
       pol[5]:=FPoints[loop].B;
+      pol[6]:=FPoints[loop].A;
 
       pol[0]:=FPoints[loop].X;
       pol[1]:=FPoints[loop].Y;
@@ -1389,7 +1397,7 @@ begin
   for loop := 0 to 255 do
   begin
     FCharGlyph[loop] := TPolygon.Create(nil);
-    FCharGlyph[loop].SetColor(0.0,0.0,1.0,0.0);
+    FCharGlyph[loop].SetColor(0.0,0.0,1.0,1.0);
     FCharGlyph[loop].SetLineColor(1.0,1.0,1.0,1.0);
     FCharGlyph[loop].LineWidth:= 1.0;
 
