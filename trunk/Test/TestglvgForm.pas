@@ -99,6 +99,10 @@ begin
   glLightfv(GL_LIGHT0, GL_AMBIENT, @ambient);
   glEnable(GL_LIGHT0);
 
+  // Alpha Blending
+  //glEnable (GL_BLEND);
+  //glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   // Set clear background color
   glClearColor(0,0,0,0);
 
@@ -160,15 +164,19 @@ end;
 
 procedure TOpenGLRender.Draw;
 begin
-  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 640, 480, 0);
+  glMatrixMode (GL_PROJECTION); glLoadIdentity(); glOrtho (0, 640, 480, 0,-100,100);
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
 
   //AntiAlias (may or may not work)
   glEnable (GL_BLEND);
-  glEnable (GL_POLYGON_SMOOTH);
+  //glEnable (GL_POLYGON_SMOOTH);
   glDisable (GL_DEPTH_TEST);
+
+    // Alpha Blending
+  //glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
   angle:=angle+1;
