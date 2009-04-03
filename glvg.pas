@@ -40,8 +40,6 @@ TPoint = packed record
   a: single;
 end;
 
-//TContour= array of TPoint;
-
 //TODO: use TPath inside svg group?
 //TODO: implement basic svg shapes using paths.
 //http://www.w3.org/TR/SVG11/paths.html
@@ -70,15 +68,9 @@ end;
 
 TPolygon = class(TComponent)
 private
-//  FOutline: boolean;
-  FcPath: TPath;
+  FcPath: TPath;            //Outline
   FPoints: array of TPoint; //polygon point
   FVertex: array of TPoint; //triangulated data
-//  FContour: array of TPoint; //outline
-  //FContour : array of TContour;
-  //FContourCount: array of integer;
-//FExtrudePath: array of TPoint; //extruding path  //TODO
-//  FExtrudePathCount: integer;                      //TODO
   FExtrudeDepth: single;
   F3DVertex: array of TPoint; //3d extruded mesh
   F3DVertexCount: integer;
@@ -91,8 +83,6 @@ private
   FGradColorAngle: single;  //TODO: consider gradient to be a seperate class
   FGradColorPoint1: TPoint; //TODO: should be dynamic array to support better gradients
   FGradColorPoint2: TPoint; //TODO: should be dynamic array to support better gradients
-
-  FNewContour : integer;
 
   FBoundBoxMinPoint: TPoint;
   FBoundBoxMaxPoint: TPoint;
@@ -121,7 +111,6 @@ public
   procedure Add(X: single; Y: single; Z: single); overload;
   procedure Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single); overload;
   procedure Render();
-//  procedure RenderOutline();
   procedure RenderPath();
   procedure Tesselate();
   procedure Extrude();
@@ -155,9 +144,20 @@ TPolygonFont = class
         property Scale: single read FScale write FScale;
      end;
 
-TglvgRect = class
+TglvgObject = class
   private
     FPolyShape: TPolygon;
+    FName: string;
+  public
+    Constructor Create();
+    Destructor Destroy(); override;
+    procedure Init;
+    procedure Render;
+    property name: string read fname write fname;
+end;
+
+TglvgRect = class(TglvgObject)
+  private
     Fx: Single;
     Fy: Single;
     Fwidth: Single;
@@ -167,14 +167,13 @@ TglvgRect = class
   public
     Constructor Create();
     Destructor Destroy(); override;
+    procedure Init;
     property X: single read Fx write Fx;
     property Y: single read Fy write Fy;
     property Width: single read Fwidth write Fwidth;
     property Height: single read Fheight write Fheight;
     property Rx: single read Frx write Frx;
     property Ry: single read Fry write Fry;
-    procedure Init;
-    procedure Render;
 end;
 
 implementation
@@ -182,8 +181,6 @@ implementation
 uses math, sysutils;
 
 type
-//     TGLArrayd6 = array[0..5] of GLDouble;
-//     PGLArrayd6 = ^TGLArrayd6;
      TGLArrayd7 = array[0..6] of GLDouble;
      PGLArrayd7 = ^TGLArrayd7;
      TGLArrayvertex4 = array[0..3] of PGLArrayd7;
@@ -193,11 +190,38 @@ type
 threadvar
   PolygonClass: TPolygon;
 
+//TglvgObject
+constructor TglvgObject.Create();
+begin
+  inherited create();
+  FPolyShape:= TPolygon.Create(nil);
+
+  FPolyShape.SetColor(1,0,0,0.5);     //first set color etc
+  FPolyShape.LineWidth := 1.0;
+  FPolyShape.SetLineColor(1,1,1,1);
+end;
+
+destructor TglvgObject.Destroy;
+begin
+  FPolyShape.Free;
+  inherited Destroy;
+end;
+
+procedure TglvgObject.Init;
+begin
+end;
+
+procedure TglvgObject.Render;
+begin
+  FPolyShape.Render;
+  FPolyShape.RenderPath;
+end;
+
 //TglvgRect
 constructor TglvgRect.Create();
 begin
   inherited create();
-  FPolyShape:= TPolygon.Create(nil);
+
   Fx:= 0.0;
   Fy:= 0.0;
   Fwidth:= 0.0;
@@ -205,14 +229,10 @@ begin
   Frx:= 0.0;
   Fry:= 0.0;
 
-  FPolyShape.SetColor(1,0,0,0.5);     //first set color etc
-  FPolyShape.LineWidth := 1.0;
-  FPolyShape.SetLineColor(1,1,1,1);
 end;
 
 destructor TglvgRect.Destroy;
 begin
-  FPolyShape.Free;
   inherited Destroy;
 end;
 
@@ -239,12 +259,6 @@ begin
     ' '+FloatToStr(Fx+FWidth-Frx)+' '+FloatToStr(Fy)+
 
     ' Z';
-end;
-
-procedure TglvgRect.Render;
-begin
-  FPolyShape.Render;
-  FPolyShape.RenderPath;
 end;
 
 //TPath
@@ -814,9 +828,6 @@ end;
 procedure TPolygon.tessBegin(which: GLenum);
 begin
 //    glBegin(which);
-
-    //add new outline
-    FNewContour := FNewContour +1;
 end;
 
 procedure TPolygon.tessEnd();
@@ -826,55 +837,24 @@ end;
 
 procedure TPolygon.tessVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
 begin
-    glcolor3f(r,g,b);
-    glVertex3f(x,y,z);
+//    glcolor4f(r,g,b,a);
+//    glVertex3f(x,y,z);
 end;
 
 
 procedure TPolygon.AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
 begin
-(*
-    if (FOutline) then
-    begin
+  FVertexCount := FVertexCount + 1;
+  SetLength(FVertex, FVertexCount);
 
-//      if (FNewContour = 1) then
-//      begin
+  FVertex[FVertexCount-1].R := R;
+  FVertex[FVertexCount-1].G := G;
+  FVertex[FVertexCount-1].B := B;
+  FVertex[FVertexCount-1].A := A;
 
-      SetLength(FContourCount, FNewContour);
-      SetLength(FContour, FNewContour);
-
-      FContourCount[FNewContour-1] := FContourCount[FNewContour-1] + 1;
-
-      SetLength(FContour[FNewContour-1], FContourCount[FNewContour-1]);
-
-
-
-      FContour[FNewContour-1][FContourCount[FNewContour-1]-1].R := R;
-      FContour[FNewContour-1][FContourCount[FNewContour-1]-1].G := G;
-      FContour[FNewContour-1][FContourCount[FNewContour-1]-1].B := B;
-      FContour[FNewContour-1][FContourCount[FNewContour-1]-1].A := A;
-
-      FContour[FNewContour-1][FContourCount[FNewContour-1]-1].X := X;
-      FContour[FNewContour-1][FContourCount[FNewContour-1]-1].Y := Y;
-      FContour[FNewContour-1][FContourCount[FNewContour-1]-1].Z := Z;
-//      end;
-
-    end
-    else
-    begin
-*)
-      FVertexCount := FVertexCount + 1;
-      SetLength(FVertex, FVertexCount);
-
-      FVertex[FVertexCount-1].R := R;
-      FVertex[FVertexCount-1].G := G;
-      FVertex[FVertexCount-1].B := B;
-      FVertex[FVertexCount-1].A := A;
-
-      FVertex[FVertexCount-1].X := X;
-      FVertex[FVertexCount-1].Y := Y;
-      FVertex[FVertexCount-1].Z := Z;
-//    end;
+  FVertex[FVertexCount-1].X := X;
+  FVertex[FVertexCount-1].Y := Y;
+  FVertex[FVertexCount-1].Z := Z;
 end;
 
 constructor TPolygon.Create(AOwner: TComponent);
@@ -890,9 +870,8 @@ begin
   FColor.G := 0.0;
   FColor.B := 0.0;
   FColor.A := 0.0;
-//  FOutline := false;
-  FExtrudeDepth := 1.0;
-  FNewContour := 0;
+
+  FExtrudeDepth := 0.0;
 
   FGradColorAngle := 1; //1..89
   FGradColorPoint1.x:=0.0; //min boundbox x
