@@ -40,7 +40,7 @@ TPoint = packed record
   a: single;
 end;
 
-TContour= array of TPoint;
+//TContour= array of TPoint;
 
 //TODO: use TPath inside svg group?
 //TODO: implement basic svg shapes using paths.
@@ -70,13 +70,13 @@ end;
 
 TPolygon = class(TComponent)
 private
-  FOutline: boolean;
+//  FOutline: boolean;
   FcPath: TPath;
   FPoints: array of TPoint; //polygon point
   FVertex: array of TPoint; //triangulated data
 //  FContour: array of TPoint; //outline
-  FContour : array of TContour;
-  FContourCount: array of integer;
+  //FContour : array of TContour;
+  //FContourCount: array of integer;
 //FExtrudePath: array of TPoint; //extruding path  //TODO
 //  FExtrudePathCount: integer;                      //TODO
   FExtrudeDepth: single;
@@ -166,7 +166,7 @@ TglvgRect = class
     Fry: Single;
   public
     Constructor Create();
-    Destructor Destroy();
+    Destructor Destroy(); override;
     property X: single read Fx write Fx;
     property Y: single read Fy write Fy;
     property Width: single read Fwidth write Fwidth;
@@ -182,11 +182,11 @@ implementation
 uses math, sysutils;
 
 type
-     TGLArrayd6 = array[0..5] of GLDouble;
-     PGLArrayd6 = ^TGLArrayd6;
+//     TGLArrayd6 = array[0..5] of GLDouble;
+//     PGLArrayd6 = ^TGLArrayd6;
      TGLArrayd7 = array[0..6] of GLDouble;
      PGLArrayd7 = ^TGLArrayd7;
-     TGLArrayvertex4 = array[0..3] of PGLArrayd6;
+     TGLArrayvertex4 = array[0..3] of PGLArrayd7;
      PGLArrayvertex4 = ^TGLArrayvertex4;
      PGLArrayf4 = ^TGLArrayf4;
 
@@ -833,6 +833,7 @@ end;
 
 procedure TPolygon.AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
 begin
+(*
     if (FOutline) then
     begin
 
@@ -861,6 +862,7 @@ begin
     end
     else
     begin
+*)
       FVertexCount := FVertexCount + 1;
       SetLength(FVertex, FVertexCount);
 
@@ -872,7 +874,7 @@ begin
       FVertex[FVertexCount-1].X := X;
       FVertex[FVertexCount-1].Y := Y;
       FVertex[FVertexCount-1].Z := Z;
-    end;
+//    end;
 end;
 
 constructor TPolygon.Create(AOwner: TComponent);
@@ -1119,8 +1121,8 @@ end;
 procedure TPolygon.Extrude();
 var
   loop: integer;
-  newindex: integer;
-  outlineloop: integer;
+//  newindex: integer;
+//  outlineloop: integer;
 begin
   if FTesselated = false then Tesselate;
 
@@ -1139,9 +1141,11 @@ begin
     F3DVertex[loop+(FVertexCount)]:=FVertex[FVertexCount-loop-1];
     F3DVertex[loop+(FVertexCount)].Z:=F3DVertex[loop+(FVertexCount)].Z-FExtrudeDepth;
   end;
-
+  
+(*
   newindex:=(FVertexCount*2);
 
+  //TODO: rewrite to use tpath ...
   //add side faces  (for each contour)
   for outlineloop := 0 to FNewContour-1 do
   begin
@@ -1186,7 +1190,8 @@ begin
   end;
 
   end;
-
+  *)
+  
 end;
 
 Procedure TPolygon.RenderExtruded();
@@ -1302,6 +1307,7 @@ begin
   gluTessEndPolygon(tess);
   gluDeleteTess(tess);        // delete after tessellation
 
+(*
   FNewContour:=0;
 
   //outline
@@ -1344,10 +1350,12 @@ begin
   gluTessEndPolygon(tess);
   gluDeleteTess(tess);        // delete after tessellation
 
+  FOutline := false;
+  *)
+
   PolygonClass := nil;
   FTesselated := true;
 
-  FOutline := false;
 end;
 
 //TPolygonFont
