@@ -295,6 +295,12 @@ var
   AHeight: single;
   AX: single;
   AY: single;
+  temppath: string;
+  angle: single;
+  vectorx: single;
+  vectory: single;
+  vectorx1: single;
+  vectory1: single;
 begin
 
  ax:=x-frx;
@@ -302,6 +308,45 @@ begin
  aWidth:= Frx*2;
  aHeight:= Fry*2;
 
+ // draw a circle from a bunch of short lines
+  vectorY1:=FY+fry;
+  vectorX1:=FX+frx;
+
+//  glBegin(GL_LINE_STRIP);
+
+    angle:=0.0*pi;//start point arc (0.0 for a complete circle)
+
+  vectorX:=FX+(Frx*sin(angle));
+  vectorY:=FY+(Fry*cos(angle));
+
+//  temppath:='M '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
+
+  vectorY1:=vectorY;
+  vectorX1:=vectorX;
+
+  temppath:='M '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
+
+  angle := angle + 0.01;
+
+
+
+    while angle < 2.0*pi do   //to endpoint arc (2.0 make a complete circle)
+    begin
+      vectorX:=FX+(Frx*sin(angle));
+      vectorY:=FY+(Fry*cos(angle));
+//      glVertex2d(vectorX1,vectorY1);
+      temppath:=temppath+' L '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
+      vectorY1:=vectorY;
+      vectorX1:=vectorX;
+      angle := angle + 0.01;
+    end;
+    temppath:=temppath+' L '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
+    //    glVertex2d(vectorX1,vectorY1); //and close it
+  //glEnd();
+     temppath:=temppath + ' Z';
+     FPolyShape.Path := temppath;
+
+ (*
 FPolyShape.Path:=
 
     'M '+FloatToStr(ax+Frx)+' '+FloatToStr(ay)+
@@ -318,6 +363,7 @@ FPolyShape.Path:=
     ' '+FloatToStr(ax+aWidth-Frx)+' '+FloatToStr(ay)+
 
     ' Z';
+*)
 end;
 
 //TglvgCircle

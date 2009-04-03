@@ -157,16 +157,16 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Y:= 1.0;
   polyrect.Width:=100.0;
   polyrect.Height:=200.0;
-  polyrect.Rx:=10.0;
-  polyrect.Ry:=10.0; //Optional
+  polyrect.Rx:=20.0;
+  polyrect.Ry:=20.0; //Optional
   polyrect.Init;
 
   polyelipse := TglvgCircle.Create();
   polyelipse.X := 600;
   polyelipse.Y := 200;
-  //polyelipse.Rx := 50;
-  //polyelipse.Ry := 25;
-  polyelipse.Radius := 10;
+  polyelipse.Rx := 50;
+  polyelipse.Ry := 25;
+  //polyelipse.Radius := 100;
   polyelipse.Init;
 
 end;
