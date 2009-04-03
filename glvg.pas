@@ -151,7 +151,7 @@ TglvgObject = class
   public
     Constructor Create();
     Destructor Destroy(); override;
-    procedure Init;
+    procedure Init; virtual;
     procedure Render;
     property name: string read fname write fname;
 end;
@@ -166,14 +166,36 @@ TglvgRect = class(TglvgObject)
     Fry: Single;
   public
     Constructor Create();
-    Destructor Destroy(); override;
-    procedure Init;
+    procedure Init; override;
     property X: single read Fx write Fx;
     property Y: single read Fy write Fy;
     property Width: single read Fwidth write Fwidth;
     property Height: single read Fheight write Fheight;
     property Rx: single read Frx write Frx;
     property Ry: single read Fry write Fry;
+end;
+
+TglvgElipse = class(TglvgObject)
+  private
+    Fx: Single;
+    Fy: Single;
+    Frx: Single;
+    Fry: Single;
+  public
+    Constructor Create();
+    procedure Init; override;
+    property X: single read Fx write Fx;
+    property Y: single read Fy write Fy;
+    property Rx: single read Frx write Frx;
+    property Ry: single read Fry write Fry;
+end;
+
+TglvgCircle = class(TglvgElipse)
+  private
+    procedure SetRadius(AValue: Single);
+    function  GetRadius(): single;
+  public
+    property Radius: single read GetRadius write SetRadius;
 end;
 
 implementation
@@ -231,11 +253,6 @@ begin
 
 end;
 
-destructor TglvgRect.Destroy;
-begin
-  inherited Destroy;
-end;
-
 procedure TglvgRect.Init;
 begin
   FPolyShape.Path:=
@@ -259,6 +276,60 @@ begin
     ' '+FloatToStr(Fx+FWidth-Frx)+' '+FloatToStr(Fy)+
 
     ' Z';
+end;
+
+//TglvgElipse
+
+constructor TglvgElipse.Create;
+begin
+  inherited Create;
+  Fx:= 0.0;
+  Fy:= 0.0;
+  Frx:= 0.0;
+  Fry:= 0.0;
+end;
+
+procedure TglvgElipse.Init;
+var
+  AWidth: single;
+  AHeight: single;
+  AX: single;
+  AY: single;
+begin
+
+ ax:=x-frx;
+ ay:=y-fry;
+ aWidth:= Frx*2;
+ aHeight:= Fry*2;
+
+FPolyShape.Path:=
+
+    'M '+FloatToStr(ax+Frx)+' '+FloatToStr(ay)+
+    ' Q '+FloatToStr(ax)+' '+FloatToStr(ay)+
+    ' '+FloatToStr(ax)+' '+FloatToStr(ay+Fry)+
+
+    ' Q '+FloatToStr(ax)+' '+FloatToStr(ay+aHeight)+
+    ' '+FloatToStr(ax+Frx)+' '+FloatToStr(ay+aHeight)+
+
+    ' Q '+FloatToStr(ax+aWidth)+' '+FloatToStr(ay+aHeight)+
+    ' '+FloatToStr(ax+aWidth)+' '+FloatToStr(ay+aHeight-Fry)+
+
+    ' Q '+FloatToStr(ax+aWidth)+' '+FloatToStr(ay)+
+    ' '+FloatToStr(ax+aWidth-Frx)+' '+FloatToStr(ay)+
+
+    ' Z';
+end;
+
+//TglvgCircle
+procedure TglvgCircle.SetRadius(AValue: single);
+begin
+  Frx := AValue;
+  Fry := AValue;
+end;
+
+function TglvgCircle.GetRadius;
+begin
+  result := Frx;
 end;
 
 //TPath

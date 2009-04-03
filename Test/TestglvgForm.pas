@@ -52,6 +52,7 @@ var
   polystar: TPolygon;
   polyfont: TPolygonFont;
   polyrect: TglvgRect;
+  polyelipse: TglvgCircle;
 
 //TOpenGLRender
 destructor TOpenGLRender.Destroy;
@@ -86,7 +87,7 @@ begin
   // Activate RenderContext
   ActivateRenderingContext(DC, RC);
 
-  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 6400, 0, 4800);
+  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 6400, 0, 6400);
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
   // track material ambient and diffuse from surface color, call it before glEnable(GL_COLOR_MATERIAL)
@@ -160,6 +161,14 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Ry:=10.0; //Optional
   polyrect.Init;
 
+  polyelipse := TglvgCircle.Create();
+  polyelipse.X := 600;
+  polyelipse.Y := 200;
+  //polyelipse.Rx := 50;
+  //polyelipse.Ry := 25;
+  polyelipse.Radius := 10;
+  polyelipse.Init;
+
 end;
 
 procedure TOpenGLRender.Draw;
@@ -198,6 +207,8 @@ begin
   //polygon render
   polystar.Render;
   polystar.RenderPath;
+
+  polyelipse.Render;
 
   glrotatef(angle,0,0,1);
   polyrect.Render;
