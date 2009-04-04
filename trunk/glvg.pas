@@ -146,12 +146,14 @@ TPolygonFont = class
         FScale: single;
         FFontHeight: single;
         FFontWidth: single;
+        FStyle: TStyle;
      public
         procedure LoadFromFile(AValue: string);
         procedure RenderChar(AValue: char);
         procedure RenderString(AValue: string);
         property Name: string read FName write FName;
         property Scale: single read FScale write FScale;
+        property Style: TStyle read FStyle write FStyle;
      end;
 
 TglvgObject = class
@@ -247,6 +249,7 @@ TglvgText = class(TglvgObject)
 private
   FFont: TPolygonFont;
   FText: string;
+  FStyle: TStyle;
   FX: single;
   FY: single;
 public
@@ -257,6 +260,7 @@ public
   property Y: single read Fy write Fy;
   property Font: TPolygonFont read FFont write FFont;
   property Text: string read FText write FText;
+  property Style: TStyle read FStyle write FStyle;
 end;
 
 TglvgTextPath = class(TglvgText)
@@ -429,12 +433,15 @@ end;
 constructor TglvgText.Create;
 begin
   inherited Create;
+  FStyle := TStyle.Create;
   FFont := TPolygonFont.Create;
+  FFont.Style := FStyle;
 end;
 
 destructor TglvgText.Destroy;
 begin
   FFont.Free;
+  FStyle.Free;
   inherited Destroy;
 end;
 
@@ -1559,7 +1566,7 @@ begin
     gltranslatef(0,-FFontHeight  ,0);
 
     FCharGlyph[ord(AValue)].Render;
-    //FCharGlyph[ord(AValue)].RenderPath;
+    FCharGlyph[ord(AValue)].RenderPath;
 
   glpopmatrix();
   
@@ -1595,9 +1602,10 @@ begin
   for loop := 0 to 255 do
   begin
     FCharGlyph[loop] := TPolygon.Create(nil);
-    FCharGlyph[loop].Style.SetColor(0.0,0.0,1.0,1.0);
-    FCharGlyph[loop].Style.SetLineColor(1.0,1.0,1.0,1.0);
-    FCharGlyph[loop].Style.LineWidth:= 1.0;
+    //FCharGlyph[loop].Style.SetColor(0.0,0.0,1.0,1.0);
+    //FCharGlyph[loop].Style.SetLineColor(1.0,1.0,1.0,1.0);
+    //FCharGlyph[loop].Style.LineWidth:= 1.0;
+    FCharGlyph[loop].Style:=FStyle;
 
     // Get glyphs' strokes per char
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) then

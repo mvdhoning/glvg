@@ -50,7 +50,6 @@ uses glvg;
 
 var
   polystar: TPolygon;
-  polyfont: TPolygonFont;
   polyrect: TglvgRect;
   polyelipse: TglvgCircle;
   polyline: TglvgLine;
@@ -151,9 +150,9 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   //polystar.Path := 'M200,300 Q400,50 600,300 T1000,300';
 
 
-  polyfont := TPolygonfont.Create();
-  polyfont.LoadFromFile('font.txt');
-  polyfont.Scale := 0.05; //TODO: Should be related to font-size?
+  //polyfont := TPolygonfont.Create();
+  //polyfont.LoadFromFile('font.txt');
+  //polyfont.Scale := 0.05; //TODO: Should be related to font-size?
 
   polyrect := TglvgRect.Create;
   polyrect.X:= 1.0;
@@ -183,9 +182,31 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polytext := TglvgText.Create;
   polytext.X := 100;
   polytext.Y := 100;
-  polytext.Font.LoadFromFile('arial.txt');
+  polytext.Style.SetColor(1,0,0,1);
+  polytext.Style.SetLineColor(1,0,0,1);
+
+  with polytext.Style.GradColorPoint1 do
+  begin
+    r:=1.0;
+    g:=1.0;
+    b:=0.0;
+    a:=0.0;
+  end;
+
+  with polytext.Style.GradColorPoint2 do
+  begin
+    r:=0.0;
+    g:=0.0;
+    b:=1.0;
+    a:=0.0;
+  end;
+
+  polytext.Style.GradColorAngle:=90;
+  //polytext.Font.Style.SetColor(0,0,1,1);
+  polytext.Font.LoadFromFile('font.txt');
   polytext.Font.Scale := 0.05; //TODO: Should be related to font-size?
-  polytext.Text := 'Testing';
+  polytext.Text := 'Hello World';
+  polytext.LineWidth:=2.0;
 
 end;
 
@@ -209,12 +230,12 @@ begin
   angle:=angle+1;
 
   //vector font
-  gltranslatef(10,10,0);
+  //gltranslatef(10,10,0);
   //polyfont.RenderChar('A');
-  polyfont.RenderString(polyfont.Name);
+  //polyfont.RenderString(polyfont.Name);
 
-  gltranslatef(10,100,0);
-  polyfont.RenderString('Hello World');
+  //gltranslatef(10,100,0);
+  //polyfont.RenderString('Hello World');
 
 
 //  glTranslatef(-80.3122, -226.2716, 0.0); //for cat drawing
@@ -243,8 +264,13 @@ end;
 
 procedure TOpenGLRender.Stop;
 begin
-  polyfont.Free;
+
   polystar.Free;
+  polyrect.Free;
+  polyelipse.Free;
+  polyline.Free;
+  polytext.Free;
+
   DeactivateRenderingContext; // Deactivate RenderContext
   wglDeleteContext(RC); //Delete RenderContext
   ReleaseDC(Handle, DC);
