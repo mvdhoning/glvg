@@ -109,9 +109,9 @@ begin
 
   //PATHPOLYGON TEST
   polystar := TPolygon.Create(nil);
-  polystar.SetColor(1,0,0,1);     //first set color etc
-  polystar.LineWidth := 1.0;
-  polystar.SetLineColor(1,1,1,1);
+  polystar.Style.SetColor(1,0,0,1);     //first set color etc
+  polystar.Style.LineWidth := 1.0;
+  polystar.Style.SetLineColor(1,1,1,1);
 
 //  polystar.Path := 'M100,200 C100,100 400,100 400,200'; //only then path
 
@@ -162,11 +162,11 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Init;
 
   polyelipse := TglvgCircle.Create();
-  polyelipse.X := 600;
+  polyelipse.X := 400;
   polyelipse.Y := 200;
-  polyelipse.Rx := 50;
-  polyelipse.Ry := 25;
-  //polyelipse.Radius := 100;
+  //polyelipse.Rx := 50;
+  //polyelipse.Ry := 25;
+  polyelipse.Radius := 100;
   polyelipse.Init;
 
 end;

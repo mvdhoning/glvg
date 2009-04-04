@@ -66,6 +66,30 @@ public
   property Count: integer read FCount;
 end;
 
+TStyle = class
+private
+  FColor: TPoint;
+  FLineColor: TPoint;
+  FGradColorAngle: single;  //TODO: consider gradient to be a seperate class
+  FGradColorPoint1: TPoint; //TODO: should be dynamic array to support better gradients
+  FGradColorPoint2: TPoint; //TODO: should be dynamic array to support better gradients
+  FLineWidth: single;
+public
+  constructor Create();
+//  destructor Destroy(); override;
+  property GradColorAngle: single read FGradColorAngle write FGradColorAngle;
+  property GradColorPoint1: TPoint read FGradColorPoint1 write FGradColorPoint1;
+  property GradColorPoint2: TPoint read FGradColorPoint2 write FGradColorPoint2;
+  property Color: TPoint read FColor write FColor;
+  property LineColor: TPoint read FLineColor write FLineColor;
+  property LineWidth: single read FLineWidth  write FLineWidth;
+  function TrigGLTriangle(value: single): single;
+  function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
+  function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
+  procedure SetColor(aR: single; aG: single; aB: single;aA: single);
+  procedure SetLineColor(aR: single; aG: single; aB: single;aA: single);
+end;
+
 TPolygon = class(TComponent)
 private
   FcPath: TPath;            //Outline
@@ -74,20 +98,17 @@ private
   FExtrudeDepth: single;
   F3DVertex: array of TPoint; //3d extruded mesh
   F3DVertexCount: integer;
-  FColor: TPoint;
-  FLineColor: TPoint;
+
+  FStyle: TStyle;
+
   FCount: integer;
   FVertexCount: integer;
   FTesselated: boolean;
 
-  FGradColorAngle: single;  //TODO: consider gradient to be a seperate class
-  FGradColorPoint1: TPoint; //TODO: should be dynamic array to support better gradients
-  FGradColorPoint2: TPoint; //TODO: should be dynamic array to support better gradients
-
   FBoundBoxMinPoint: TPoint;
   FBoundBoxMaxPoint: TPoint;
 
-  FLineWidth: single;
+
 
   procedure SetPoint(I: integer; Value: TPoint);
   procedure AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
@@ -98,15 +119,10 @@ private
   procedure tessVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
   function GetPathText: string;
   procedure SetPathText(AValue: string);
-
-  function TrigGLTriangle(value: single): single;
-  function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
-  function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
-
 public
   constructor Create(AOwner: TComponent); reintroduce; overload;
   destructor Destroy(); reintroduce; overload;
-  procedure SetColor(R: single; G: single; B: single;A: single);
+
   procedure Add(X: single; Y: single); overload;
   procedure Add(X: single; Y: single; Z: single); overload;
   procedure Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single); overload;
@@ -121,11 +137,9 @@ public
   property Points[I: integer]: TPoint read GetPoint write SetPoint;
   property Count: integer read GetCount;
   property ExtrudeDepth: single read FExtrudeDepth write FExtrudeDepth;
-  property GradColorAngle: single read FGradColorAngle write FGradColorAngle;
-  property GradColorPoint1: TPoint read FGradColorPoint1 write FGradColorPoint1;
-  property GradColorPoint2: TPoint read FGradColorPoint2 write FGradColorPoint2;
-  property LineWidth: single read FLineWidth  write FLineWidth;
-  procedure SetLineColor(R: single; G: single; B: single;A: single);
+  //property LineWidth: single read FLineWidth  write FLineWidth;
+  property Style: TStyle read FStyle write FStyle;
+  //procedure SetLineColor(aR: single; aG: single; aB: single;aA: single);
 end;
 
 TPolygonFont = class
@@ -218,9 +232,9 @@ begin
   inherited create();
   FPolyShape:= TPolygon.Create(nil);
 
-  FPolyShape.SetColor(1,0,0,0.5);     //first set color etc
-  FPolyShape.LineWidth := 1.0;
-  FPolyShape.SetLineColor(1,1,1,1);
+  FPolyShape.Style.SetColor(1,0,0,0.5);     //first set color etc
+  FPolyShape.Style.LineWidth := 1.0;
+  FPolyShape.Style.SetLineColor(1,1,1,1);
 end;
 
 destructor TglvgObject.Destroy;
@@ -291,10 +305,6 @@ end;
 
 procedure TglvgElipse.Init;
 var
-  AWidth: single;
-  AHeight: single;
-  AX: single;
-  AY: single;
   temppath: string;
   angle: single;
   vectorx: single;
@@ -302,68 +312,29 @@ var
   vectorx1: single;
   vectory1: single;
 begin
-
- ax:=x-frx;
- ay:=y-fry;
- aWidth:= Frx*2;
- aHeight:= Fry*2;
-
- // draw a circle from a bunch of short lines
-  vectorY1:=FY+fry;
-  vectorX1:=FX+frx;
-
-//  glBegin(GL_LINE_STRIP);
-
-    angle:=0.0*pi;//start point arc (0.0 for a complete circle)
-
+  // draw a circle from a bunch of short lines
+  angle:=0.0*pi; //start point arc (0.0 for a complete circle)
   vectorX:=FX+(Frx*sin(angle));
   vectorY:=FY+(Fry*cos(angle));
-
-//  temppath:='M '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
-
   vectorY1:=vectorY;
   vectorX1:=vectorX;
 
   temppath:='M '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
 
   angle := angle + 0.01;
-
-
-
-    while angle < 2.0*pi do   //to endpoint arc (2.0 make a complete circle)
-    begin
-      vectorX:=FX+(Frx*sin(angle));
-      vectorY:=FY+(Fry*cos(angle));
-//      glVertex2d(vectorX1,vectorY1);
-      temppath:=temppath+' L '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
-      vectorY1:=vectorY;
-      vectorX1:=vectorX;
-      angle := angle + 0.01;
-    end;
+  while angle < 2.0*pi do   //to endpoint arc (2.0 make a complete circle)
+  begin
+    vectorX:=FX+(Frx*sin(angle));
+    vectorY:=FY+(Fry*cos(angle));
     temppath:=temppath+' L '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
-    //    glVertex2d(vectorX1,vectorY1); //and close it
-  //glEnd();
-     temppath:=temppath + ' Z';
-     FPolyShape.Path := temppath;
+    vectorY1:=vectorY;
+    vectorX1:=vectorX;
+    angle := angle + 0.01;
+  end;
+  temppath:=temppath+' L '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
+  temppath:=temppath + ' Z';
 
- (*
-FPolyShape.Path:=
-
-    'M '+FloatToStr(ax+Frx)+' '+FloatToStr(ay)+
-    ' Q '+FloatToStr(ax)+' '+FloatToStr(ay)+
-    ' '+FloatToStr(ax)+' '+FloatToStr(ay+Fry)+
-
-    ' Q '+FloatToStr(ax)+' '+FloatToStr(ay+aHeight)+
-    ' '+FloatToStr(ax+Frx)+' '+FloatToStr(ay+aHeight)+
-
-    ' Q '+FloatToStr(ax+aWidth)+' '+FloatToStr(ay+aHeight)+
-    ' '+FloatToStr(ax+aWidth)+' '+FloatToStr(ay+aHeight-Fry)+
-
-    ' Q '+FloatToStr(ax+aWidth)+' '+FloatToStr(ay)+
-    ' '+FloatToStr(ax+aWidth-Frx)+' '+FloatToStr(ay)+
-
-    ' Z';
-*)
+  FPolyShape.Path := temppath;
 end;
 
 //TglvgCircle
@@ -807,12 +778,30 @@ begin
   end;
 end;
 
-//TPolygon
+//TStyle
+
+constructor TStyle.Create;
+begin
+  FGradColorAngle := 1; //1..89
+  FGradColorPoint1.x:=0.0; //min boundbox x
+  FGradColorPoint1.y:=0.0; //min boundbox y
+  FGradColorPoint1.r:=0.0;
+  FGradColorPoint1.g:=1.0;
+  FGradColorPoint1.b:=0.0;
+
+  //point must make a square (e.g. bounding box of polygon)
+
+  FGradColorPoint2.x:=1.0; //max boundbox x;
+  FGradColorPoint2.y:=1.0; //max boundbox y;
+  FGradColorPoint2.r:=1.0;
+  FGradColorPoint2.g:=0.0;
+  FGradColorPoint2.b:=0.0;
+end;
 
 const
  TRIG_FUNCTABLE_SIZE: integer =	1024;
 
-function TPolygon.TrigGLTriangle(value: single): single;
+function TStyle.TrigGLTriangle(value: single): single;
 var
   temp: integer;
 begin
@@ -829,7 +818,7 @@ begin
 
 end;
 
-function TPolygon.CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
+function TStyle.CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
 var
   HeightDistance: single;
   WidthDistance: single;
@@ -861,7 +850,7 @@ begin
 
 end;
 
-function TPolygon.CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
+function TStyle.CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
 var
   HeightDistance: single;
   WidthDistance: single;
@@ -889,6 +878,30 @@ begin
   result:=gradbeginAlpha *  (1.0 - CurPos) + GradEndAlpha * CurPos;
 end;
 
+procedure TStyle.SetColor(aR: single; aG: single; aB: single;aA: single);
+begin
+  with FColor do
+  begin
+    r := aR;
+    g := aG;
+    b := aB;
+    a := aA;
+ end;
+end;
+
+procedure TStyle.SetLineColor(aR: single; aG: single; aB: single;aA: single);
+begin
+  with FLineColor do
+  begin
+    r := aR;
+    g := aG;
+    b := aB;
+    a := aA;
+  end;
+end;
+
+//TPolygon
+
   function TPolygon.GetPathText: string;
   begin
     result := FcPath.Text;
@@ -913,8 +926,8 @@ end;
   var
     loop: integer;
   begin
-    glcolor3f(FLineColor.R,FLineColor.G,FLineColor.B);
-    glLineWidth(FLineWidth);
+    glcolor3f(FStyle.LineColor.R,FStyle.LineColor.G,FStyle.LineColor.B);
+    glLineWidth(FStyle.LineWidth);
 
     //Draw Path
     glBegin(GL_LINES);
@@ -925,21 +938,7 @@ end;
     glEnd();
   end;
 
-procedure TPolygon.SetColor(R: single; G: single; B: single;A: single);
-begin
-  FColor.r := R;
-  FColor.g := G;
-  FColor.b := B;
-  FColor.a := A;
-end;
 
-procedure TPolygon.SetLineColor(R: single; G: single; B: single;A: single);
-begin
-  FLineColor.r := R;
-  FLineColor.g := G;
-  FLineColor.b := B;
-  FLineColor.a := A;
-end;
 
 
 procedure TPolygon.tessBegin(which: GLenum);
@@ -983,33 +982,19 @@ begin
   FCount := 0;
   FVertexCount := 0;
   FTesselated := false;
-  FColor.R := 0.0;
-  FColor.G := 0.0;
-  FColor.B := 0.0;
-  FColor.A := 0.0;
+
+  FStyle := TStyle.Create;
 
   FExtrudeDepth := 0.0;
 
-  FGradColorAngle := 1; //1..89
-  FGradColorPoint1.x:=0.0; //min boundbox x
-  FGradColorPoint1.y:=0.0; //min boundbox y
-  FGradColorPoint1.r:=0.0;
-  FGradColorPoint1.g:=1.0;
-  FGradColorPoint1.b:=0.0;
 
-  //point must make a square (e.g. bounding box of polygon)
-
-  FGradColorPoint2.x:=1.0; //max boundbox x;
-  FGradColorPoint2.y:=1.0; //max boundbox y;
-  FGradColorPoint2.r:=1.0;
-  FGradColorPoint2.g:=0.0;
-  FGradColorPoint2.b:=0.0;
 
 end;
 
 destructor TPolygon.Destroy();
 begin
   FcPath.Free;
+  FStyle.Free;
   FTesselated := false;
   FCount := 0;
   FVertexCount := 0;
@@ -1045,7 +1030,7 @@ begin
   FPoints[FCount-1].Y := Y;
   FPoints[FCount-1].Z := 0.0;
 
-  CurColor:=FColor;
+  CurColor:=FStyle.Color;
 
   FPoints[FCount-1].R := CurColor.R;
   FPoints[FCount-1].G := CurColor.G;
@@ -1061,10 +1046,10 @@ begin
   FPoints[FCount-1].X := X;
   FPoints[FCount-1].Y := Y;
   FPoints[FCount-1].Z := Z;
-  FPoints[FCount-1].R := FColor.R;
-  FPoints[FCount-1].G := FColor.G;
-  FPoints[FCount-1].B := FColor.B;
-  FPoints[FCount-1].A := FColor.A;
+  FPoints[FCount-1].R := FStyle.Color.R;
+  FPoints[FCount-1].G := FStyle.Color.G;
+  FPoints[FCount-1].B := FStyle.Color.B;
+  FPoints[FCount-1].A := FStyle.Color.A;
 end;
 
 procedure TPolygon.Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single);
@@ -1120,14 +1105,20 @@ var
   loop: integer;
   CurColor: TPoint;
 begin
-  FGradColorPoint1.x := FBoundBoxMinPoint.x;
-  FGradColorPoint1.y := FBoundBoxMinPoint.y;
-  FGradColorPoint2.x := FBoundBoxMaxPoint.x;
-  FGradColorPoint2.y := FBoundBoxMaxPoint.y;
+  with FStyle.GradColorPoint1 do
+  begin
+    x := FBoundBoxMinPoint.x;
+    y := FBoundBoxMinPoint.y;
+  end;
+  with FStyle.GradColorPoint2 do
+  begin
+    x := FBoundBoxMaxPoint.x;
+    y := FBoundBoxMaxPoint.y;
+  end;
 
   for loop:=0 to FCount-1 do
   begin
-    CurColor:=CalcGradColor(FPoints[loop].x, FPoints[loop].y, FGradColorPoint1, FGradColorPoint2, FGradColorPoint1.x, FGradColorPoint1.y, FGradColorPoint2.x, FGradColorPoint2.y, FGradColorAngle);
+    CurColor:=FStyle.CalcGradColor(FPoints[loop].x, FPoints[loop].y, FStyle.GradColorPoint1, FStyle.GradColorPoint2, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
     FPoints[loop].r := CurColor.r;
     FPoints[loop].g := CurColor.g;
     FPoints[loop].b := CurColor.b;
@@ -1501,9 +1492,9 @@ begin
   for loop := 0 to 255 do
   begin
     FCharGlyph[loop] := TPolygon.Create(nil);
-    FCharGlyph[loop].SetColor(0.0,0.0,1.0,1.0);
-    FCharGlyph[loop].SetLineColor(1.0,1.0,1.0,1.0);
-    FCharGlyph[loop].LineWidth:= 1.0;
+    FCharGlyph[loop].Style.SetColor(0.0,0.0,1.0,1.0);
+    FCharGlyph[loop].Style.SetLineColor(1.0,1.0,1.0,1.0);
+    FCharGlyph[loop].Style.LineWidth:= 1.0;
 
     // Get glyphs' strokes per char
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) then
