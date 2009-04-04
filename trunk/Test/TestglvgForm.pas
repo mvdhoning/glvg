@@ -53,6 +53,9 @@ var
   polyfont: TPolygonFont;
   polyrect: TglvgRect;
   polyelipse: TglvgCircle;
+  polyline: TglvgLine;
+  polytext: TglvgText;
+
 
 //TOpenGLRender
 destructor TOpenGLRender.Destroy;
@@ -167,7 +170,22 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   //polyelipse.Rx := 50;
   //polyelipse.Ry := 25;
   polyelipse.Radius := 100;
+  polyelipse.LineWidth := 2.0;
   polyelipse.Init;
+
+  polyline := TglvgLine.Create;
+  polyline.X1 := 100;
+  polyline.Y1 := 300;
+  polyline.X2 := 300;
+  polyline.Y2 := 100;
+  polyline.Init;
+
+  polytext := TglvgText.Create;
+  polytext.X := 100;
+  polytext.Y := 100;
+  polytext.Font.LoadFromFile('arial.txt');
+  polytext.Font.Scale := 0.05; //TODO: Should be related to font-size?
+  polytext.Text := 'Testing';
 
 end;
 
@@ -209,6 +227,12 @@ begin
   polystar.RenderPath;
 
   polyelipse.Render;
+
+  polyline.Render;
+
+  polytext.Render;
+
+  //rotate rounded rectangle
 
   glrotatef(angle,0,0,1);
   polyrect.Render;
