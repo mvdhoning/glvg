@@ -40,7 +40,7 @@ TPoint = packed record
   a: single;
 end;
 
-//TODO: use TPath inside svg group?
+
 //TODO: implement basic svg shapes using paths.
 //http://www.w3.org/TR/SVG11/paths.html
 
@@ -108,8 +108,6 @@ private
   FBoundBoxMinPoint: TPoint;
   FBoundBoxMaxPoint: TPoint;
 
-
-
   procedure SetPoint(I: integer; Value: TPoint);
   procedure AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
   function GetPoint(I: integer): TPoint;
@@ -137,9 +135,7 @@ public
   property Points[I: integer]: TPoint read GetPoint write SetPoint;
   property Count: integer read GetCount;
   property ExtrudeDepth: single read FExtrudeDepth write FExtrudeDepth;
-  //property LineWidth: single read FLineWidth  write FLineWidth;
   property Style: TStyle read FStyle write FStyle;
-  //procedure SetLineColor(aR: single; aG: single; aB: single;aA: single);
 end;
 
 TPolygonFont = class
@@ -162,12 +158,15 @@ TglvgObject = class
   private
     FPolyShape: TPolygon;
     FName: string;
+    procedure SetLineWidth(AValue: single);
+    function GetLineWidth(): single;
   public
     Constructor Create();
     Destructor Destroy(); override;
     procedure Init; virtual;
-    procedure Render;
+    procedure Render; virtual;
     property name: string read fname write fname;
+    property LineWidth: single read GetLineWidth write SetLineWidth;
 end;
 
 TglvgRect = class(TglvgObject)
@@ -212,6 +211,59 @@ TglvgCircle = class(TglvgElipse)
     property Radius: single read GetRadius write SetRadius;
 end;
 
+TglvgLine = class(TglvgObject)
+  private
+    Fx1: Single;
+    Fy1: Single;
+    Fx2: Single;
+    Fy2: Single;
+  public
+    Constructor Create();
+    procedure Init; override;
+    property X1: single read Fx1 write Fx1;
+    property Y1: single read Fy1 write Fy1;
+    property X2: single read Fx2 write Fx2;
+    property Y2: single read Fy2 write Fy2;
+end;
+
+TglvgPolyLine = class(TglvgObject) //TODO: implement or use TPolygon directly?
+private
+  points: array of TPoint;
+public
+//perform an absolute moveto operation to the first coordinate pair in the list of points
+//for each subsequent coordinate pair, perform an absolute lineto operation to that coordinate pair
+end;
+
+TglvgPolygon = class(TglvgObject) //TODO: implement or use TPolygon directly?
+private
+  points: array of TPoint;
+public
+//perform an absolute moveto operation to the first coordinate pair in the list of points
+//for each subsequent coordinate pair, perform an absolute lineto operation to that coordinate pair
+//perform a closepath command
+end;
+
+TglvgText = class(TglvgObject)
+private
+  FFont: TPolygonFont;
+  FText: string;
+  FX: single;
+  FY: single;
+public
+  Constructor Create();
+  Destructor Destroy(); override;
+  procedure Render; override;
+  property X: single read Fx write Fx;
+  property Y: single read Fy write Fy;
+  property Font: TPolygonFont read FFont write FFont;
+  property Text: string read FText write FText;
+end;
+
+TglvgTextPath = class(TglvgText)
+private
+public
+end;
+
 implementation
 
 uses math, sysutils;
@@ -231,10 +283,6 @@ constructor TglvgObject.Create();
 begin
   inherited create();
   FPolyShape:= TPolygon.Create(nil);
-
-  FPolyShape.Style.SetColor(1,0,0,0.5);     //first set color etc
-  FPolyShape.Style.LineWidth := 1.0;
-  FPolyShape.Style.SetLineColor(1,1,1,1);
 end;
 
 destructor TglvgObject.Destroy;
@@ -251,6 +299,16 @@ procedure TglvgObject.Render;
 begin
   FPolyShape.Render;
   FPolyShape.RenderPath;
+end;
+
+procedure TglvgObject.SetLineWidth(AValue: single);
+begin
+  FPolyShape.Style.LineWidth := AValue;
+end;
+
+function TglvgObject.GetLineWidth(): single;
+begin
+  result := FPolyShape.Style.LineWidth;
 end;
 
 //TglvgRect
@@ -347,6 +405,45 @@ end;
 function TglvgCircle.GetRadius;
 begin
   result := Frx;
+end;
+
+//TglvgLine
+
+constructor TglvgLine.Create;
+begin
+  inherited Create;
+  Fx1:= 0.0;
+  Fy1:= 0.0;
+  Fx2:= 0.0;
+  Fy2:= 0.0;
+end;
+
+procedure TglvgLine.Init;
+begin
+  FPolyShape.Path := 'M '+FloatToStr(Fx1)+ ' '+FloatToStr(Fy1)+
+                     'L '+FloatToStr(Fx2)+ ' '+FloatToStr(Fy2);
+end;
+
+//TglvgText
+
+constructor TglvgText.Create;
+begin
+  inherited Create;
+  FFont := TPolygonFont.Create;
+end;
+
+destructor TglvgText.Destroy;
+begin
+  FFont.Free;
+  inherited Destroy;
+end;
+
+procedure TglvgText.Render;
+begin
+  glpushmatrix();
+    gltranslatef(Fx,Fy,0);
+    ffont.RenderString(FText);
+  glpopmatrix();
 end;
 
 //TPath
@@ -782,6 +879,12 @@ end;
 
 constructor TStyle.Create;
 begin
+  inherited Create;
+
+  SetColor(1,0,0,0.5);     //first set color etc
+  FLineWidth := 1.0;
+  SetLineColor(1,1,1,1);
+
   FGradColorAngle := 1; //1..89
   FGradColorPoint1.x:=0.0; //min boundbox x
   FGradColorPoint1.y:=0.0; //min boundbox y
