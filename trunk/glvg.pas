@@ -160,15 +160,16 @@ TglvgObject = class
   private
     FPolyShape: TPolygon;
     FName: string;
-    procedure SetLineWidth(AValue: single);
-    function GetLineWidth(): single;
+    procedure SetStyle(AValue: TStyle);
+    function GetStyle(): TStyle;
   public
     Constructor Create();
     Destructor Destroy(); override;
     procedure Init; virtual;
     procedure Render; virtual;
     property name: string read fname write fname;
-    property LineWidth: single read GetLineWidth write SetLineWidth;
+    //property LineWidth: single read GetLineWidth write SetLineWidth;
+    property Style: TStyle read GetStyle write SetStyle;
 end;
 
 TglvgRect = class(TglvgObject)
@@ -305,14 +306,14 @@ begin
   FPolyShape.RenderPath;
 end;
 
-procedure TglvgObject.SetLineWidth(AValue: single);
+procedure TglvgObject.SetStyle(AValue: TStyle);
 begin
-  FPolyShape.Style.LineWidth := AValue;
+  FPolyShape.Style := AValue;
 end;
 
-function TglvgObject.GetLineWidth(): single;
+function TglvgObject.GetStyle(): TStyle;
 begin
-  result := FPolyShape.Style.LineWidth;
+  result := FPolyShape.Style;
 end;
 
 //TglvgRect
