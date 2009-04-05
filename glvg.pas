@@ -892,7 +892,7 @@ begin
   FLineWidth := 1.0;
   SetLineColor(1,1,1,1);
 
-  FGradColorAngle := 1; //1..89
+  FGradColorAngle := 0; 
   FGradColorPoint1.x:=0.0; //min boundbox x
   FGradColorPoint1.y:=0.0; //min boundbox y
   FGradColorPoint1.r:=0.0;
@@ -1338,7 +1338,7 @@ begin
     F3DVertex[loop+(FVertexCount)]:=FVertex[FVertexCount-loop-1];
     F3DVertex[loop+(FVertexCount)].Z:=F3DVertex[loop+(FVertexCount)].Z-FExtrudeDepth;
   end;
-  
+
 (*
   newindex:=(FVertexCount*2);
 
@@ -1388,7 +1388,7 @@ begin
 
   end;
   *)
-  
+
 end;
 
 Procedure TPolygon.RenderExtruded();
@@ -1569,7 +1569,7 @@ begin
     FCharGlyph[ord(AValue)].RenderPath;
 
   glpopmatrix();
-  
+
   glTranslatef((FCharWidth[ord(AValue)]*FSCALE), 0, 0);
   end;
 
@@ -1617,7 +1617,8 @@ begin
       if FFontHeight < FCharGlyph[loop].FBoundBoxMaxPoint.y then
         FFontHeight := FCharGlyph[loop].FBoundBoxMaxPoint.y;
 
-      FCharGlyph[loop].ApplyGradFill();
+      if FCharGlyph[loop].Style.FGradColorAngle > 0 then
+        FCharGlyph[loop].ApplyGradFill();
       //FCharGlyph[loop].Tesselate; //Do automatic tesselate...
       //FCharGlyph[loop].Extrude(); //Only flat font by default
     end;
