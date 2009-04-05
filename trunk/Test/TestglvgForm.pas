@@ -244,10 +244,11 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   pt2 := TglvgText.Create;
   pt2.X:=10;
   pt2.Y:=10;
+  pt2.Style.SetColor(1,1,1,0.5);
   pt2.Font.LoadFromFile('times.txt');
-  pt2.Font.Scale := 0.05; //TODO: Should be related to font-size?
+  pt2.Font.Scale := 0.2; //TODO: Should be related to font-size?
   pt2.Text:=FloatTostr(fFPS)+ ' fps';
-  pt2.LineWidth:=4.0;
+  //pt2.LineWidth:=1.0;
 
   // Enable or Disable V-Sync
   VSync := vsmSync;
@@ -299,7 +300,7 @@ begin
 
   pt2.Text:=FloatTostr(Round(fFPS))+ ' fps';
   pt2.Render;
-  polytext.Render;
+  //polytext.Render;
 
 
   //rotate rounded rectangle
@@ -309,6 +310,7 @@ begin
 
   //swap buffer (aka draw)
   SwapBuffers(DC);
+
 
   //fps calculation ...
   inc(fFrames);
