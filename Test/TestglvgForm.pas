@@ -26,6 +26,10 @@ type
     fOptions: TRCOptions;
     fPixelDepth: byte;
     fDepthBuffer: byte;
+
+    fStartTick : Cardinal;
+    fFrames    : Integer;
+    fFPS       : Single;
   public
     destructor Destroy; override;
     procedure Init;
@@ -54,7 +58,34 @@ var
   polyelipse: TglvgCircle;
   polyline: TglvgLine;
   polytext: TglvgText;
+  pt2: TglvgText;
 
+type
+  TVSyncMode = (vsmSync, vsmNoSync);
+
+var
+  VSync: TVSyncMode;
+
+{-------------------------------------------------------------------}
+{ V-Sync
+{ Ok for all system windows 32                                      }
+{-------------------------------------------------------------------}
+procedure VBL2(vsync : TVSyncMode);
+var
+   i : Integer;
+begin
+   if WGL_EXT_swap_control then
+   begin
+      i := wglGetSwapIntervalEXT;
+      case VSync of
+         vsmSync    : if i<>1 then wglSwapIntervalEXT(1);
+         vsmNoSync  : if i<>0 then wglSwapIntervalEXT(0);
+      else
+         Assert(False);
+      end;
+   end;
+
+end;
 
 //TOpenGLRender
 destructor TOpenGLRender.Destroy;
@@ -88,6 +119,8 @@ begin
   RC := CreateRenderingContext(DC, fOptions, fPixelDepth, fDepthBuffer, 0, 0, 0, 0);
   // Activate RenderContext
   ActivateRenderingContext(DC, RC);
+
+  fStartTick := GetTickCount; //Init FPS.
 
   glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 6400, 0, 6400);
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
@@ -208,6 +241,19 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polytext.Text := 'Hello World';
   polytext.LineWidth:=2.0;
 
+  pt2 := TglvgText.Create;
+  pt2.X:=10;
+  pt2.Y:=10;
+  pt2.Font.LoadFromFile('times.txt');
+  pt2.Font.Scale := 0.05; //TODO: Should be related to font-size?
+  pt2.Text:=FloatTostr(fFPS)+ ' fps';
+  pt2.LineWidth:=4.0;
+
+  // Enable or Disable V-Sync
+  VSync := vsmSync;
+  //VSync := vsmNoSync;
+  VBL2(VSync);
+
 end;
 
 procedure TOpenGLRender.Draw;
@@ -251,7 +297,10 @@ begin
 
   polyline.Render;
 
+  pt2.Text:=FloatTostr(Round(fFPS))+ ' fps';
+  pt2.Render;
   polytext.Render;
+
 
   //rotate rounded rectangle
 
@@ -260,6 +309,17 @@ begin
 
   //swap buffer (aka draw)
   SwapBuffers(DC);
+
+  //fps calculation ...
+  inc(fFrames);
+
+  if GetTickCount - fStartTick >= 500 then
+  begin
+    fFPS       := fFrames/(GetTickCount-fStartTick)*1000;
+    fFrames    := 0;
+    fStartTick := GetTickCount
+  end;
+
 end;
 
 procedure TOpenGLRender.Stop;
@@ -270,6 +330,7 @@ begin
   polyelipse.Free;
   polyline.Free;
   polytext.Free;
+  pt2.Free;
 
   DeactivateRenderingContext; // Deactivate RenderContext
   wglDeleteContext(RC); //Delete RenderContext
