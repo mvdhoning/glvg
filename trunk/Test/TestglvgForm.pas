@@ -107,7 +107,8 @@ end;
 procedure TOpenGLRender.Init;
 const
   light0_position:TGLArrayf4=( -8.0, 8.0, -16.0, 0.0);
-  ambient:  TGLArrayf4=( 0.3, 0.3, 0.3, 0.3);
+  //ambient:  TGLArrayf4=( 0.3, 0.3, 0.3, 0.3);
+  ambient:  TGLArrayf4=( 1, 1, 1, 0);
 var
   mypath: string;
 begin
@@ -244,7 +245,8 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   pt2 := TglvgText.Create;
   pt2.X:=10;
   pt2.Y:=10;
-  pt2.Style.SetColor(1,1,1,0.5);
+//  pt2.Style.SetColor(1,1,1,0.5);
+  pt2.Style.SetColor('#00C4EE');
   pt2.Font.LoadFromFile('times.txt');
   pt2.Font.Scale := 0.2; //TODO: Should be related to font-size?
   pt2.Text:=FloatTostr(fFPS)+ ' fps';
@@ -272,6 +274,7 @@ begin
     // Alpha Blending
   //glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 
 
   angle:=angle+1;

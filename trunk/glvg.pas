@@ -40,7 +40,6 @@ TPoint = packed record
   a: single;
 end;
 
-
 //TODO: implement basic svg shapes using paths.
 //http://www.w3.org/TR/SVG11/paths.html
 
@@ -86,7 +85,8 @@ public
   function TrigGLTriangle(value: single): single;
   function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
   function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
-  procedure SetColor(aR: single; aG: single; aB: single;aA: single);
+  procedure SetColor(aR: single; aG: single; aB: single;aA: single); overload;
+  procedure SetColor(AName: string); overload;
   procedure SetLineColor(aR: single; aG: single; aB: single;aA: single);
 end;
 
@@ -888,7 +888,7 @@ constructor TStyle.Create;
 begin
   inherited Create;
 
-  SetColor(1,0,0,0.5);     //first set color etc
+  SetColor(1,0,0,1.0);     //first set color etc
   FLineWidth := 1.0;
   SetLineColor(1,1,1,1);
 
@@ -996,6 +996,47 @@ begin
     g := aG;
     b := aB;
     a := aA;
+ end;
+end;
+
+procedure TStyle.SetColor(AName: string);
+
+function HexToInt(HexStr: String): Int64;
+var RetVar : Int64;
+    i : byte;
+begin
+  HexStr := UpperCase(HexStr);
+  if HexStr[length(HexStr)] = 'H' then
+     Delete(HexStr,length(HexStr),1);
+  RetVar := 0;
+
+  for i := 1 to length(HexStr) do begin
+      RetVar := RetVar shl 4;
+      if HexStr[i] in ['0'..'9'] then
+         RetVar := RetVar + (byte(HexStr[i]) - 48)
+      else
+         if HexStr[i] in ['A'..'F'] then
+            RetVar := RetVar + (byte(HexStr[i]) - 55)
+         else begin
+            Retvar := 0;
+            break;
+         end;
+  end;
+
+  Result := RetVar;
+end;
+
+
+begin
+  if Aname[1] = '#' then
+  begin
+    with FColor do
+    begin
+     r := HexToInt(Copy(Aname, 2, 2) ) / 254;
+     g := HexToInt(Copy(Aname, 4, 2) ) / 254;
+     b := HexToInt(Copy(Aname, 6, 2) ) / 254;
+     //a := HexToInt(Copy(Aname, 7, 8) ) /255;
+  end;
  end;
 end;
 
