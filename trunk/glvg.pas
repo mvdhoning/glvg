@@ -1608,7 +1608,7 @@ begin
     FCharGlyph[loop].Style:=FStyle;
 
     // Get glyphs' strokes per char
-    if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) then
+    if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) or ( (loop >= ord('0')) and (loop <= ord('9')) )then
     begin
       FCharGlyph[loop].Path := fs.Values[inttostr(loop)];
       FCharGlyph[loop].CalculateBoundBox();
