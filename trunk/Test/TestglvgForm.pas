@@ -300,7 +300,7 @@ begin
 
   pt2.Text:=FloatTostr(Round(fFPS))+ ' fps';
   pt2.Render;
-  //polytext.Render;
+  polytext.Render;
 
 
   //rotate rounded rectangle

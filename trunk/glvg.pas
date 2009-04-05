@@ -1602,10 +1602,8 @@ begin
   for loop := 0 to 255 do
   begin
     FCharGlyph[loop] := TPolygon.Create(nil);
-    //FCharGlyph[loop].Style.SetColor(0.0,0.0,1.0,1.0);
-    //FCharGlyph[loop].Style.SetLineColor(1.0,1.0,1.0,1.0);
-    //FCharGlyph[loop].Style.LineWidth:= 1.0;
     FCharGlyph[loop].Style:=FStyle;
+    FCharGlyph[loop].FcPath.FSplinePrecision := 3; //gpu/cpu friendly and nicely rounded
 
     // Get glyphs' strokes per char
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) or ( (loop >= ord('0')) and (loop <= ord('9')) )then
@@ -1619,8 +1617,6 @@ begin
 
       if FCharGlyph[loop].Style.FGradColorAngle > 0 then
         FCharGlyph[loop].ApplyGradFill();
-      //FCharGlyph[loop].Tesselate; //Do automatic tesselate...
-      //FCharGlyph[loop].Extrude(); //Only flat font by default
     end;
   end;
 
