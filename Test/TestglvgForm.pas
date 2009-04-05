@@ -195,6 +195,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Height:=200.0;
   polyrect.Rx:=20.0;
   polyrect.Ry:=20.0; //Optional
+  polyrect.Style.SetColor(1,0,0,0.5);
   polyrect.Init;
 
   polyelipse := TglvgCircle.Create();
@@ -203,7 +204,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   //polyelipse.Rx := 50;
   //polyelipse.Ry := 25;
   polyelipse.Radius := 100;
-  polyelipse.LineWidth := 2.0;
+  polyelipse.Style.LineWidth := 2.0;
   polyelipse.Init;
 
   polyline := TglvgLine.Create;
@@ -240,7 +241,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polytext.Font.LoadFromFile('font.txt');
   polytext.Font.Scale := 0.05; //TODO: Should be related to font-size?
   polytext.Text := 'Hello World';
-  polytext.LineWidth:=2.0;
+  polytext.Style.LineWidth:=2.0;
 
   pt2 := TglvgText.Create;
   pt2.X:=10;
