@@ -174,23 +174,7 @@ public
   property Style: TStyle read FStyle write FStyle;
 end;
 
-TPolygonFont = class
-     private
-        FCharGlyph: array[0..255] of TPolygon;
-        FCharWidth: array[0..255] of integer;
-        FName: string;
-        FScale: single;
-        FFontHeight: single;
-        FFontWidth: single;
-        FStyle: TStyle;
-     public
-        procedure LoadFromFile(AValue: string);
-        procedure RenderChar(AValue: char);
-        procedure RenderString(AValue: string);
-        property Name: string read FName write FName;
-        property Scale: single read FScale write FScale;
-        property Style: TStyle read FStyle write FStyle;
-     end;
+
 
 TglvgObject = class
   private
@@ -207,6 +191,24 @@ TglvgObject = class
     //property LineWidth: single read GetLineWidth write SetLineWidth;
     property Style: TStyle read GetStyle write SetStyle;
 end;
+
+TPolygonFont = class
+     private
+        FCharGlyph: array[0..255] of TglvgObject;
+        FCharWidth: array[0..255] of integer;
+        FName: string;
+        FScale: single;
+        FFontHeight: single;
+        FFontWidth: single;
+        FStyle: TStyle;
+     public
+        procedure LoadFromFile(AValue: string);
+        procedure RenderChar(AValue: char);
+        procedure RenderString(AValue: string);
+        property Name: string read FName write FName;
+        property Scale: single read FScale write FScale;
+        property Style: TStyle read FStyle write FStyle;
+     end;
 
 TglvgRect = class(TglvgObject)
   private
@@ -1603,7 +1605,7 @@ begin
     gltranslatef(0,-FFontHeight  ,0);
 
     FCharGlyph[ord(AValue)].Render;
-    FCharGlyph[ord(AValue)].RenderPath;
+    //FCharGlyph[ord(AValue)].RenderPath;
 
   glpopmatrix();
 
@@ -1638,28 +1640,30 @@ begin
 
   for loop := 0 to 255 do
   begin
-    FCharGlyph[loop] := TPolygon.Create(nil);
+    FCharGlyph[loop] := TglvgObject.Create;
     FCharGlyph[loop].Style:=FStyle;
-    FCharGlyph[loop].FcPath.FSplinePrecision := 3; //gpu/cpu friendly and nicely rounded
+    FCharGlyph[loop].FPolyShape.FcPath.FSplinePrecision := 3; //gpu/cpu friendly and nicely rounded
 
     // Get glyphs' strokes per char
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) or ( (loop >= ord('0')) and (loop <= ord('9')) )then
     begin
-      FCharGlyph[loop].Path := fs.Values[inttostr(loop)];
-      FCharGlyph[loop].CalculateBoundBox();
-      FCharWidth[loop] := Round(FCharGlyph[loop].FBoundBoxMaxPoint.x);
+      FCharGlyph[loop].FPolyShape.Path := fs.Values[inttostr(loop)];
+      FCharGlyph[loop].FPolyShape.CalculateBoundBox();
+      FCharWidth[loop] := Round(FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.x);
 
-      if FFontHeight < FCharGlyph[loop].FBoundBoxMaxPoint.y then
-        FFontHeight := FCharGlyph[loop].FBoundBoxMaxPoint.y;
+      if FFontHeight < FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.y then
+        FFontHeight := FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.y;
 
-      FCharGlyph[loop].Style.GradColorPoint1.x := FCharGlyph[loop].FBoundBoxMinPoint.x;
-      FCharGlyph[loop].Style.GradColorPoint1.y := FCharGlyph[loop].FBoundBoxMinPoint.y;
+      FCharGlyph[loop].Init;
 
-      FCharGlyph[loop].Style.GradColorPoint2.x := FCharGlyph[loop].FBoundBoxMaxPoint.x;
-      FCharGlyph[loop].Style.GradColorPoint2.y := FCharGlyph[loop].FBoundBoxMaxPoint.y;
+      FCharGlyph[loop].Style.GradColorPoint1.x := FCharGlyph[loop].FPolyShape.FBoundBoxMinPoint.x;
+      FCharGlyph[loop].Style.GradColorPoint1.y := FCharGlyph[loop].FPolyShape.FBoundBoxMinPoint.y;
 
-      if FCharGlyph[loop].Style.FillType = glvgLinearGradient then
-        FCharGlyph[loop].ApplyGradFill();
+      FCharGlyph[loop].Style.GradColorPoint2.x := FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.x;
+      FCharGlyph[loop].Style.GradColorPoint2.y := FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.y;
+
+      //if FCharGlyph[loop].Style.FillType = glvgLinearGradient then
+      //  FCharGlyph[loop].ApplyGradFill();
     end;
   end;
 
