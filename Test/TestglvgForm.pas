@@ -196,6 +196,8 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Rx:=20.0;
   polyrect.Ry:=20.0; //Optional
   polyrect.Style.SetColor(1,0,0,0.5);
+  polyrect.Style.FillType := glvgSolid;
+  polyrect.Style.LineType := glvgSolid;
   polyrect.Init;
 
   polyelipse := TglvgCircle.Create();
@@ -220,7 +222,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polytext.X := 100;
   polytext.Y := 100;
   polytext.Style.SetColor(1,0,0,1);
-  polytext.Style.SetLineColor(1,0,0,1);
+  polytext.Style.SetLineColor(1,0,1,1);
 
   with polytext.Style.GradColorPoint1 do
   begin
@@ -240,6 +242,10 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   polytext.Style.GradColorAngle:=90;
   //polytext.Font.Style.SetColor(0,0,1,1);
+
+  polytext.Style.FillType := glvgLinearGradient;
+  polytext.Style.LineType := glvgNone; //glvgSolid;
+
   polytext.Font.LoadFromFile('font.txt');
   polytext.Font.Scale := 0.05; //TODO: Should be related to font-size?
   polytext.Text := 'Hello World';
@@ -250,6 +256,9 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   pt2.Y:=10;
 //  pt2.Style.SetColor(1,1,1,0.5);
   pt2.Style.SetColor('#00C4EE');
+  pt2.Style.FillType := glvgSolid;
+  pt2.Style.LineType := glvgSolid;
+
   pt2.Font.LoadFromFile('times.txt');
   pt2.Font.Scale := 0.2; //TODO: Should be related to font-size?
   pt2.Text:=FloatTostr(fFPS)+ ' fps';
