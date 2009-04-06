@@ -199,12 +199,13 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Ry:=20.0; //Optional
   polyrect.Style.Color.SetColor(1,0,0,1);
 
-  polyrect.Style.GradColorAngle:=0;
+  polyrect.Style.GradColorAngle:=90;
+  polyrect.Style.GradColorAngleAlpha:=0;
   polyrect.Style.GradColorPoint1.a :=1.0;
-  polyrect.Style.GradColorPoint2.a :=0.5;
+  polyrect.Style.GradColorPoint2.a :=0.0;
   polyrect.Style.AlphaFillType := glvgLinearGradient;
 
-  polyrect.Style.FillType := glvgSolid;
+  polyrect.Style.FillType := glvgLinearGradient;
   polyrect.Style.LineType := glvgSolid;
   polyrect.Init;
 
@@ -270,7 +271,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   pt2 := TglvgText.Create;
   pt2.X:=10;
   pt2.Y:=10;
-//  pt2.Style.SetColor(1,1,1,0.5);
+  pt2.Style.Color.SetColor(1,1,1,0.5);
   pt2.Style.Color.SetColor('#00C4EE');
   pt2.Style.FillType := glvgSolid;
   pt2.Style.LineType := glvgSolid;
