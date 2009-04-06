@@ -209,7 +209,15 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   //polyelipse.Ry := 25;
   polyelipse.Radius := 100;
   //polyelipse.Style.LineWidth := 2.0;
-  polyelipse.Style.FillType := glvgSolid;
+  polyelipse.Style.GradColorAngle:= 45;
+
+  polyelipse.Style.GradColorPoint1.x := -25 + polyelipse.X;
+  polyelipse.Style.GradColorPoint1.y := -25 + polyelipse.Y;
+
+  polyelipse.Style.GradColorPoint2.x := 25 + polyelipse.X;
+  polyelipse.Style.GradColorPoint2.y := 25 + polyelipse.Y;
+
+  polyelipse.Style.FillType := glvgLinearGradient;
   polyelipse.Style.LineType := glvgNone;
   polyelipse.Init;
 

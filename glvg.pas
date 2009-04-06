@@ -77,6 +77,7 @@ private
   fb: single;
   fa: single;
 public
+  constructor Create;
   procedure SetColor(aR: single; aG: single; aB: single;aA: single); overload;
   procedure SetColor(AName: string); overload;
   function  GetColorPoint: TPoint;
@@ -296,7 +297,7 @@ private
 public
 end;
 
-//Experimental idea for making a vector gui ...
+//Experimental idea for making a vector gui ... (or group control)
 TglvguiObject = class
 private
   FElements: array of TglvgObject;
@@ -348,7 +349,19 @@ procedure TglvgObject.Init;
 begin
   FPolyShape.CalculateBoundBox();
   if FPolyShape.Style.FillType = glvgLinearGradient then
+  begin
+    if FPolyShape.Style.FGradColorPoint1.x = -1.0 then
+    FPolyShape.Style.FGradColorPoint1.x := FPolyShape.FBoundBoxMinPoint.x;
+    if FPolyShape.Style.FGradColorPoint1.y = -1.0 then
+    FPolyShape.Style.FGradColorPoint1.y := FPolyShape.FBoundBoxMinPoint.y;
+
+    if FPolyShape.Style.FGradColorPoint2.x = -1.0 then
+    FPolyShape.Style.FGradColorPoint2.x := FPolyShape.FBoundBoxMaxPoint.x;
+        if FPolyShape.Style.FGradColorPoint2.y = -1.0 then
+    FPolyShape.Style.FGradColorPoint2.y := FPolyShape.FBoundBoxMaxPoint.y;
+
     FPolyShape.ApplyGradFill();
+  end;
 end;
 
 procedure TglvgObject.Render;
@@ -942,6 +955,18 @@ end;
 
 //TColor
 
+constructor TColor.Create;
+begin
+  inherited Create;
+  fx := -1;
+  fy := -1;
+  fz := -1;
+  fr := 0;
+  fg := 0;
+  fb := 0;
+  fa := 1;
+end;
+
 function TColor.GetColorPoint;
 begin
   result.x := fx;
@@ -1018,16 +1043,16 @@ begin
   FLineColor.SetColor(1,1,1,1);
 
   FGradColorAngle := 0;
-  FGradColorPoint1.x:=0.0; //min boundbox x
-  FGradColorPoint1.y:=0.0; //min boundbox y
+  //FGradColorPoint1.x:=0.0; //min boundbox x
+  //FGradColorPoint1.y:=0.0; //min boundbox y
   FGradColorPoint1.r:=0.0;
   FGradColorPoint1.g:=1.0;
   FGradColorPoint1.b:=0.0;
 
   //point must make a square (e.g. bounding box of polygon)
 
-  FGradColorPoint2.x:=1.0; //max boundbox x;
-  FGradColorPoint2.y:=1.0; //max boundbox y;
+  //FGradColorPoint2.x:=1.0; //max boundbox x;
+  //FGradColorPoint2.y:=1.0; //max boundbox y;
   FGradColorPoint2.r:=1.0;
   FGradColorPoint2.g:=0.0;
   FGradColorPoint2.b:=0.0;
@@ -1341,7 +1366,7 @@ var
   loop: integer;
   CurColor: TPoint;
 begin
-  with FStyle.GradColorPoint1 do
+(*  with FStyle.GradColorPoint1 do
   begin
     x := FBoundBoxMinPoint.x;
     y := FBoundBoxMinPoint.y;
@@ -1350,7 +1375,7 @@ begin
   begin
     x := FBoundBoxMaxPoint.x;
     y := FBoundBoxMaxPoint.y;
-  end;
+  end; *)
 
   for loop:=0 to FCount-1 do
   begin
@@ -1584,6 +1609,12 @@ begin
 
       if FFontHeight < FCharGlyph[loop].FBoundBoxMaxPoint.y then
         FFontHeight := FCharGlyph[loop].FBoundBoxMaxPoint.y;
+
+      FCharGlyph[loop].Style.GradColorPoint1.x := FCharGlyph[loop].FBoundBoxMinPoint.x;
+      FCharGlyph[loop].Style.GradColorPoint1.y := FCharGlyph[loop].FBoundBoxMinPoint.y;
+
+      FCharGlyph[loop].Style.GradColorPoint2.x := FCharGlyph[loop].FBoundBoxMaxPoint.x;
+      FCharGlyph[loop].Style.GradColorPoint2.y := FCharGlyph[loop].FBoundBoxMaxPoint.y;
 
       if FCharGlyph[loop].Style.FillType = glvgLinearGradient then
         FCharGlyph[loop].ApplyGradFill();
