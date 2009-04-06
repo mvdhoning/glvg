@@ -1512,7 +1512,7 @@ begin
       if FFontHeight < FCharGlyph[loop].FBoundBoxMaxPoint.y then
         FFontHeight := FCharGlyph[loop].FBoundBoxMaxPoint.y;
 
-      if FCharGlyph[loop].Style.FGradColorAngle > 0 then
+      if FCharGlyph[loop].Style.FillType = glvgLinearGradient then
         FCharGlyph[loop].ApplyGradFill();
     end;
   end;
