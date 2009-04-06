@@ -67,33 +67,54 @@ end;
 
 TglvgFillType = (glvgNone, glvgSolid, glvgLinearGradient, glvgCircularGradient,glvgTexture);
 
+TColor = class
+private
+  fx: single;
+  fy: single;
+  fz: single;
+  fr: single;
+  fg: single;
+  fb: single;
+  fa: single;
+public
+  procedure SetColor(aR: single; aG: single; aB: single;aA: single); overload;
+  procedure SetColor(AName: string); overload;
+  function  GetColorPoint: TPoint;
+  property x: single read fx write fx;
+  property y: single read fy write fy;
+  property z: single read fz write fz;
+  property r: single read fr write fr;
+  property g: single read fg write fg;
+  property b: single read fb write fb;
+  property a: single read fa write fa;
+end;
+
 TStyle = class
 private
-  FColor: TPoint;
-  FLineColor: TPoint;
+  FColor: TColor;
+  FLineColor: TColor;
   FGradColorAngle: single;  //TODO: consider gradient to be a seperate class
-  FGradColorPoint1: TPoint; //TODO: should be dynamic array to support better gradients
-  FGradColorPoint2: TPoint; //TODO: should be dynamic array to support better gradients
+  FGradColorPoint1: TColor; //TODO: should be dynamic array to support better gradients
+  FGradColorPoint2: TColor; //TODO: should be dynamic array to support better gradients
   FLineWidth: single;
   FFillType: TglvgFillType;
   FlineType: TglvgFillType;
 public
   constructor Create();
-//  destructor Destroy(); override;
+  destructor Destroy(); override;
   property GradColorAngle: single read FGradColorAngle write FGradColorAngle;
-  property GradColorPoint1: TPoint read FGradColorPoint1 write FGradColorPoint1;
-  property GradColorPoint2: TPoint read FGradColorPoint2 write FGradColorPoint2;
-  property Color: TPoint read FColor write FColor;
-  property LineColor: TPoint read FLineColor write FLineColor;
+  property GradColorPoint1: TColor read FGradColorPoint1 write FGradColorPoint1;
+  property GradColorPoint2: TColor read FGradColorPoint2 write FGradColorPoint2;
+  property Color: TColor read FColor write FColor;
+  property LineColor: TColor read FLineColor write FLineColor;
   property LineWidth: single read FLineWidth  write FLineWidth;
   property FillType: TglvgFillType read FFillType write FFillType;
   property LineType: TglvgFillType read FLineType write FLineType;
   function TrigGLTriangle(value: single): single;
   function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
   function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
-  procedure SetColor(aR: single; aG: single; aB: single;aA: single); overload;
-  procedure SetColor(AName: string); overload;
-  procedure SetLineColor(aR: single; aG: single; aB: single;aA: single);
+
+  //procedure SetLineColor(aR: single; aG: single; aB: single;aA: single);
 end;
 
 TPolygon = class(TComponent)
@@ -275,6 +296,27 @@ private
 public
 end;
 
+//Experimental idea for making a vector gui ...
+TglvguiObject = class
+private
+  FElements: array of TglvgObject;
+  FNumElements: integer;
+  FMouseOver: boolean;
+  FClicked: boolean;
+  FX: single;
+  FY: single;
+public
+  Constructor Create();
+  Destructor Destroy(); override;
+  procedure AddElement(AElement: TglvgObject);
+  procedure Render;
+  procedure RenderMouseOver;
+  procedure RenderClicked;
+  procedure GetState;
+  property X: single read Fx write Fx;
+  property Y: single read Fy write Fy;
+end;
+
 implementation
 
 uses math, sysutils;
@@ -304,6 +346,9 @@ end;
 
 procedure TglvgObject.Init;
 begin
+  FPolyShape.CalculateBoundBox();
+  if FPolyShape.Style.FillType = glvgLinearGradient then
+    FPolyShape.ApplyGradFill();
 end;
 
 procedure TglvgObject.Render;
@@ -359,6 +404,8 @@ begin
     ' '+FloatToStr(Fx+FWidth-Frx)+' '+FloatToStr(Fy)+
 
     ' Z';
+
+    inherited init;
 end;
 
 //TglvgElipse
@@ -404,6 +451,8 @@ begin
   temppath:=temppath + ' Z';
 
   FPolyShape.Path := temppath;
+
+  inherited init;
 end;
 
 //TglvgCircle
@@ -433,6 +482,8 @@ procedure TglvgLine.Init;
 begin
   FPolyShape.Path := 'M '+FloatToStr(Fx1)+ ' '+FloatToStr(Fy1)+
                      'L '+FloatToStr(Fx2)+ ' '+FloatToStr(Fy2);
+
+  inherited init;
 end;
 
 //TglvgText
@@ -889,20 +940,84 @@ begin
   end;
 end;
 
+//TColor
+
+function TColor.GetColorPoint;
+begin
+  result.x := fx;
+  result.y := fy;
+  result.z := fz;
+  result.r := fr;
+  result.g := fg;
+  result.b := fb;
+  result.a := fa;
+end;
+
+procedure TColor.SetColor(aR: single; aG: single; aB: single;aA: single);
+begin
+    r := aR;
+    g := aG;
+    b := aB;
+    a := aA;
+end;
+
+procedure TColor.SetColor(AName: string);
+
+function HexToInt(HexStr: String): Int64;
+var RetVar : Int64;
+    i : byte;
+begin
+  HexStr := UpperCase(HexStr);
+  if HexStr[length(HexStr)] = 'H' then
+     Delete(HexStr,length(HexStr),1);
+  RetVar := 0;
+
+  for i := 1 to length(HexStr) do begin
+      RetVar := RetVar shl 4;
+      if HexStr[i] in ['0'..'9'] then
+         RetVar := RetVar + (byte(HexStr[i]) - 48)
+      else
+         if HexStr[i] in ['A'..'F'] then
+            RetVar := RetVar + (byte(HexStr[i]) - 55)
+         else begin
+            Retvar := 0;
+            break;
+         end;
+  end;
+
+  Result := RetVar;
+end;
+
+
+begin
+  if Aname[1] = '#' then
+  begin
+     r := HexToInt(Copy(Aname, 2, 2) ) / 254;
+     g := HexToInt(Copy(Aname, 4, 2) ) / 254;
+     b := HexToInt(Copy(Aname, 6, 2) ) / 254;
+     //a := HexToInt(Copy(Aname, 7, 8) ) /255;
+ end;
+end;
+
 //TStyle
 
 constructor TStyle.Create;
 begin
   inherited Create;
 
+  FColor := TColor.Create;
+  FLineColor := TColor.Create;
+  FGradColorPoint1 := TColor.Create;
+  FGradColorPoint2 := TColor.Create;
+
   FFillType := glvgnone;
   FLineType := glvgsolid;
 
-  SetColor(1,0,0,1.0);     //first set color etc
+  FColor.SetColor(1,0,0,1.0);     //first set color etc
   FLineWidth := 1.0;
-  SetLineColor(1,1,1,1);
+  FLineColor.SetColor(1,1,1,1);
 
-  FGradColorAngle := 0; 
+  FGradColorAngle := 0;
   FGradColorPoint1.x:=0.0; //min boundbox x
   FGradColorPoint1.y:=0.0; //min boundbox y
   FGradColorPoint1.r:=0.0;
@@ -916,6 +1031,14 @@ begin
   FGradColorPoint2.r:=1.0;
   FGradColorPoint2.g:=0.0;
   FGradColorPoint2.b:=0.0;
+end;
+
+destructor TStyle.Destroy;
+begin
+  FColor.Free;
+  FLineColor.Free;
+  FGradColorPoint1.Free;
+  FGradColorPoint2.Free;
 end;
 
 const
@@ -998,58 +1121,7 @@ begin
   result:=gradbeginAlpha *  (1.0 - CurPos) + GradEndAlpha * CurPos;
 end;
 
-procedure TStyle.SetColor(aR: single; aG: single; aB: single;aA: single);
-begin
-  with FColor do
-  begin
-    r := aR;
-    g := aG;
-    b := aB;
-    a := aA;
- end;
-end;
-
-procedure TStyle.SetColor(AName: string);
-
-function HexToInt(HexStr: String): Int64;
-var RetVar : Int64;
-    i : byte;
-begin
-  HexStr := UpperCase(HexStr);
-  if HexStr[length(HexStr)] = 'H' then
-     Delete(HexStr,length(HexStr),1);
-  RetVar := 0;
-
-  for i := 1 to length(HexStr) do begin
-      RetVar := RetVar shl 4;
-      if HexStr[i] in ['0'..'9'] then
-         RetVar := RetVar + (byte(HexStr[i]) - 48)
-      else
-         if HexStr[i] in ['A'..'F'] then
-            RetVar := RetVar + (byte(HexStr[i]) - 55)
-         else begin
-            Retvar := 0;
-            break;
-         end;
-  end;
-
-  Result := RetVar;
-end;
-
-
-begin
-  if Aname[1] = '#' then
-  begin
-    with FColor do
-    begin
-     r := HexToInt(Copy(Aname, 2, 2) ) / 254;
-     g := HexToInt(Copy(Aname, 4, 2) ) / 254;
-     b := HexToInt(Copy(Aname, 6, 2) ) / 254;
-     //a := HexToInt(Copy(Aname, 7, 8) ) /255;
-  end;
- end;
-end;
-
+(*
 procedure TStyle.SetLineColor(aR: single; aG: single; aB: single;aA: single);
 begin
   with FLineColor do
@@ -1060,6 +1132,7 @@ begin
     a := aA;
   end;
 end;
+*)
 
 //TPolygon
 
@@ -1193,7 +1266,7 @@ begin
   FPoints[FCount-1].Y := Y;
   FPoints[FCount-1].Z := 0.0;
 
-  CurColor:=FStyle.Color;
+  CurColor:=FStyle.Color.GetColorPoint;
 
   FPoints[FCount-1].R := CurColor.R;
   FPoints[FCount-1].G := CurColor.G;
@@ -1281,7 +1354,7 @@ begin
 
   for loop:=0 to FCount-1 do
   begin
-    CurColor:=FStyle.CalcGradColor(FPoints[loop].x, FPoints[loop].y, FStyle.GradColorPoint1, FStyle.GradColorPoint2, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
+    CurColor:=FStyle.CalcGradColor(FPoints[loop].x, FPoints[loop].y, FStyle.GradColorPoint1.GetColorPoint, FStyle.GradColorPoint2.GetColorPoint, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
     FPoints[loop].r := CurColor.r;
     FPoints[loop].g := CurColor.g;
     FPoints[loop].b := CurColor.b;
@@ -1518,5 +1591,123 @@ begin
   end;
 
 end;
+
+//TglvguiObject
+
+  constructor TglvguiObject.Create;
+  begin
+    inherited Create();
+    FNumElements:=0;
+
+    AddElement(TglvgRect.Create);
+    TglvgRect(FElements[0]).X := 0;
+    TglvgRect(FElements[0]).Y := 0;
+
+    TglvgRect(FElements[0]).Width := 100;
+    TglvgRect(FElements[0]).Height := 30;
+
+    TglvgRect(FElements[0]).Rx := 15;
+    TglvgRect(FElements[0]).Ry := 15;
+
+    TglvgRect(FElements[0]).Style.GradColorPoint1.SetColor('#00C0C0');
+    TglvgRect(FElements[0]).Style.GradColorPoint2.SetColor('#0000C0');
+
+    TglvgRect(FElements[0]).Style.FillType := glvgLinearGradient;
+    TglvgRect(FElements[0]).Style.LineType := glvgNone;
+
+    TglvgRect(FElements[0]).Init;
+
+    //hl1
+    AddElement(TglvgRect.Create);
+    TglvgRect(FElements[1]).X := 5;
+    TglvgRect(FElements[1]).Y := 2.5;
+
+    TglvgRect(FElements[1]).Width := 90;
+    TglvgRect(FElements[1]).Height := 20;
+
+    TglvgRect(FElements[1]).Rx := 10;
+    TglvgRect(FElements[1]).Ry := 10;
+
+    //TglvgRect(FElements[1]).Style.Color.SetColor(1,1,1,0.5);
+    TglvgRect(FElements[1]).Style.GradColorPoint1.SetColor('#FFFFFF');
+    TglvgRect(FElements[1]).Style.GradColorPoint2.SetColor('#0000C0');
+
+    TglvgRect(FElements[1]).Style.FillType := glvgLinearGradient;
+    TglvgRect(FElements[1]).Style.LineType := glvgNone;
+
+    TglvgRect(FElements[1]).Init;
+
+    //hl2
+
+    AddElement(TglvgRect.Create);
+    TglvgRect(FElements[2]).X := 5;
+    TglvgRect(FElements[2]).Y := 22.5;
+
+    TglvgRect(FElements[2]).Width := 90;
+    TglvgRect(FElements[2]).Height := 5;
+
+    TglvgRect(FElements[2]).Rx := 5;
+    TglvgRect(FElements[2]).Ry := 5;
+
+    //TglvgRect(FElements[2]).Style.Color.SetColor(1,1,1,0.5);
+    TglvgRect(FElements[2]).Style.GradColorPoint1.SetColor('#0000C0');
+    TglvgRect(FElements[2]).Style.GradColorPoint2.SetColor('#404040');
+
+    TglvgRect(FElements[2]).Style.FillType := glvgLinearGradient;
+    TglvgRect(FElements[2]).Style.LineType := glvgNone;
+
+    TglvgRect(FElements[2]).Init;
+
+
+  end;
+
+  destructor TglvguiObject.Destroy;
+  var
+    i: integer;
+  begin
+    if FElements <> nil then
+    begin
+      For i:=FNumElements-1 downto 0 do
+      begin
+        FElements[i].Free;
+      end;
+    end;
+
+    SetLength(FElements,0);
+    inherited Destroy;
+  end;
+
+  procedure TglvguiObject.AddElement(AElement: TglvgObject);
+  begin
+    FNumElements:=FNumElements+1;
+    SetLength(FElements,FNumElements);
+    FElements[FNumElements-1] := AElement;
+  end;
+
+  procedure TglvguiObject.Render;
+  var
+    i: integer;
+  begin
+    glpushmatrix();
+      gltranslatef(Fx,Fy,0);
+      for i:=0 to FNumElements-1 do
+      begin
+        FElements[i].Render;
+      end;
+    glpopmatrix();
+  end;
+
+  procedure TglvguiObject.RenderMouseOver;
+  begin
+  end;
+
+  procedure TglvguiObject.RenderClicked;
+  begin
+  end;
+
+  procedure TglvguiObject.GetState;
+  begin
+  end;
+
 
 end.
