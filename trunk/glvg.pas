@@ -360,6 +360,7 @@ begin
         if FPolyShape.Style.FGradColorPoint2.y = -1.0 then
     FPolyShape.Style.FGradColorPoint2.y := FPolyShape.FBoundBoxMaxPoint.y;
 
+    FPolyShape.Tesselate;
     FPolyShape.ApplyGradFill();
   end;
 end;
@@ -441,6 +442,8 @@ var
   vectorx1: single;
   vectory1: single;
 begin
+  //FPolyShape.FcPath.FSplinePrecision := 1;
+
   // draw a circle from a bunch of short lines
   angle:=0.0*pi; //start point arc (0.0 for a complete circle)
   vectorX:=FX+(Frx*sin(angle));
@@ -450,7 +453,7 @@ begin
 
   temppath:='M '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
 
-  angle := angle + 0.01;
+  angle := angle + 0.1; //0.01;
   while angle < 2.0*pi do   //to endpoint arc (2.0 make a complete circle)
   begin
     vectorX:=FX+(Frx*sin(angle));
@@ -458,7 +461,7 @@ begin
     temppath:=temppath+' L '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
     vectorY1:=vectorY;
     vectorX1:=vectorX;
-    angle := angle + 0.01;
+    angle := angle + 0.1; //0.01;
   end;
   temppath:=temppath+' L '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
   temppath:=temppath + ' Z';
@@ -1385,6 +1388,17 @@ begin
     FPoints[loop].b := CurColor.b;
     //FPoints[loop].a := CurColor.a;
   end;
+
+  for loop:=0 to FVertexCount-1 do
+  begin
+
+    CurColor:=FStyle.CalcGradColor(FVertex[loop].x, FVertex[loop].y, FStyle.GradColorPoint1.GetColorPoint, FStyle.GradColorPoint2.GetColorPoint, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
+    FVertex[loop].r := CurColor.r;
+    FVertex[loop].g := CurColor.g;
+    FVertex[loop].b := CurColor.b;
+
+  end;
+
 end;
 
 Procedure TPolygon.Render();
