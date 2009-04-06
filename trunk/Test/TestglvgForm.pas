@@ -321,9 +321,12 @@ begin
 
 
 //gui test
+glpushmatrix();
 
+ //glscalef(10,10,1);
  polyuitest.Render;
 
+glpopmatrix();
 //end gui test
 
   //polygon render

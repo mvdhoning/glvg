@@ -384,7 +384,7 @@ procedure TglvgObject.Render;
 begin
   FPolyShape.Render;
   FPolyShape.RenderPath;
-  FPolyShape.RenderBoundingBox; //DEBUG
+//  FPolyShape.RenderBoundingBox; //DEBUG
 end;
 
 procedure TglvgObject.SetStyle(AValue: TStyle);
@@ -1696,20 +1696,24 @@ end;
 
     //hl1
     AddElement(TglvgRect.Create);
-    TglvgRect(FElements[1]).X := 5;
+    TglvgRect(FElements[1]).X := 2.5;
     TglvgRect(FElements[1]).Y := 2.5;
 
-    TglvgRect(FElements[1]).Width := 90;
+    TglvgRect(FElements[1]).Width := 95;
     TglvgRect(FElements[1]).Height := 20;
 
-    TglvgRect(FElements[1]).Rx := 10;
-    TglvgRect(FElements[1]).Ry := 10;
+    TglvgRect(FElements[1]).Rx := 15;
+    TglvgRect(FElements[1]).Ry := 15;
 
-    //TglvgRect(FElements[1]).Style.Color.SetColor(1,1,1,0.5);
-    TglvgRect(FElements[1]).Style.GradColorPoint1.SetColor('#FFFFFF');
-    TglvgRect(FElements[1]).Style.GradColorPoint2.SetColor('#0000C0');
+    TglvgRect(FElements[1]).Style.Color.SetColor('#FFFFFF');
+    TglvgRect(FElements[1]).Style.GradColorPoint1.a:=1.0;
+    TglvgRect(FElements[1]).Style.GradColorPoint1.y:=0.0;
+    TglvgRect(FElements[1]).Style.GradColorPoint2.y:=10.0;
+    TglvgRect(FElements[1]).Style.GradColorPoint2.a:=0.0;
 
-    TglvgRect(FElements[1]).Style.FillType := glvgLinearGradient;
+
+    TglvgRect(FElements[1]).Style.FillType := glvgSolid;
+    TglvgRect(FElements[1]).Style.AlphaFillType := glvgLinearGradient;
     TglvgRect(FElements[1]).Style.LineType := glvgNone;
 
     TglvgRect(FElements[1]).Init;
@@ -1717,20 +1721,24 @@ end;
     //hl2
 
     AddElement(TglvgRect.Create);
-    TglvgRect(FElements[2]).X := 5;
-    TglvgRect(FElements[2]).Y := 22.5;
+    TglvgRect(FElements[2]).X := 2.5;
+    TglvgRect(FElements[2]).Y := 30 - 2.5 - 20;
 
-    TglvgRect(FElements[2]).Width := 90;
-    TglvgRect(FElements[2]).Height := 5;
+    TglvgRect(FElements[2]).Width := 95;
+    TglvgRect(FElements[2]).Height := 20;
 
-    TglvgRect(FElements[2]).Rx := 5;
-    TglvgRect(FElements[2]).Ry := 5;
+    TglvgRect(FElements[2]).Rx := 15;
+    TglvgRect(FElements[2]).Ry := 15;
 
-    //TglvgRect(FElements[2]).Style.Color.SetColor(1,1,1,0.5);
-    TglvgRect(FElements[2]).Style.GradColorPoint1.SetColor('#0000C0');
-    TglvgRect(FElements[2]).Style.GradColorPoint2.SetColor('#404040');
+    TglvgRect(FElements[2]).Style.Color.SetColor('#000000');
+    TglvgRect(FElements[2]).Style.GradColorPoint1.a:=0.0;
+    TglvgRect(FElements[2]).Style.GradColorPoint1.y:=20.0;
+    TglvgRect(FElements[2]).Style.GradColorPoint2.y:=30.0;
+    TglvgRect(FElements[2]).Style.GradColorPoint2.a:=1.0;
 
-    TglvgRect(FElements[2]).Style.FillType := glvgLinearGradient;
+
+    TglvgRect(FElements[2]).Style.FillType := glvgSolid;
+    TglvgRect(FElements[2]).Style.AlphaFillType := glvgLinearGradient;
     TglvgRect(FElements[2]).Style.LineType := glvgNone;
 
     TglvgRect(FElements[2]).Init;
@@ -1767,6 +1775,7 @@ end;
   begin
     glpushmatrix();
       gltranslatef(Fx,Fy,0);
+      //glscalef(5,5,1); //DEBUG scaling...
       for i:=0 to FNumElements-1 do
       begin
         FElements[i].Render;
