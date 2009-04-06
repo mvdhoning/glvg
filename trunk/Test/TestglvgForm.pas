@@ -204,7 +204,9 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   //polyelipse.Rx := 50;
   //polyelipse.Ry := 25;
   polyelipse.Radius := 100;
-  polyelipse.Style.LineWidth := 2.0;
+  //polyelipse.Style.LineWidth := 2.0;
+  polyelipse.Style.FillType := glvgSolid;
+  polyelipse.Style.LineType := glvgNone;
   polyelipse.Init;
 
   polyline := TglvgLine.Create;
