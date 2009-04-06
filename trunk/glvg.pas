@@ -95,6 +95,7 @@ private
   FColor: TColor;
   FLineColor: TColor;
   FGradColorAngle: single;  //TODO: consider gradient to be a seperate class
+  FGradColorAngleAlpha: single;  //TODO: consider gradient to be a seperate class
   FGradColorPoint1: TColor; //TODO: should be dynamic array to support better gradients
   FGradColorPoint2: TColor; //TODO: should be dynamic array to support better gradients
   FLineWidth: single;
@@ -106,6 +107,7 @@ public
   constructor Create();
   destructor Destroy(); override;
   property GradColorAngle: single read FGradColorAngle write FGradColorAngle;
+  property GradColorAngleAlpha: single read FGradColorAngleAlpha write FGradColorAngleAlpha;
   property GradColorPoint1: TColor read FGradColorPoint1 write FGradColorPoint1;
   property GradColorPoint2: TColor read FGradColorPoint2 write FGradColorPoint2;
   property Color: TColor read FColor write FColor;
@@ -1130,7 +1132,7 @@ begin
   result.R:=gradbeginColor.R *  (1.0 - CurPos) + GradEndColor.R * CurPos;
   result.G:=gradbeginColor.G *  (1.0 - CurPos) + GradEndColor.G * CurPos;
   result.B:=gradbeginColor.B *  (1.0 - CurPos) + GradEndColor.B * CurPos;
-  result.A:=gradbeginColor.A *  (1.0 - CurPos) + GradEndColor.A * CurPos;
+  //result.A:=gradbeginColor.A *  (1.0 - CurPos) + GradEndColor.A * CurPos;
 
 end;
 
@@ -1375,7 +1377,6 @@ begin
     FPoints[loop].r := CurColor.r;
     FPoints[loop].g := CurColor.g;
     FPoints[loop].b := CurColor.b;
-    //FPoints[loop].a := CurColor.a;
   end;
 
   for loop:=0 to FVertexCount-1 do
@@ -1385,7 +1386,6 @@ begin
     FVertex[loop].r := CurColor.r;
     FVertex[loop].g := CurColor.g;
     FVertex[loop].b := CurColor.b;
-    //FVertex[loop].a := CurColor.a;
   end;
 
 end;
@@ -1396,12 +1396,12 @@ var
 begin
   for loop:=0 to FCount-1 do
   begin
-    FPoints[loop].a := FStyle.CalcGradAlpha(FPoints[loop].x, FPoints[loop].y, FStyle.GradColorPoint1.a, FStyle.GradColorPoint2.a, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
+    FPoints[loop].a := FStyle.CalcGradAlpha(FPoints[loop].x, FPoints[loop].y, FStyle.GradColorPoint1.a, FStyle.GradColorPoint2.a, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngleAlpha);
   end;
 
   for loop:=0 to FVertexCount-1 do
   begin
-    FVertex[loop].a := FStyle.CalcGradAlpha(FVertex[loop].x, FVertex[loop].y, FStyle.GradColorPoint1.a, FStyle.GradColorPoint2.a, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
+    FVertex[loop].a := FStyle.CalcGradAlpha(FVertex[loop].x, FVertex[loop].y, FStyle.GradColorPoint1.a, FStyle.GradColorPoint2.a, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngleAlpha);
   end;
 
 end;
