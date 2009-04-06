@@ -60,6 +60,8 @@ var
   polytext: TglvgText;
   pt2: TglvgText;
 
+  polyuitest: TglvguiObject;
+
 type
   TVSyncMode = (vsmSync, vsmNoSync);
 
@@ -145,9 +147,9 @@ begin
 
   //PATHPOLYGON TEST
   polystar := TPolygon.Create(nil);
-  polystar.Style.SetColor(1,0,0,1);     //first set color etc
+  polystar.Style.Color.SetColor(1,0,0,1);     //first set color etc
   polystar.Style.LineWidth := 1.0;
-  polystar.Style.SetLineColor(1,1,1,1);
+  polystar.Style.LineColor.SetColor(1,1,1,1);
 
 //  polystar.Path := 'M100,200 C100,100 400,100 400,200'; //only then path
 
@@ -195,7 +197,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Height:=200.0;
   polyrect.Rx:=20.0;
   polyrect.Ry:=20.0; //Optional
-  polyrect.Style.SetColor(1,0,0,0.5);
+  polyrect.Style.Color.SetColor(1,0,0,0.5);
   polyrect.Style.FillType := glvgSolid;
   polyrect.Style.LineType := glvgSolid;
   polyrect.Init;
@@ -221,8 +223,8 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polytext := TglvgText.Create;
   polytext.X := 100;
   polytext.Y := 100;
-  polytext.Style.SetColor(1,0,0,1);
-  polytext.Style.SetLineColor(1,0,1,1);
+  polytext.Style.Color.SetColor(1,0,0,1);
+  polytext.Style.LineColor.SetColor(1,0,1,1);
 
   with polytext.Style.GradColorPoint1 do
   begin
@@ -255,7 +257,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   pt2.X:=10;
   pt2.Y:=10;
 //  pt2.Style.SetColor(1,1,1,0.5);
-  pt2.Style.SetColor('#00C4EE');
+  pt2.Style.Color.SetColor('#00C4EE');
   pt2.Style.FillType := glvgSolid;
   pt2.Style.LineType := glvgSolid;
 
@@ -263,6 +265,11 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   pt2.Font.Scale := 0.2; //TODO: Should be related to font-size?
   pt2.Text:=FloatTostr(fFPS)+ ' fps';
   //pt2.LineWidth:=1.0;
+
+
+  polyuitest := TglvguiObject.Create;
+  polyuitest.X := 100;
+  polyuitest.Y := 300;
 
   // Enable or Disable V-Sync
   VSync := vsmSync;
@@ -304,6 +311,12 @@ begin
 
 
 //    glscalef(0.1,0.1,0);
+
+//gui test
+
+ polyuitest.Render;
+
+//end gui test
 
   //polygon render
   polystar.Render;
