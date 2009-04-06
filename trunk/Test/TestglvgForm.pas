@@ -197,7 +197,13 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Height:=200.0;
   polyrect.Rx:=20.0;
   polyrect.Ry:=20.0; //Optional
-  polyrect.Style.Color.SetColor(1,0,0,0.5);
+  polyrect.Style.Color.SetColor(1,0,0,1);
+
+  polyrect.Style.GradColorAngle:=0;
+  polyrect.Style.GradColorPoint1.a :=1.0;
+  polyrect.Style.GradColorPoint2.a :=0.5;
+  polyrect.Style.AlphaFillType := glvgLinearGradient;
+
   polyrect.Style.FillType := glvgSolid;
   polyrect.Style.LineType := glvgSolid;
   polyrect.Init;

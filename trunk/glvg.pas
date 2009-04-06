@@ -99,7 +99,9 @@ private
   FGradColorPoint2: TColor; //TODO: should be dynamic array to support better gradients
   FLineWidth: single;
   FFillType: TglvgFillType;
+  FAlphaFillType: TglvgFillType;
   FlineType: TglvgFillType;
+  FAlphaLineType: TglvgFillType;
 public
   constructor Create();
   destructor Destroy(); override;
@@ -111,6 +113,8 @@ public
   property LineWidth: single read FLineWidth  write FLineWidth;
   property FillType: TglvgFillType read FFillType write FFillType;
   property LineType: TglvgFillType read FLineType write FLineType;
+  property AlphaFillType: TglvgFillType read FAlphaFillType write FAlphaFillType;
+  property AlphaLineType: TglvgFillType read FAlphaLineType write FAlphaLineType;
   function TrigGLTriangle(value: single): single;
   function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
   function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
@@ -159,6 +163,7 @@ public
   procedure RenderExtruded();
   procedure CalculateBoundBox();
   procedure ApplyGradFill();
+  procedure ApplyAlphaGradFill();
   property Path: string read GetPathText write SetPathText;
   property Points[I: integer]: TPoint read GetPoint write SetPoint;
   property Count: integer read GetCount;
@@ -348,8 +353,7 @@ end;
 procedure TglvgObject.Init;
 begin
   FPolyShape.CalculateBoundBox();
-  if FPolyShape.Style.FillType = glvgLinearGradient then
-  begin
+
     if FPolyShape.Style.FGradColorPoint1.x = -1.0 then
     FPolyShape.Style.FGradColorPoint1.x := FPolyShape.FBoundBoxMinPoint.x;
     if FPolyShape.Style.FGradColorPoint1.y = -1.0 then
@@ -360,8 +364,14 @@ begin
         if FPolyShape.Style.FGradColorPoint2.y = -1.0 then
     FPolyShape.Style.FGradColorPoint2.y := FPolyShape.FBoundBoxMaxPoint.y;
 
-    FPolyShape.Tesselate;
+  if FPolyShape.Style.FillType = glvgLinearGradient then
+  begin
     FPolyShape.ApplyGradFill();
+  end;
+
+  if FPolyShape.Style.FAlphaFillType = glvgLinearGradient then
+  begin
+    FPolyShape.ApplyAlphaGradFill();
   end;
 end;
 
@@ -1051,6 +1061,7 @@ begin
   FGradColorPoint1.r:=0.0;
   FGradColorPoint1.g:=1.0;
   FGradColorPoint1.b:=0.0;
+  FGradColorPoint1.a:=1.0;
 
   //point must make a square (e.g. bounding box of polygon)
 
@@ -1059,6 +1070,7 @@ begin
   FGradColorPoint2.r:=1.0;
   FGradColorPoint2.g:=0.0;
   FGradColorPoint2.b:=0.0;
+  FGradColorPoint2.a:=1.0;
 end;
 
 destructor TStyle.Destroy;
@@ -1118,6 +1130,7 @@ begin
   result.R:=gradbeginColor.R *  (1.0 - CurPos) + GradEndColor.R * CurPos;
   result.G:=gradbeginColor.G *  (1.0 - CurPos) + GradEndColor.G * CurPos;
   result.B:=gradbeginColor.B *  (1.0 - CurPos) + GradEndColor.B * CurPos;
+  result.A:=gradbeginColor.A *  (1.0 - CurPos) + GradEndColor.A * CurPos;
 
 end;
 
@@ -1149,19 +1162,6 @@ begin
   result:=gradbeginAlpha *  (1.0 - CurPos) + GradEndAlpha * CurPos;
 end;
 
-(*
-procedure TStyle.SetLineColor(aR: single; aG: single; aB: single;aA: single);
-begin
-  with FLineColor do
-  begin
-    r := aR;
-    g := aG;
-    b := aB;
-    a := aA;
-  end;
-end;
-*)
-
 //TPolygon
 
   function TPolygon.GetPathText: string;
@@ -1190,7 +1190,7 @@ end;
   begin
 if FStyle.LineType <> glvgNone then
 begin
-    glcolor3f(FStyle.LineColor.R,FStyle.LineColor.G,FStyle.LineColor.B);
+    glcolor4f(FStyle.LineColor.R,FStyle.LineColor.G,FStyle.LineColor.B, FStyle.LineColor.A);
     glLineWidth(FStyle.LineWidth);
 
     //Draw Path
@@ -1369,17 +1369,6 @@ var
   loop: integer;
   CurColor: TPoint;
 begin
-(*  with FStyle.GradColorPoint1 do
-  begin
-    x := FBoundBoxMinPoint.x;
-    y := FBoundBoxMinPoint.y;
-  end;
-  with FStyle.GradColorPoint2 do
-  begin
-    x := FBoundBoxMaxPoint.x;
-    y := FBoundBoxMaxPoint.y;
-  end; *)
-
   for loop:=0 to FCount-1 do
   begin
     CurColor:=FStyle.CalcGradColor(FPoints[loop].x, FPoints[loop].y, FStyle.GradColorPoint1.GetColorPoint, FStyle.GradColorPoint2.GetColorPoint, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
@@ -1396,7 +1385,23 @@ begin
     FVertex[loop].r := CurColor.r;
     FVertex[loop].g := CurColor.g;
     FVertex[loop].b := CurColor.b;
+    //FVertex[loop].a := CurColor.a;
+  end;
 
+end;
+
+procedure TPolygon.ApplyAlphaGradFill();
+var
+  loop: integer;
+begin
+  for loop:=0 to FCount-1 do
+  begin
+    FPoints[loop].a := FStyle.CalcGradAlpha(FPoints[loop].x, FPoints[loop].y, FStyle.GradColorPoint1.a, FStyle.GradColorPoint2.a, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
+  end;
+
+  for loop:=0 to FVertexCount-1 do
+  begin
+    FVertex[loop].a := FStyle.CalcGradAlpha(FVertex[loop].x, FVertex[loop].y, FStyle.GradColorPoint1.a, FStyle.GradColorPoint2.a, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
   end;
 
 end;
