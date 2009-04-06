@@ -160,6 +160,7 @@ public
   procedure Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single); overload;
   procedure Render();
   procedure RenderPath();
+  procedure RenderBoundingBox();
   procedure Tesselate();
   procedure Extrude();
   procedure RenderExtruded();
@@ -381,6 +382,7 @@ procedure TglvgObject.Render;
 begin
   FPolyShape.Render;
   FPolyShape.RenderPath;
+  FPolyShape.RenderBoundingBox; //DEBUG
 end;
 
 procedure TglvgObject.SetStyle(AValue: TStyle);
@@ -1423,6 +1425,27 @@ begin
   end;
   glend;
 end;
+end;
+
+procedure TPolygon.RenderBoundingBox;
+var
+  loop: integer;
+begin
+  glcolor4f(0,1,0,1);
+  glLineWidth(1.0);
+  glbegin(GL_LINES);
+    glvertex3f(FBoundBoxMinPoint.X,FBoundBoxMinPoint.Y,0);
+    glvertex3f(FBoundBoxMinPoint.X,FBoundBoxMaxPoint.Y,0);
+
+    glvertex3f(FBoundBoxMinPoint.X,FBoundBoxMaxPoint.Y,0);
+    glvertex3f(FBoundBoxMaxPoint.X,FBoundBoxMaxPoint.Y,0);
+
+    glvertex3f(FBoundBoxMaxPoint.X,FBoundBoxMaxPoint.Y,0);
+    glvertex3f(FBoundBoxMaxPoint.X,FBoundBoxMinPoint.Y,0);
+
+    glvertex3f(FBoundBoxMaxPoint.X,FBoundBoxMinPoint.Y,0);
+    glvertex3f(FBoundBoxMinPoint.X,FBoundBoxMinPoint.Y,0);
+  glend;
 end;
 
 procedure TPolygon.Extrude();
