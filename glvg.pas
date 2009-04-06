@@ -65,6 +65,8 @@ public
   property Count: integer read FCount;
 end;
 
+TglvgFillType = (glvgNone, glvgSolid, glvgLinearGradient, glvgCircularGradient,glvgTexture);
+
 TStyle = class
 private
   FColor: TPoint;
@@ -73,6 +75,8 @@ private
   FGradColorPoint1: TPoint; //TODO: should be dynamic array to support better gradients
   FGradColorPoint2: TPoint; //TODO: should be dynamic array to support better gradients
   FLineWidth: single;
+  FFillType: TglvgFillType;
+  FlineType: TglvgFillType;
 public
   constructor Create();
 //  destructor Destroy(); override;
@@ -82,6 +86,8 @@ public
   property Color: TPoint read FColor write FColor;
   property LineColor: TPoint read FLineColor write FLineColor;
   property LineWidth: single read FLineWidth  write FLineWidth;
+  property FillType: TglvgFillType read FFillType write FFillType;
+  property LineType: TglvgFillType read FLineType write FLineType;
   function TrigGLTriangle(value: single): single;
   function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
   function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
@@ -889,6 +895,9 @@ constructor TStyle.Create;
 begin
   inherited Create;
 
+  FFillType := glvgnone;
+  FLineType := glvgsolid;
+
   SetColor(1,0,0,1.0);     //first set color etc
   FLineWidth := 1.0;
   SetLineColor(1,1,1,1);
@@ -1078,6 +1087,8 @@ end;
   var
     loop: integer;
   begin
+if FStyle.LineType <> glvgNone then
+begin
     glcolor3f(FStyle.LineColor.R,FStyle.LineColor.G,FStyle.LineColor.B);
     glLineWidth(FStyle.LineWidth);
 
@@ -1089,7 +1100,7 @@ end;
     end;
     glEnd();
   end;
-
+end;
 
 
 
@@ -1282,6 +1293,8 @@ Procedure TPolygon.Render();
 var
   loop: integer;
 begin
+if FStyle.FillType <> glvgNone then
+begin
   if FTesselated = false then Tesselate;
 
   glbegin(GL_TRIANGLES);
@@ -1293,69 +1306,7 @@ begin
   end;
   glend;
 end;
-
-(*
-Procedure TPolygon.RenderOutline();
-var
-  loop: integer;
-  temppoint: TPoint;
-  outlineloop: integer;
-begin
-  if FTesselated = false then Tesselate;
-
-  temppoint.x := 0.0;
-  temppoint.y := 0.0;
-  temppoint.z := 0.0;
-
-  for outlineloop := 0 to FNewContour-1 do
-  begin
-
-//  loop :=0;
-
-  glbegin(GL_LINE_LOOP);
-
-  for loop:=0 to FContourCount[outlineloop]-1 do
-  begin
-
-//  while loop < FContourCount[outlineloop]-1 do
-//  begin
-//
-//      if
-//        (temppoint.X <> FContour[outlineloop][loop].X)
-//      and
-//        (temppoint.Y <> FContour[outlineloop][loop].Y)
-//      and
-//        (temppoint.Z <> FContour[outlineloop][loop].Z)
-//      then
-//      begin
-//        glend;
-//        glbegin(GL_LINE_LOOP);
-//      end;
-
- //   glbegin(GL_LINE_LOOP);
-    glcolor3f(FContour[outlineloop][loop].R,FContour[outlineloop][loop].G,FContour[outlineloop][loop].B);
-    glvertex3f(FContour[outlineloop][loop].X,FContour[outlineloop][loop].Y,FContour[outlineloop][loop].Z);
-
-
-//    glcolor3f(FContour[outlineloop][loop+1].R,FContour[outlineloop][loop+1].G,FContour[outlineloop][loop+1].B);
-//    glvertex3f(FContour[outlineloop][loop+1].X,FContour[outlineloop][loop+1].Y,FContour[outlineloop][loop+1].Z);
-
-//    temppoint.x := FContour[outlineloop][loop+1].X;
-//    temppoint.y := FContour[outlineloop][loop+1].y;
-//    temppoint.z := FContour[outlineloop][loop+1].z;
-
-//glend;
-//    loop := loop +2;
-  end;
-
-
-
-  glend;
-
-  end;
-
 end;
-*)
 
 procedure TPolygon.Extrude();
 var
@@ -1380,56 +1331,6 @@ begin
     F3DVertex[loop+(FVertexCount)]:=FVertex[FVertexCount-loop-1];
     F3DVertex[loop+(FVertexCount)].Z:=F3DVertex[loop+(FVertexCount)].Z-FExtrudeDepth;
   end;
-
-(*
-  newindex:=(FVertexCount*2);
-
-  //TODO: rewrite to use tpath ...
-  //add side faces  (for each contour)
-  for outlineloop := 0 to FNewContour-1 do
-  begin
-
-  F3DVertexCount:=F3DVertexCount+(FContourCount[outlineloop]*6);
-  SetLength(F3DVertex, F3DVertexCount);
-
-
-  for loop:=0 to FContourCount[outlineloop]-1 do
-  begin
-    //1st triangle
-    F3DVertex[newindex]:=FContour[outlineloop][loop];
-    F3DVertex[newindex+1]:=FContour[outlineloop][loop];
-    F3DVertex[newindex+1].Z:=F3DVertex[newindex+1].Z-FExtrudeDepth;
-    if (loop) < FContourCount[outlineloop]-1 then
-    begin
-      //2nd triangle
-      F3DVertex[newindex+2]:=FContour[outlineloop][loop+1];
-
-      F3DVertex[newindex+5]:=FContour[outlineloop][loop+1];
-
-      F3DVertex[newindex+4]:=FContour[outlineloop][loop+1];
-      F3DVertex[newindex+4].Z:=F3DVertex[newindex+4].Z-FExtrudeDepth;
-
-      F3DVertex[newindex+3]:=FContour[outlineloop][loop];
-      F3DVertex[newindex+3].Z:=F3DVertex[newindex+3].Z-FExtrudeDepth;
-    end
-    else
-    begin
-      //last triangle
-      F3DVertex[newindex+2]:=FContour[outlineloop][0];
-
-      F3DVertex[newindex+5]:=FContour[outlineloop][0];
-
-      F3DVertex[newindex+4]:=FContour[outlineloop][0];
-      F3DVertex[newindex+4].Z:=F3DVertex[newindex+4].Z-FExtrudeDepth;
-
-      F3DVertex[newindex+3]:=FContour[outlineloop][loop];
-      F3DVertex[newindex+3].Z:=F3DVertex[newindex+3].Z-FExtrudeDepth;
-    end;
-    newindex := newindex + 6;
-  end;
-
-  end;
-  *)
 
 end;
 
@@ -1545,52 +1446,6 @@ begin
   gluTessEndContour(tess);
   gluTessEndPolygon(tess);
   gluDeleteTess(tess);        // delete after tessellation
-
-(*
-  FNewContour:=0;
-
-  //outline
-  FOutline:=true;
-
-  tess := gluNewTess();
-
-  gluTessCallback(tess, GLU_TESS_BEGIN, @iTessBeginCB );
-  gluTessCallback(tess, GLU_TESS_END, @iTessEndCB);
-  gluTessCallback(tess, GLU_TESS_VERTEX, @iTessVertexCB);
-  gluTessCallback(tess, GLU_TESS_COMBINE, @iTessCombineCB);  //does not work for font?
-  gluTessCallback(tess, GLU_TESS_EDGE_FLAG_DATA, @iTessEdgeCB); //force triangles
-
-  gluTessProperty(tess, GLU_TESS_BOUNDARY_ONLY, GL_TRUE);
-
-  gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_NONZERO );
-
-  gluTessBeginPolygon(tess, nil);                   // with NULL data
-  gluTessBeginContour(tess);
-
-  for loop := 0 to FCount-1 do
-  begin
-      new(pol);
-      pol[3]:=FPoints[loop].R; //color
-      pol[4]:=FPoints[loop].G;
-      pol[5]:=FPoints[loop].B;
-      pol[6]:=FPoints[loop].A;
-
-      pol[0]:=FPoints[loop].X;
-      pol[1]:=FPoints[loop].Y;
-      pol[2]:=0;
-
-      test[0] := pol[0];
-      test[1] := pol[1];
-      test[2] := pol[2];
-      gluTessVertex(tess, test, pol);
-  end;
-
-  gluTessEndContour(tess);
-  gluTessEndPolygon(tess);
-  gluDeleteTess(tess);        // delete after tessellation
-
-  FOutline := false;
-  *)
 
   PolygonClass := nil;
   FTesselated := true;
