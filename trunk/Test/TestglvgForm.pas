@@ -218,11 +218,17 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   //polyelipse.Style.LineWidth := 2.0;
   polyelipse.Style.GradColorAngle:= 45;
 
-  polyelipse.Style.GradColorPoint1.x := -25 + polyelipse.X;
-  polyelipse.Style.GradColorPoint1.y := -25 + polyelipse.Y;
+// Ok this does not work when using an angle
+// Possible solutions
+// 1) use shader
+// 2) add (interpolated)points to FPolygonShape ...
+// 3) keep using calculated boundingbox points
+  
+//  polyelipse.Style.GradColorPoint1.x := -25 + polyelipse.X;
+//  polyelipse.Style.GradColorPoint1.y := -25 + polyelipse.Y;
 
-  polyelipse.Style.GradColorPoint2.x := 25 + polyelipse.X;
-  polyelipse.Style.GradColorPoint2.y := 25 + polyelipse.Y;
+//  polyelipse.Style.GradColorPoint2.x := 25 + polyelipse.X;
+//  polyelipse.Style.GradColorPoint2.y := 25 + polyelipse.Y;
 
   polyelipse.Style.FillType := glvgLinearGradient;
   polyelipse.Style.LineType := glvgNone;
@@ -313,19 +319,6 @@ begin
 
   angle:=angle+1;
 
-  //vector font
-  //gltranslatef(10,10,0);
-  //polyfont.RenderChar('A');
-  //polyfont.RenderString(polyfont.Name);
-
-  //gltranslatef(10,100,0);
-  //polyfont.RenderString('Hello World');
-
-
-//  glTranslatef(-80.3122, -226.2716, 0.0); //for cat drawing
-
-
-//    glscalef(0.1,0.1,0);
 
 //gui test
 
