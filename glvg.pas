@@ -45,7 +45,7 @@ end;
 
 TPath = class
 private
-  FCommandText: string;
+  FCommandText: ansistring;
   FCount: integer;
   FPoints: array of TPoint;
   FSplinePrecision: integer;
@@ -61,7 +61,7 @@ public
   destructor Destroy(); override;
   procedure Parse();
   property Points[I: integer]: TPoint read GetPoint write SetPoint;
-  property Text: string read fcommandtext write fcommandtext;
+  property Text: ansistring read fcommandtext write fcommandtext;
   property Count: integer read FCount;
 end;
 
@@ -645,10 +645,10 @@ procedure TPath.Parse();
 var
   MyParser: TParser; //TODO: collect info on TParser!!!!
   MS: TMemoryStream;
-  str: string;
-  CurToken: char;
-  CurCommand: char;
-  PrevCommand: char;
+  str: ansistring;
+  CurToken: ansichar;
+  CurCommand: ansichar;
+  PrevCommand: ansichar;
   Params: array[0..7] of single;
   ParamsPoint: array[0..2] of TPoint;
   ParamCount: byte;
@@ -714,7 +714,7 @@ begin
           paramcount := paramcount +1;
         end;
       end;
-      toString:
+//      toString:
     end;
 
     //detect command: (Uppercase is absolute coords vs Lowercase relative coords)
@@ -968,7 +968,7 @@ begin
     end;
 
     PrevCommand:=CurCommand;
-    curtoken := MyParser.NextToken;
+    curtoken := ansichar(MyParser.NextToken);
   end;
 end;
 
