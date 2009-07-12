@@ -413,7 +413,13 @@ end;
 
 procedure TglvgRect.Init;
 begin
-  FPolyShape.Path:=
+  //Ok Clean Up for a high speed gain ...
+  FPolyShape.FcPath.Free;
+  FPolyShape.FcPath := TPath.Create;
+  FPolyShape.FCount:= 0;
+  FPolyShape.FVertexCount := 0;
+
+  FPolyShape.Path :=
 
     'M '+FloatToStr(Fx+Frx)+' '+FloatToStr(Fy)+
     ' Q '+FloatToStr(Fx)+' '+FloatToStr(Fy)+
@@ -645,10 +651,10 @@ procedure TPath.Parse();
 var
   MyParser: TParser; //TODO: collect info on TParser!!!!
   MS: TMemoryStream;
-  str: ansistring;
-  CurToken: ansichar;
-  CurCommand: ansichar;
-  PrevCommand: ansichar;
+  str: string;
+  CurToken: char;
+  CurCommand: char;
+  PrevCommand: char;
   Params: array[0..7] of single;
   ParamsPoint: array[0..2] of TPoint;
   ParamCount: byte;
@@ -968,7 +974,7 @@ begin
     end;
 
     PrevCommand:=CurCommand;
-    curtoken := ansichar(MyParser.NextToken);
+    curtoken := MyParser.NextToken;
   end;
 end;
 
