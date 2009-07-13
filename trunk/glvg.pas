@@ -1631,6 +1631,11 @@ begin
   glpopmatrix();
 
   glTranslatef((FCharWidth[ord(AValue)]*FSCALE), 0, 0);
+  if AValue = ' ' then
+  begin
+    gltranslatef(20,0,0);
+  end;
+
   end;
 
 procedure TPolygonFont.RenderString(AValue: string);
