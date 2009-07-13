@@ -186,6 +186,7 @@ TglvgObject = class
     Constructor Create();
     Destructor Destroy(); override;
     procedure Init; virtual;
+    procedure CleanUp; virtual;
     procedure Render; virtual;
     property name: string read fname write fname;
     //property LineWidth: single read GetLineWidth write SetLineWidth;
@@ -380,6 +381,17 @@ begin
   end;
 end;
 
+procedure TglvgObject.CleanUp;
+begin
+  //Ok Clean Up for a high speed gain ...
+  FPolyShape.FcPath.Free;
+  FPolyShape.FcPath := TPath.Create;
+  FPolyShape.FCount:= 0;
+  FPolyShape.FVertexCount := 0;
+  SetLength(FPolyShape.FPoints,0);
+  SetLength(FPolyShape.FVertex,0);
+end;
+
 procedure TglvgObject.Render;
 begin
   FPolyShape.Render;
@@ -414,10 +426,7 @@ end;
 procedure TglvgRect.Init;
 begin
   //Ok Clean Up for a high speed gain ...
-  FPolyShape.FcPath.Free;
-  FPolyShape.FcPath := TPath.Create;
-  FPolyShape.FCount:= 0;
-  FPolyShape.FVertexCount := 0;
+  self.CleanUp;
 
   FPolyShape.Path :=
 
@@ -464,6 +473,9 @@ var
   vectorx1: single;
   vectory1: single;
 begin
+  //Ok Clean Up for a high speed gain ...
+  self.CleanUp;
+
   //FPolyShape.FcPath.FSplinePrecision := 1;
 
   // draw a circle from a bunch of short lines
@@ -518,6 +530,9 @@ end;
 
 procedure TglvgLine.Init;
 begin
+  //Ok Clean Up for a high speed gain ...
+  self.CleanUp;
+
   FPolyShape.Path := 'M '+FloatToStr(Fx1)+ ' '+FloatToStr(Fy1)+
                      'L '+FloatToStr(Fx2)+ ' '+FloatToStr(Fy2);
 

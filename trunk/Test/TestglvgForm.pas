@@ -57,10 +57,10 @@ var
   polyrect: TglvgRect;
   polyelipse: TglvgCircle;
   polyline: TglvgLine;
-//  polytext: TglvgText;
-//  pt2: TglvgText;
+  polytext: TglvgText;
+  pt2: TglvgText;
 
-//  polyuitest: TglvguiObject;
+  polyuitest: TglvguiObject;
 
 type
   TVSyncMode = (vsmSync, vsmNoSync);
@@ -241,7 +241,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyline.Y2 := 100;
   polyline.Init;
 
-(*  polytext := TglvgText.Create;
+  polytext := TglvgText.Create;
   polytext.X := 100;
   polytext.Y := 100;
   polytext.Style.Color.SetColor(1,0,0,1);
@@ -291,7 +291,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyuitest := TglvguiObject.Create;
   polyuitest.X := 100;
   polyuitest.Y := 300;
-*)
+
 
 
   // Enable or Disable V-Sync
@@ -339,10 +339,10 @@ glpopmatrix();
 
   polyline.Render;
 
-(*  pt2.Text:=FloatTostr(Round(fFPS))+ ' fps';
+  pt2.Text:=FloatTostr(Round(fFPS))+ ' fps';
   pt2.Render;
   polytext.Render;
-*)
+
 
   //rotate rounded rectangle
 
@@ -372,8 +372,8 @@ begin
   polyrect.Free;
   polyelipse.Free;
   polyline.Free;
-//  polytext.Free;
-//  pt2.Free;
+  polytext.Free;
+  pt2.Free;
 
   DeactivateRenderingContext; // Deactivate RenderContext
   wglDeleteContext(RC); //Delete RenderContext
