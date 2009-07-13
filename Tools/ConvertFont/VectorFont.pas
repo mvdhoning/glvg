@@ -127,7 +127,7 @@ type
       destructor Destroy; override;
 
       function GetCharacterGlyphs( CharCode: integer ): TStrokeCollection;
-      function GetCharacterPath( CharCode: integer ): String;
+      function GetCharacterPath( CharCode: integer ): AnsiString;
       function GetCharacterRegion( CharCode, SizeX, SizeY, OfsX, OfsY: integer ): HRGN;
 
     published
@@ -539,7 +539,7 @@ begin
   {$ENDIF}
 end;
 
-function TTTFToVectorConverter.GetCharacterPath( CharCode: integer ): String;
+function TTTFToVectorConverter.GetCharacterPath( CharCode: integer ): ansiString;
 const EMSIZE = 1024; SIZEX = 1024; SIZEY = 1024;
 type TDPoint = record
   x,y: double;
@@ -628,21 +628,21 @@ begin
                             CharCode,
                             GGO_NATIVE,
                             gm,
-                            bufSize, pchar(buf),
+                            bufSize, pansichar(buf),
                             m2 )
   else
     res := GetGlyphOutlineW( mdc,
                              CharCode,
                              GGO_NATIVE,
                              gm,
-                             bufSize, pchar(buf),
+                             bufSize, pansichar(buf),
                              m2 );
   {$ELSE}
   res := GetGlyphOutline( mdc,
                           CharCode,
                           GGO_NATIVE,
                           gm,
-                          bufSize, pchar(buf),
+                          bufSize, pansichar(buf),
                           m2 );
   {$ENDIF}
   SelectObject( mdc, ofont );
@@ -670,7 +670,7 @@ begin
     Result := Result + ' ' +FloatToStr(ps.y);
 
     pcSize := buf^.cb - sizeof(TTTPOLYGONHEADER);
-    pchar(pc) := pchar(buf) + sizeof(TTTPOLYGONHEADER);
+    pansichar(pc) := pansichar(buf) + sizeof(TTTPOLYGONHEADER);
     ofs2 := 0;
     p2 := ps;
     while not done and (ofs2 < pcSize) do
@@ -721,7 +721,7 @@ begin
           end;
       end;
       ofs2 := ofs2 + sizeof(TTTPOLYCURVE) + (pc^.cpfx-1)*sizeof(TPOINTFX);
-      pchar(pc) := pchar(pc) + sizeof(TTTPOLYCURVE) + (pc^.cpfx-1)*sizeof(TPOINTFX);
+      pansichar(pc) := pansichar(pc) + sizeof(TTTPOLYCURVE) + (pc^.cpfx-1)*sizeof(TPOINTFX);
     end;
     if not done then
     begin
@@ -732,7 +732,7 @@ begin
         //NewStroke( polyN, p1, p2 );
       ofs := ofs + pcSize + sizeof(TTTPOLYGONHEADER);
       done := ofs >= bufSize-sizeof(TTTPolygonHeader);
-      pchar(buf) := pchar(pc);
+      pansichar(buf) := pansichar(pc);
       inc( polyN );
     end;
   Result:=Result+' Z ';

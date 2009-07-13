@@ -7,7 +7,7 @@ uses
 
 var
   fsl: TStringList;
-  path: string;
+  path: ansistring;
   loop: integer;
   TTF2Vector:  TTTFToVectorConverter;
 
