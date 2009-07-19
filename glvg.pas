@@ -1660,7 +1660,7 @@ begin
   FFontHeight := 0.0;
 
   fs := TStringList.Create;
-  fs.NameValueSeparator := ':';
+  //fs.NameValueSeparator := ':';
   fs.LoadFromFile(AValue);
 
   FName := fs[0];
