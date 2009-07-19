@@ -191,6 +191,7 @@ TglvgObject = class
     property name: string read fname write fname;
     //property LineWidth: single read GetLineWidth write SetLineWidth;
     property Style: TStyle read GetStyle write SetStyle;
+    property Polygon: TPolygon read FPolyshape write FPolyshape;
 end;
 
 TPolygonFont = class
