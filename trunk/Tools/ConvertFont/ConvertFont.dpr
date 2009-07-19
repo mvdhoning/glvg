@@ -35,7 +35,7 @@ begin
     begin
       //glyphs := TTF2Vector.GetCharacterGlyphs( loop );
       Path := TTF2Vector.GetCharacterPath( loop );
-      fsl.Add(IntToStr(loop)+':'+Path);
+      fsl.Add(IntToStr(loop)+'='+Path);
     end;
   end;
   fsl.SaveToFile('font.txt');
