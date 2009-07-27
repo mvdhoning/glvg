@@ -310,7 +310,7 @@ public
 end;
 
 //Experimental idea for making a vector gui ... (or group control)
-TglvguiObject = class
+TglvgGuiObject = class
 private
   FElements: array of TglvgObject;
   FNumElements: integer;
@@ -318,6 +318,8 @@ private
   FClicked: boolean;
   FX: single;
   FY: single;
+  function  GetElement(Index: Integer): TglvgObject;
+  procedure SetElement(Index: Integer; Value: TglvgObject);
 public
   Constructor Create();
   Destructor Destroy(); override;
@@ -328,6 +330,7 @@ public
   procedure GetState;
   property X: single read Fx write Fx;
   property Y: single read Fy write Fy;
+  property Element[index: integer]: TglvgObject read GetElement write SetElement;
 end;
 
 implementation
@@ -1698,11 +1701,12 @@ end;
 
 //TglvguiObject
 
-  constructor TglvguiObject.Create;
+  constructor TglvgGuiObject.Create;
   begin
     inherited Create();
     FNumElements:=0;
 
+    (* TODO: move code to inherited button gui class ...
     AddElement(TglvgRect.Create);
     TglvgRect(FElements[0]).X := 0;
     TglvgRect(FElements[0]).Y := 0;
@@ -1769,11 +1773,11 @@ end;
     TglvgRect(FElements[2]).Style.LineType := glvgNone;
 
     TglvgRect(FElements[2]).Init;
-
+    *)
 
   end;
 
-  destructor TglvguiObject.Destroy;
+  destructor TglvgGuiObject.Destroy;
   var
     i: integer;
   begin
@@ -1789,14 +1793,14 @@ end;
     inherited Destroy;
   end;
 
-  procedure TglvguiObject.AddElement(AElement: TglvgObject);
+  procedure TglvgGuiObject.AddElement(AElement: TglvgObject);
   begin
     FNumElements:=FNumElements+1;
     SetLength(FElements,FNumElements);
     FElements[FNumElements-1] := AElement;
   end;
 
-  procedure TglvguiObject.Render;
+  procedure TglvgGuiObject.Render;
   var
     i: integer;
   begin
@@ -1810,17 +1814,26 @@ end;
     glpopmatrix();
   end;
 
-  procedure TglvguiObject.RenderMouseOver;
+  procedure TglvgGuiObject.RenderMouseOver;
   begin
   end;
 
-  procedure TglvguiObject.RenderClicked;
+  procedure TglvgGuiObject.RenderClicked;
   begin
   end;
 
-  procedure TglvguiObject.GetState;
+  procedure TglvgGuiObject.GetState;
   begin
   end;
 
+  function  TglvgGuiObject.GetElement(Index: Integer): TglvgObject;
+  begin
+    result := fElements[Index];
+  end;
+
+  procedure TglvgGuiObject.SetElement(Index: Integer; Value: TglvgObject);
+  begin
+    fElements[Index] := Value;
+  end;
 
 end.
