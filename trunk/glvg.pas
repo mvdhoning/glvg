@@ -318,6 +318,8 @@ private
   FClicked: boolean;
   FX: single;
   FY: single;
+  FWidth: single;
+  FHeight: single;
   function  GetElement(Index: Integer): TglvgObject;
   procedure SetElement(Index: Integer; Value: TglvgObject);
 public
@@ -330,7 +332,19 @@ public
   procedure GetState;
   property X: single read Fx write Fx;
   property Y: single read Fy write Fy;
+  property Width: single read FWidth write FWidth;
+  property Height: single read FHeight write FHeight;
   property Element[index: integer]: TglvgObject read GetElement write SetElement;
+end;
+
+TglvgGuiButton = class ( TglvgGuiObject )
+private
+  fdrawtext : TglvgText;
+  ftext : string;
+public
+  Constructor Create();
+  procedure Init;
+  property Text: string read ftext write ftext;
 end;
 
 implementation
@@ -1705,76 +1719,6 @@ end;
   begin
     inherited Create();
     FNumElements:=0;
-
-    (* TODO: move code to inherited button gui class ...
-    AddElement(TglvgRect.Create);
-    TglvgRect(FElements[0]).X := 0;
-    TglvgRect(FElements[0]).Y := 0;
-
-    TglvgRect(FElements[0]).Width := 100;
-    TglvgRect(FElements[0]).Height := 30;
-
-    TglvgRect(FElements[0]).Rx := 15;
-    TglvgRect(FElements[0]).Ry := 15;
-
-    TglvgRect(FElements[0]).Style.GradColorPoint1.SetColor('#00C0C0');
-    TglvgRect(FElements[0]).Style.GradColorPoint2.SetColor('#0000C0');
-
-    TglvgRect(FElements[0]).Style.FillType := glvgLinearGradient;
-    TglvgRect(FElements[0]).Style.LineType := glvgNone;
-
-    TglvgRect(FElements[0]).Init;
-
-    //hl1
-    AddElement(TglvgRect.Create);
-    TglvgRect(FElements[1]).X := 2.5;
-    TglvgRect(FElements[1]).Y := 2.5;
-
-    TglvgRect(FElements[1]).Width := 95;
-    TglvgRect(FElements[1]).Height := 20;
-
-    TglvgRect(FElements[1]).Rx := 15;
-    TglvgRect(FElements[1]).Ry := 15;
-
-    TglvgRect(FElements[1]).Style.Color.SetColor('#FFFFFF');
-    TglvgRect(FElements[1]).Style.GradColorPoint1.a:=1.0;
-    TglvgRect(FElements[1]).Style.GradColorPoint1.y:=0.0;
-    TglvgRect(FElements[1]).Style.GradColorPoint2.y:=10.0;
-    TglvgRect(FElements[1]).Style.GradColorPoint2.a:=0.0;
-
-
-    TglvgRect(FElements[1]).Style.FillType := glvgSolid;
-    TglvgRect(FElements[1]).Style.AlphaFillType := glvgLinearGradient;
-    TglvgRect(FElements[1]).Style.LineType := glvgNone;
-
-    TglvgRect(FElements[1]).Init;
-
-    //hl2
-
-    AddElement(TglvgRect.Create);
-    TglvgRect(FElements[2]).X := 2.5;
-    TglvgRect(FElements[2]).Y := 30 - 2.5 - 20;
-
-    TglvgRect(FElements[2]).Width := 95;
-    TglvgRect(FElements[2]).Height := 20;
-
-    TglvgRect(FElements[2]).Rx := 15;
-    TglvgRect(FElements[2]).Ry := 15;
-
-    TglvgRect(FElements[2]).Style.Color.SetColor('#000000');
-    TglvgRect(FElements[2]).Style.GradColorPoint1.a:=0.0;
-    TglvgRect(FElements[2]).Style.GradColorPoint1.y:=20.0;
-    TglvgRect(FElements[2]).Style.GradColorPoint2.y:=30.0;
-    TglvgRect(FElements[2]).Style.GradColorPoint2.a:=1.0;
-
-
-    TglvgRect(FElements[2]).Style.FillType := glvgSolid;
-    TglvgRect(FElements[2]).Style.AlphaFillType := glvgLinearGradient;
-    TglvgRect(FElements[2]).Style.LineType := glvgNone;
-
-    TglvgRect(FElements[2]).Init;
-    *)
-
   end;
 
   destructor TglvgGuiObject.Destroy;
@@ -1834,6 +1778,90 @@ end;
   procedure TglvgGuiObject.SetElement(Index: Integer; Value: TglvgObject);
   begin
     fElements[Index] := Value;
+  end;
+
+  constructor TglvgGuiButton.Create;
+  begin
+    inherited Create();
+
+    fDrawText := tglvgText.Create;
+
+    FNumElements:=0;
+
+
+
+  end;
+
+  procedure TglvgGuiButton.Init;
+  begin
+      AddElement(TglvgRect.Create);
+    TglvgRect(FElements[0]).X := 0;
+    TglvgRect(FElements[0]).Y := 0;
+
+    TglvgRect(FElements[0]).Width := fWidth;
+    TglvgRect(FElements[0]).Height := fHeight;
+
+    TglvgRect(FElements[0]).Rx := 15;
+    TglvgRect(FElements[0]).Ry := 15;
+
+    TglvgRect(FElements[0]).Style.GradColorPoint1.SetColor('#00C0C0');
+    TglvgRect(FElements[0]).Style.GradColorPoint2.SetColor('#0000C0');
+
+    TglvgRect(FElements[0]).Style.FillType := glvgLinearGradient;
+    TglvgRect(FElements[0]).Style.LineType := glvgNone;
+
+    TglvgRect(FElements[0]).Init;
+
+    //hl1
+    AddElement(TglvgRect.Create);
+    TglvgRect(FElements[1]).X := 2.5;
+    TglvgRect(FElements[1]).Y := 2.5;
+
+    TglvgRect(FElements[1]).Width := fWidth - 5;
+    TglvgRect(FElements[1]).Height := fHeight - 10;
+
+    TglvgRect(FElements[1]).Rx := 15;
+    TglvgRect(FElements[1]).Ry := 15;
+
+    TglvgRect(FElements[1]).Style.Color.SetColor('#FFFFFF');
+    TglvgRect(FElements[1]).Style.GradColorPoint1.a:=1.0;
+    TglvgRect(FElements[1]).Style.GradColorPoint1.y:=0.0;
+    TglvgRect(FElements[1]).Style.GradColorPoint2.y:=10.0;
+    TglvgRect(FElements[1]).Style.GradColorPoint2.a:=0.0;
+
+
+    TglvgRect(FElements[1]).Style.FillType := glvgSolid;
+    TglvgRect(FElements[1]).Style.AlphaFillType := glvgLinearGradient;
+    TglvgRect(FElements[1]).Style.LineType := glvgNone;
+
+    TglvgRect(FElements[1]).Init;
+
+    //hl2
+
+    AddElement(TglvgRect.Create);
+    TglvgRect(FElements[2]).X := 2.5;
+    TglvgRect(FElements[2]).Y := 30 - 2.5 - 20;
+
+    TglvgRect(FElements[2]).Width := fWidth - 5;
+    TglvgRect(FElements[2]).Height := fHeight - 10;
+
+    TglvgRect(FElements[2]).Rx := 15;
+    TglvgRect(FElements[2]).Ry := 15;
+
+    TglvgRect(FElements[2]).Style.Color.SetColor('#000000');
+    TglvgRect(FElements[2]).Style.GradColorPoint1.a:=0.0;
+    TglvgRect(FElements[2]).Style.GradColorPoint1.y:=20.0;
+    TglvgRect(FElements[2]).Style.GradColorPoint2.y:=30.0;
+    TglvgRect(FElements[2]).Style.GradColorPoint2.a:=1.0;
+
+
+    TglvgRect(FElements[2]).Style.FillType := glvgSolid;
+    TglvgRect(FElements[2]).Style.AlphaFillType := glvgLinearGradient;
+    TglvgRect(FElements[2]).Style.LineType := glvgNone;
+
+    TglvgRect(FElements[2]).Init;
+
+    AddElement(FDrawText);
   end;
 
 end.
