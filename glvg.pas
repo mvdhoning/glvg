@@ -27,7 +27,7 @@ unit glvg;
 
 interface
 
-uses DGLOpenGL, classes;
+uses DGLOpenGL, classes, Types;
 
 type
 TPoint = packed record
@@ -345,6 +345,25 @@ public
   Constructor Create();
   procedure Init;
   property Text: string read ftext write ftext;
+end;
+
+TglvgGuiGridDrawState = set of (gdSelected, gdFocused, gdFixed);
+
+
+TglvgGuiGrid = class ( TglvgGuiObject )
+private
+ FCells: array of array of String;
+ FColCount: integer;
+ FRowCount: integer;
+ function GetCell(x: integer; y:integer): string;
+ procedure SetCell(x: integer; y:integer; value: string);
+ procedure SetRowCount(value: integer);
+ procedure SetColCount(value: integer);
+public
+ procedure DrawCell(ACol: Longint; ARow: Longint; ARect: TRect; AState: TglvgGuiGridDrawState); virtual; abstract;
+ property Cells[x:integer;y:integer]:string read GetCell write SetCell;
+ property RowCount: integer read FRowCount write SetRowCount;
+ property ColCount: integer read FColCount write SetColCount;
 end;
 
 implementation
@@ -1862,6 +1881,35 @@ end;
     TglvgRect(FElements[2]).Init;
 
     AddElement(FDrawText);
+  end;
+
+  procedure TglvgGuiGrid.SetCell(x: Integer; y: Integer; value: string);
+  begin
+    FCells[x,y] := value;
+  end;
+
+  function TglvgGuiGrid.GetCell(x: Integer; y: Integer): string;
+  begin
+    result := FCells[x,y];
+  end;
+
+  procedure TglvgGuiGrid.SetRowCount(value: Integer);
+  var
+    I: Integer;
+  begin
+    FRowCount := Value;
+    SetLength(FCells, Value);
+    for I := 0 to frowcount - 1 do
+      setlength(FCells[I], fcolcount);
+  end;
+
+  procedure TglvgGuiGrid.SetColCount(value: Integer);
+  var
+    I: Integer;
+  begin
+    FColCount:=Value;
+    for I := 0 to frowcount - 1 do
+      setlength(FCells[I], Value);
   end;
 
 end.

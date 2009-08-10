@@ -60,7 +60,7 @@ var
   polytext: TglvgText;
   pt2: TglvgText;
 
-  polyuitest: TglvguiObject;
+  polyuitest: TglvgGuiObject;
 
 type
   TVSyncMode = (vsmSync, vsmNoSync);
@@ -288,7 +288,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   //pt2.LineWidth:=1.0;
 
 
-  polyuitest := TglvguiObject.Create;
+  polyuitest := TglvgGuiObject.Create;
   polyuitest.X := 100;
   polyuitest.Y := 300;
 
