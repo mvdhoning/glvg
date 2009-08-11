@@ -50,7 +50,7 @@ implementation
 
 {$R *.DFM}
 
-uses glvg;
+uses glvg, glvggui;
 
 var
   polystar: TPolygon;
