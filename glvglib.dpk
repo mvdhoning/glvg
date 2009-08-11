@@ -29,6 +29,7 @@ requires
   oglpan;
 
 contains
-  glvg in 'glvg.pas';
+  glvg in 'glvg.pas',
+  glvggui in 'glvggui.pas';
 
 end.
