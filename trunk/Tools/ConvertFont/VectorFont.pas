@@ -712,7 +712,7 @@ begin
                 pfxC.Y := Fix2Double(lpAPFX^[i+1].Y);
               end;
               //DrawQSpline( polyN, pfxA, pfxB, pfxC );
-              Result := Result + ' C '+FloatToStr(pfxA.x) +' '+FloatToStr(pfxA.y)+
+              Result := Result + ' Q '+FloatToStr(pfxA.x) +' '+FloatToStr(pfxA.y)+
                                    ' '+FloatToStr(pfxB.x) +' '+FloatToStr(pfxB.y)+
                                    ' '+FloatToStr(pfxC.x) +' '+FloatToStr(pfxC.y);
               pfxA := pfxC;
