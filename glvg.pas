@@ -634,7 +634,7 @@ end;
 constructor TPath.Create();
 begin
   FCount:= 0;
-  FSplinePrecision := 25; //
+  FSplinePrecision := 1; //
 end;
 
 destructor  TPath.Destroy();
