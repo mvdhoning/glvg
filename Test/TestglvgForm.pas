@@ -59,6 +59,7 @@ var
   polyline: TglvgLine;
   polytext: TglvgText;
   pt2: TglvgText;
+  texturepoly: TglvgRect;
 
   polyuitest: TglvgGuiObject;
 
@@ -292,6 +293,28 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyuitest.X := 100;
   polyuitest.Y := 300;
 
+  //textured poly rectangle
+  //TODO: a texture is drawn at real pixel size?
+  //as it seems only a size 200 x 200 the full texture is shown
+  //but even then the bottom part is not shown
+  //also making it larger the texture does not repeat
+  //better fix the texture settings
+  //TODO2: investigate on modifying texture using a matrix
+  texturepoly := TglvgRect.Create;
+  texturepoly.X:= 100.0;
+  texturepoly.Y:= 200.0;
+  texturepoly.Width:=200.0;
+  texturepoly.Height:=200.0;
+  texturepoly.Rx:=20.0;
+  texturepoly.Ry:=20.0; //Optional
+  texturepoly.Style.TextureFileName := 'test.bmp';
+  texturepoly.Style.Color.SetColor(1,1,1,1);
+  texturepoly.Style.FillType := glvgTexture;
+  texturepoly.Style.Init; //load texture
+  texturepoly.Init;
+  texturepoly.Polygon.Tesselate;
+  texturepoly.Polygon.ApplyTextureFill;
+
 
 
   // Enable or Disable V-Sync
@@ -344,6 +367,27 @@ glpopmatrix();
   polytext.Render;
 
 
+
+  texturepoly.Render;
+
+  (*
+    // draw debug for texture
+
+  glcolor3f(1,1,1);
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture( GL_TEXTURE_2D, TexturePoly.Style.TextureId );
+
+  glbegin(GL_QUADS);
+
+  glTexCoord2f(0.0, 1.0); glVertex3f(-100.0, 100.0, 1.0);
+  glTexCoord2f(0.0, 0.0); glVertex3f(100.0, 100.0, 1.0);
+  glTexCoord2f(1.0, 0.0); glVertex3f(100.0, -100.0, 1.0);
+  glTexCoord2f(1.0, 1.0); glVertex3f(-100.0, -100.0, 1.0);
+
+  glend;
+
+  glDisable(GL_TEXTURE_2D);
+  *)
   //rotate rounded rectangle
 
   glrotatef(angle,0,0,1);

@@ -27,7 +27,7 @@ unit glvg;
 
 interface
 
-uses DGLOpenGL, classes;
+uses DGLOpenGL, glBitmap, classes;
 
 type
 TPoint = packed record
@@ -38,6 +38,8 @@ TPoint = packed record
   g: single;
   b: single;
   a: single;
+  s: single; //u texture coord
+  t: single; //v texture coord
 end;
 
 //TODO: implement basic svg shapes using paths.
@@ -103,6 +105,9 @@ private
   FAlphaFillType: TglvgFillType;
   FlineType: TglvgFillType;
   FAlphaLineType: TglvgFillType;
+  FTextureFileName: string;
+  FTexture: TglBitmap2D;
+  FTextureId: GLuInt;
 public
   constructor Create();
   destructor Destroy(); override;
@@ -117,10 +122,12 @@ public
   property LineType: TglvgFillType read FLineType write FLineType;
   property AlphaFillType: TglvgFillType read FAlphaFillType write FAlphaFillType;
   property AlphaLineType: TglvgFillType read FAlphaLineType write FAlphaLineType;
+  property TextureId: GluInt read FTextureId;
+  property TextureFileName: string read FTextureFileName write FTextureFileName;
   function TrigGLTriangle(value: single): single;
   function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
   function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
-
+  procedure Init(); //Loads and sets texture;
   //procedure SetLineColor(aR: single; aG: single; aB: single;aA: single);
 end;
 
@@ -141,6 +148,8 @@ private
 
   FBoundBoxMinPoint: TPoint;
   FBoundBoxMaxPoint: TPoint;
+
+  Origin: Tpoint;
 
   procedure SetPoint(I: integer; Value: TPoint);
   procedure AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
@@ -167,6 +176,7 @@ public
   procedure CalculateBoundBox();
   procedure ApplyGradFill();
   procedure ApplyAlphaGradFill();
+  procedure ApplyTextureFill();
   property Path: string read GetPathText write SetPathText;
   property Points[I: integer]: TPoint read GetPoint write SetPoint;
   property Count: integer read GetCount;
@@ -359,6 +369,11 @@ begin
   begin
     FPolyShape.ApplyAlphaGradFill();
   end;
+
+  if FPolyShape.Style.FillType = glvgTexture then
+  begin
+    FPolyShape.ApplyTextureFill();
+  end;
 end;
 
 procedure TglvgObject.CleanUp;
@@ -376,7 +391,7 @@ procedure TglvgObject.Render;
 begin
   FPolyShape.Render;
   FPolyShape.RenderPath;
-//  FPolyShape.RenderBoundingBox; //DEBUG
+  //FPolyShape.RenderBoundingBox; //DEBUG
 end;
 
 procedure TglvgObject.SetStyle(AValue: TStyle);
@@ -429,6 +444,9 @@ begin
     ' '+FloatToStr(Fx+FWidth-Frx)+' '+FloatToStr(Fy)+
 
     ' Z';
+
+    FPolyShape.Origin.x := Fx;
+    FPolyShape.Origin.y := Fy;
 
     inherited init;
 end;
@@ -634,7 +652,7 @@ end;
 constructor TPath.Create();
 begin
   FCount:= 0;
-  FSplinePrecision := 1; //
+  FSplinePrecision := 25; //the higher the value the more smoothnes
 end;
 
 destructor  TPath.Destroy();
@@ -1078,6 +1096,8 @@ begin
   FGradColorPoint2.g:=0.0;
   FGradColorPoint2.b:=0.0;
   FGradColorPoint2.a:=1.0;
+
+  ftexture := TglBitmap2D.Create;
 end;
 
 destructor TStyle.Destroy;
@@ -1086,6 +1106,7 @@ begin
   FLineColor.Free;
   FGradColorPoint1.Free;
   FGradColorPoint2.Free;
+  FTexture.Free;
 end;
 
 const
@@ -1167,6 +1188,13 @@ begin
     if (gradangle >=540) then
       CurPos := CurPosH * TrigGLTriangle( gradangle + 180) + (1.0-CurPosW) * TrigGLTriangle(gradangle);
   result:=gradbeginAlpha *  (1.0 - CurPos) + GradEndAlpha * CurPos;
+end;
+
+procedure TStyle.Init;
+begin
+  ftexture.LoadFromFile(ftexturefilename);
+  ftexture.GenTexture; //upload to video card.
+  ftextureid := ftexture.ID;
 end;
 
 //TPolygon
@@ -1411,6 +1439,31 @@ begin
 
 end;
 
+procedure TPolygon.ApplyTextureFill();
+var
+  range: TPoint;
+  offset: TPoint;
+  loop: integer;
+begin
+  //caclulate uv coords
+  range.x := (FBoundBoxMinPoint.x-origin.x - FBoundBoxMaxPoint.x-origin.x) * -1;
+  range.y := (FBoundBoxMinPoint.y-origin.y - FBoundBoxMaxPoint.y-origin.y) * -1 ;
+  offset.x := 0 + FBoundBoxMinPoint.x-origin.x;
+  offset.y := 0 + FBoundBoxMinPoint.y-origin.y;
+
+  for loop:=0 to FCount-1 do
+  begin
+    FPoints[loop].s := (FPoints[loop].x-origin.x + offset.x) / range.x;
+    FPoints[loop].t := (FPoints[loop].y-origin.y + offset.y) / range.y;
+  end;
+
+  for loop:=0 to FVertexCount-1 do
+  begin
+    FVertex[loop].s := (FVertex[loop].x-origin.x + offset.x) / range.x * 2;
+    FVertex[loop].t := (FVertex[loop].y-origin.y + offset.y) / range.y * 2;
+  end;
+end;
+
 Procedure TPolygon.Render();
 var
   loop: integer;
@@ -1419,14 +1472,27 @@ if FStyle.FillType <> glvgNone then
 begin
   if FTesselated = false then Tesselate;
 
+  if FStyle.FillType = glvgTexture then
+  begin
+    glcolor3f(1,1,1);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture( GL_TEXTURE_2D, FStyle.TextureId );
+    FStyle.FTexture.Bind();
+  end;
+
   glbegin(GL_TRIANGLES);
   for loop:=0 to FVertexCount-1 do
   begin
-//    glcolor4f(FVertex[loop].R,FVertex[loop].G,FVertex[loop].B,0.8);//FVertex[loop].A);
+    gltexcoord2f(FVertex[loop].S, FVertex[loop].T);
     glcolor4f(FVertex[loop].R,FVertex[loop].G,FVertex[loop].B,FVertex[loop].A);
     glvertex3f(FVertex[loop].X,FVertex[loop].Y,FVertex[loop].Z);
   end;
   glend;
+
+  if FStyle.FillType = glvgTexture then
+  begin
+    glDisable(GL_TEXTURE_2D);
+  end;
 end;
 end;
 

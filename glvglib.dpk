@@ -26,7 +26,8 @@ package glvglib;
 
 requires
   rtl,
-  oglpan;
+  oglpan,
+  vclimg;
 
 contains
   glvg in 'glvg.pas',
