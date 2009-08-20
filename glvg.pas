@@ -1098,6 +1098,7 @@ begin
   FGradColorPoint2.a:=1.0;
 
   ftexture := TglBitmap2D.Create;
+
 end;
 
 destructor TStyle.Destroy;
@@ -1445,23 +1446,24 @@ var
   offset: TPoint;
   loop: integer;
 begin
-  //caclulate uv coords
-  range.x := (FBoundBoxMinPoint.x-origin.x - FBoundBoxMaxPoint.x-origin.x) * -1;
-  range.y := (FBoundBoxMinPoint.y-origin.y - FBoundBoxMaxPoint.y-origin.y) * -1 ;
-  offset.x := 0 + FBoundBoxMinPoint.x-origin.x;
-  offset.y := 0 + FBoundBoxMinPoint.y-origin.y;
+  //caclulate st coords
+  range.x := (FBoundBoxMinPoint.x - FBoundBoxMaxPoint.x) * -1;
+  range.y := (FBoundBoxMinPoint.y - FBoundBoxMaxPoint.y) * -1;
+  offset.x := 0 + FBoundBoxMinPoint.x;
+  offset.y := 0 + FBoundBoxMinPoint.y;
 
   for loop:=0 to FCount-1 do
   begin
-    FPoints[loop].s := (FPoints[loop].x-origin.x + offset.x) / range.x;
-    FPoints[loop].t := (FPoints[loop].y-origin.y + offset.y) / range.y;
+    FPoints[loop].s := ((FPoints[loop].x - offset.x) / range.x);
+    FPoints[loop].t := ((FPoints[loop].y - offset.y) / range.y);
   end;
 
   for loop:=0 to FVertexCount-1 do
   begin
-    FVertex[loop].s := (FVertex[loop].x-origin.x + offset.x) / range.x * 2;
-    FVertex[loop].t := (FVertex[loop].y-origin.y + offset.y) / range.y * 2;
+    FVertex[loop].s := ((FVertex[loop].x - offset.x) / range.x);
+    FVertex[loop].t := ((FVertex[loop].y - offset.y) / range.y);
   end;
+
 end;
 
 Procedure TPolygon.Render();
@@ -1474,10 +1476,15 @@ begin
 
   if FStyle.FillType = glvgTexture then
   begin
-    glcolor3f(1,1,1);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture( GL_TEXTURE_2D, FStyle.TextureId );
     FStyle.FTexture.Bind();
+
+    //experimental texture matrix (rotating around center)
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    glTranslatef(0.5,0.5,0.0); //no need to know the size of the texture
+    glRotatef(0.0,0.0,0.0,1.0); //angle 45.0
+    glTranslatef(-0.5,-0.5,0.0);
+    glMatrixMode(GL_MODELVIEW);
   end;
 
   glbegin(GL_TRIANGLES);
@@ -1491,7 +1498,7 @@ begin
 
   if FStyle.FillType = glvgTexture then
   begin
-    glDisable(GL_TEXTURE_2D);
+    FStyle.FTexture.UnBind();
   end;
 end;
 end;
