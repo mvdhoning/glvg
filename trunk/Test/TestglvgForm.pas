@@ -302,9 +302,9 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   //TODO2: investigate on modifying texture using a matrix
   texturepoly := TglvgRect.Create;
   texturepoly.X:= 100.0;
-  texturepoly.Y:= 200.0;
-  texturepoly.Width:=200.0;
-  texturepoly.Height:=200.0;
+  texturepoly.Y:= 100.0;
+  texturepoly.Width:=300;//128.0;
+  texturepoly.Height:=128.0;
   texturepoly.Rx:=20.0;
   texturepoly.Ry:=20.0; //Optional
   texturepoly.Style.TextureFileName := 'test.bmp';
