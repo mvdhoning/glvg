@@ -303,12 +303,13 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   texturepoly := TglvgRect.Create;
   texturepoly.X:= 100.0;
   texturepoly.Y:= 100.0;
-  texturepoly.Width:=300;//128.0;
+  texturepoly.Width:=300.0; //128 is texture width
   texturepoly.Height:=128.0;
   texturepoly.Rx:=20.0;
   texturepoly.Ry:=20.0; //Optional
   texturepoly.Style.TextureFileName := 'test.bmp';
-  texturepoly.Style.Color.SetColor(1,1,1,1);
+  texturepoly.Style.TextureAngle := 45;
+  texturepoly.Style.Color.SetColor(1,1,1,0.5);
   texturepoly.Style.FillType := glvgTexture;
   texturepoly.Style.Init; //load texture
   texturepoly.Init;

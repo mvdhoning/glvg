@@ -108,6 +108,7 @@ private
   FTextureFileName: string;
   FTexture: TglBitmap2D;
   FTextureId: GLuInt;
+  FTextureAngle: single;
 public
   constructor Create();
   destructor Destroy(); override;
@@ -122,6 +123,7 @@ public
   property LineType: TglvgFillType read FLineType write FLineType;
   property AlphaFillType: TglvgFillType read FAlphaFillType write FAlphaFillType;
   property AlphaLineType: TglvgFillType read FAlphaLineType write FAlphaLineType;
+  property TextureAngle: single read FTextureAngle write FTextureAngle;
   property TextureId: GluInt read FTextureId;
   property TextureFileName: string read FTextureFileName write FTextureFileName;
   function TrigGLTriangle(value: single): single;
@@ -1447,8 +1449,8 @@ var
   loop: integer;
 begin
   //caclulate st coords
-  range.x := (FBoundBoxMinPoint.x - FBoundBoxMaxPoint.x) * -1;
-  range.y := (FBoundBoxMinPoint.y - FBoundBoxMaxPoint.y) * -1;
+  range.x := (fstyle.FTexture.Width{FBoundBoxMinPoint.x - FBoundBoxMaxPoint.x});// * -1;
+  range.y := (fstyle.FTexture.Height{FBoundBoxMinPoint.y - FBoundBoxMaxPoint.y});// * -1;
   offset.x := 0 + FBoundBoxMinPoint.x;
   offset.y := 0 + FBoundBoxMinPoint.y;
 
@@ -1482,9 +1484,15 @@ begin
     glMatrixMode(GL_TEXTURE);
     glLoadIdentity();
     glTranslatef(0.5,0.5,0.0); //no need to know the size of the texture
-    glRotatef(0.0,0.0,0.0,1.0); //angle 45.0
+    glRotatef(FStyle.FTextureAngle,0.0,0.0,1.0);
     glTranslatef(-0.5,-0.5,0.0);
     glMatrixMode(GL_MODELVIEW);
+
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                     GL_REPEAT  );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                     GL_REPEAT );
+
   end;
 
   glbegin(GL_TRIANGLES);
