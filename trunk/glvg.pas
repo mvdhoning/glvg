@@ -100,6 +100,8 @@ private
   FGradColorAngleAlpha: single;  //TODO: consider gradient to be a seperate class
   FGradColorPoint1: TColor; //TODO: should be dynamic array to support better gradients
   FGradColorPoint2: TColor; //TODO: should be dynamic array to support better gradients
+  FNumGradColors: integer;
+  FGradColors: array of TColor;
   FLineWidth: single;
   FFillType: TglvgFillType;
   FAlphaFillType: TglvgFillType;
@@ -109,6 +111,12 @@ private
   FTexture: TglBitmap2D;
   FTextureId: GLuInt;
   FTextureAngle: single;
+  procedure DrawCircle(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
+  procedure DrawRing(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
+  procedure DrawFill;
+  procedure SetGradColor(Index: integer; AValue: TColor);
+  function GetGradColor(Index: integer): TColor;
+  procedure SetNumGradColors(AValue: integer);
 public
   constructor Create();
   destructor Destroy(); override;
@@ -116,6 +124,8 @@ public
   property GradColorAngleAlpha: single read FGradColorAngleAlpha write FGradColorAngleAlpha;
   property GradColorPoint1: TColor read FGradColorPoint1 write FGradColorPoint1;
   property GradColorPoint2: TColor read FGradColorPoint2 write FGradColorPoint2;
+  property GradColor[i: integer]: TColor read GetGradColor write SetGradColor;
+  property NumGradColors: integer read FNumGradColors write SetNumGradColors;
   property Color: TColor read FColor write FColor;
   property LineColor: TColor read FLineColor write FLineColor;
   property LineWidth: single read FLineWidth  write FLineWidth;
@@ -203,6 +213,7 @@ TglvgObject = class
     property name: string read fname write fname;
     //property LineWidth: single read GetLineWidth write SetLineWidth;
     property Style: TStyle read GetStyle write SetStyle;
+    //property Style: TStyle read GetStyle write SetStyle;
     property Polygon: TPolygon read FPolyshape write FPolyshape;
 end;
 
@@ -403,7 +414,7 @@ end;
 
 function TglvgObject.GetStyle(): TStyle;
 begin
-  result := FPolyShape.Style;
+  result := self.FPolyShape.Style;
 end;
 
 //TglvgRect
@@ -1200,6 +1211,118 @@ begin
   ftextureid := ftexture.ID;
 end;
 
+procedure TStyle.DrawCircle(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
+var
+  y1: single;
+  x1: single;
+  y2: single;
+  x2: single;
+  angle: single;
+  i: integer;
+
+  radius: single;
+begin
+radius := colorfrom.x - colorto.x;
+
+     y1:=y;
+     x1:=x;
+     glBegin(GL_TRIANGLES);
+     for i:=0 to 360 do
+     begin
+       angle:=((i)/57.29577957795135);
+       x2:=x+(radius*sin(angle));
+       y2:=y+(radius*cos(angle));
+       glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,1); //inner
+       glVertex2d(x,y);
+       glcolor4f(colorto.r,colorto.g,colorto.b,1); //outer
+       glVertex2d(x1,y1);
+       glVertex2d(x2,y2);
+       y1:=y2;
+       x1:=x2;
+     end;
+     glEnd();
+end;
+
+procedure TStyle.DrawRing(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
+Var
+    p  : Integer;
+    t  : Single;
+    a  : Single;
+    r2 : Single;
+    r1 : Single;
+    ex : Single;
+    ey : Single;
+    MinRadius: single;
+    MaxRadius: single;
+    Segments: integer;
+Begin
+    MinRadius:= (x - colorfrom.x) * -1;
+    MaxRadius:= (colorfrom.x - colorto.x) * -1;
+    segments := 360;
+    If Time < 0Then Exit;
+    t := 1;//Time / TTL;
+    r2 := MinRadius + MaxRadius * (1- t);
+    r1 := r2 + MaxRadius;
+    If r1 < 0Then r1 := 0;
+
+    glPushMatrix;
+        glTranslatef(fgradcolorpoint1.x,fgradcolorpoint1.y,0);
+        glBegin(GL_TRIANGLE_STRIP);
+        For p := 0 To Segments Do
+        Begin
+            a := p * 2* PI / Segments;
+            ex := Cos(a);
+            ey := Sin(a);
+            // inner ring edge
+            glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,1);
+            glVertex3f(r2 * ex,r2 * ey,0);
+            // outer ring edge
+            glcolor4f(colorto.r,colorto.g,colorto.b,1);
+            glVertex3f(r1 * ex,r1 * ey,0);
+        End;
+        glEnd;
+    glPopMatrix;
+End;
+
+procedure TStyle.DrawFill;
+var
+ i:integer;
+begin
+  if fNumGradColors >= 2 then
+    DrawCircle(FGradColors[0].x, FGradColors[0].y,FGradColors[0],FGradColors[1]);
+  if fNumGradColors >=3 then
+  begin
+    for i := 2 to fNumGradColors - 1 do
+      DrawRing(FGradColors[0].x, FGradColors[0].y,FGradColors[i-1],FGradColors[i]);
+  end;
+end;
+
+procedure TStyle.SetNumGradColors(AValue: integer);
+var
+  i: integer;
+begin
+if AValue > FNumGradColors then
+begin
+
+  SetLength(FGradColors, AValue);
+  for i := FNumGradColors to AValue - 1 do
+    FGradColors[i] := TColor.Create;
+  FNumGradColors:=AValue;
+end;
+end;
+
+procedure TStyle.SetGradColor(Index: Integer; AValue: TColor);
+begin
+  self.FGradColors[Index] := AValue;
+end;
+
+function TStyle.GetGradColor(Index: Integer): TColor;
+begin
+  if FNumGradColors>=Index then
+
+  result := self.FGradColors[Index];
+end;
+
 //TPolygon
 
   function TPolygon.GetPathText: string;
@@ -1476,6 +1599,47 @@ if FStyle.FillType <> glvgNone then
 begin
   if FTesselated = false then Tesselate;
 
+  if FStyle.FillType = glvgCircularGradient then
+  begin
+    //prepare draw shape
+    //turning off writing to the color buffer and depth buffer so we only
+    //write to stencil buffer
+    glColorMask(FALSE, FALSE, FALSE, FALSE);
+    glDepthMask(FALSE);
+    //enable stencil buffer
+    glEnable(GL_STENCIL_TEST);
+    //write a one to the stencil buffer everywhere we are about to draw
+    glStencilFunc(GL_ALWAYS, 2, $FFFFFFFF);
+    //this is to always pass a one to the stencil buffer where we draw
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+    //draw shape
+
+    glbegin(GL_TRIANGLES);
+    for loop:=0 to FVertexCount-1 do
+    begin
+      //gltexcoord2f(FVertex[loop].S, FVertex[loop].T);
+      glcolor4f(FVertex[loop].R,FVertex[loop].G,FVertex[loop].B,FVertex[loop].A);
+      glvertex3f(FVertex[loop].X,FVertex[loop].Y,FVertex[loop].Z);
+    end;
+    glend;
+
+    //prepare draw fill
+    //turn the color and depth buffers back on
+    glColorMask(TRUE,TRUE, TRUE, TRUE);
+    glDepthMask(TRUE);
+    //until stencil test is diabled, only write to areas where the
+    //stencil buffer has a one. This fills the shape
+    glStencilFunc(GL_EQUAL, 2, $FFFFFFFF);
+    // don't modify the contents of the stencil buffer
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    //draw fill
+    fStyle.DrawFill;
+    //back to normal
+    glDisable(GL_STENCIL_TEST);
+  end
+  else
+  begin
+
   if FStyle.FillType = glvgTexture then
   begin
     FStyle.FTexture.Bind();
@@ -1508,6 +1672,7 @@ begin
   begin
     FStyle.FTexture.UnBind();
   end;
+end;
 end;
 end;
 
