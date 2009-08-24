@@ -158,7 +158,7 @@ begin
   glClearColor(0,0,0,0);
 
   //PATHPOLYGON TEST
-  polystar := TPolygon.Create(nil);
+  polystar := TPolygon.Create();
   polystar.Style.Color.SetColor(1,0,0,1);     //first set color etc
   polystar.Style.LineWidth := 1.0;
   polystar.Style.LineColor.SetColor(1,1,1,1);
@@ -213,8 +213,12 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   polyrect.Style.GradColorAngle:=90;
   polyrect.Style.GradColorAngleAlpha:=0;
-  polyrect.Style.GradColorPoint1.a :=1.0;
-  polyrect.Style.GradColorPoint2.a :=0.0;
+  polyrect.Style.NumGradColors := 2;
+  polyrect.Style.GradColor[0].a :=1.0;
+  polyrect.Style.GradColor[1].a :=0.0;
+  polyrect.Style.GradColor[0].SetColor('#FF0000');
+  polyrect.Style.GradColor[1].SetColor('#00FF00');
+
   polyrect.Style.AlphaFillType := glvgLinearGradient;
 
   polyrect.Style.FillType := glvgLinearGradient;
@@ -242,6 +246,9 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 //  polyelipse.Style.GradColorPoint2.x := 25 + polyelipse.X;
 //  polyelipse.Style.GradColorPoint2.y := 25 + polyelipse.Y;
 
+  polyelipse.Style.NumGradColors:=2;
+  polyelipse.Style.GradColor[0].SetColor('#FF0000');
+  polyelipse.Style.GradColor[1].SetColor('#00FF00');
   polyelipse.Style.FillType := glvgLinearGradient;
   polyelipse.Style.LineType := glvgNone;
   polyelipse.Init;
@@ -259,7 +266,8 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polytext.Style.Color.SetColor(1,0,0,1);
   polytext.Style.LineColor.SetColor(1,0,1,1);
 
-  with polytext.Style.GradColorPoint1 do
+  polytext.Style.NumGradColors:=2;
+  with polytext.Style.GradColor[0] do
   begin
     r:=1.0;
     g:=1.0;
@@ -267,7 +275,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
     a:=0.0;
   end;
 
-  with polytext.Style.GradColorPoint2 do
+  with polytext.Style.GradColor[1] do
   begin
     r:=0.0;
     g:=0.0;
@@ -339,8 +347,8 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   with circfillpoly.Style.GradColor[0] do
   begin
-    x:=100; //use x pos from figure should autocalc center but be overideable
-    y:=300; //use y pos from figure should autocalc center but be overideable
+    x:=200; //use x pos from figure should autocalc center but be overideable
+    y:=400; //use y pos from figure should autocalc center but be overideable
     r:=0.0;
     g:=1.0;
     b:=0.0;
@@ -349,7 +357,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   with circfillpoly.Style.GradColor[1] do
   begin
-    x:=200; //the x coord is used for gradient color position on the radius
+    x:=250; //the x coord is used for gradient color position on the radius
     r:=0.0;
     g:=0.0;
     b:=1.0;

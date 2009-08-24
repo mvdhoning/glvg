@@ -47,6 +47,8 @@ end;
 
 TPath = class
 private
+  class var fid: integer;
+  var
   FCommandText: ansistring;
   FCount: integer;
   FPoints: array of TPoint;
@@ -98,8 +100,6 @@ private
   FLineColor: TColor;
   FGradColorAngle: single;  //TODO: consider gradient to be a seperate class
   FGradColorAngleAlpha: single;  //TODO: consider gradient to be a seperate class
-  FGradColorPoint1: TColor; //TODO: should be dynamic array to support better gradients
-  FGradColorPoint2: TColor; //TODO: should be dynamic array to support better gradients
   FNumGradColors: integer;
   FGradColors: array of TColor;
   FLineWidth: single;
@@ -113,7 +113,7 @@ private
   FTextureAngle: single;
   procedure DrawCircle(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
   procedure DrawRing(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
-  procedure DrawFill;
+  procedure DrawFill(radius: single);
   procedure SetGradColor(Index: integer; AValue: TColor);
   function GetGradColor(Index: integer): TColor;
   procedure SetNumGradColors(AValue: integer);
@@ -122,8 +122,6 @@ public
   destructor Destroy(); override;
   property GradColorAngle: single read FGradColorAngle write FGradColorAngle;
   property GradColorAngleAlpha: single read FGradColorAngleAlpha write FGradColorAngleAlpha;
-  property GradColorPoint1: TColor read FGradColorPoint1 write FGradColorPoint1;
-  property GradColorPoint2: TColor read FGradColorPoint2 write FGradColorPoint2;
   property GradColor[i: integer]: TColor read GetGradColor write SetGradColor;
   property NumGradColors: integer read FNumGradColors write SetNumGradColors;
   property Color: TColor read FColor write FColor;
@@ -140,11 +138,11 @@ public
   function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
   function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
   procedure Init(); //Loads and sets texture;
-  //procedure SetLineColor(aR: single; aG: single; aB: single;aA: single);
 end;
 
-TPolygon = class(TComponent)
+TPolygon = class
 private
+  FId: integer;
   FcPath: TPath;            //Outline
   FPoints: array of TPoint; //polygon point
   FVertex: array of TPoint; //triangulated data
@@ -160,6 +158,7 @@ private
 
   FBoundBoxMinPoint: TPoint;
   FBoundBoxMaxPoint: TPoint;
+  FBoundBoxRadius: Single;
 
   Origin: Tpoint;
 
@@ -173,8 +172,8 @@ private
   function GetPathText: string;
   procedure SetPathText(AValue: string);
 public
-  constructor Create(AOwner: TComponent); reintroduce; overload;
-  destructor Destroy(); reintroduce; overload;
+  constructor Create();
+  destructor Destroy(); override;
 
   procedure Add(X: single; Y: single); overload;
   procedure Add(X: single; Y: single; Z: single); overload;
@@ -350,7 +349,7 @@ threadvar
 constructor TglvgObject.Create();
 begin
   inherited create();
-  FPolyShape:= TPolygon.Create(nil);
+  FPolyShape:= TPolygon.Create;
 end;
 
 destructor TglvgObject.Destroy;
@@ -363,24 +362,29 @@ procedure TglvgObject.Init;
 begin
   FPolyShape.CalculateBoundBox();
 
-    if FPolyShape.Style.FGradColorPoint1.x = -1.0 then
-    FPolyShape.Style.FGradColorPoint1.x := FPolyShape.FBoundBoxMinPoint.x;
-    if FPolyShape.Style.FGradColorPoint1.y = -1.0 then
-    FPolyShape.Style.FGradColorPoint1.y := FPolyShape.FBoundBoxMinPoint.y;
-
-    if FPolyShape.Style.FGradColorPoint2.x = -1.0 then
-    FPolyShape.Style.FGradColorPoint2.x := FPolyShape.FBoundBoxMaxPoint.x;
-        if FPolyShape.Style.FGradColorPoint2.y = -1.0 then
-    FPolyShape.Style.FGradColorPoint2.y := FPolyShape.FBoundBoxMaxPoint.y;
-
-  if FPolyShape.Style.FillType = glvgLinearGradient then
+  if FPolyShape.Style.NumGradColors >=2 then
   begin
-    FPolyShape.ApplyGradFill();
-  end;
 
-  if FPolyShape.Style.FAlphaFillType = glvgLinearGradient then
-  begin
-    FPolyShape.ApplyAlphaGradFill();
+    if FPolyShape.Style.FGradColors[0].x = -1.0 then
+    FPolyShape.Style.FGradColors[0].x := FPolyShape.FBoundBoxMinPoint.x;
+    if FPolyShape.Style.FGradColors[0].y = -1.0 then
+    FPolyShape.Style.FGradColors[0].y := FPolyShape.FBoundBoxMinPoint.y;
+
+    if FPolyShape.Style.FGradColors[1].x = -1.0 then
+    FPolyShape.Style.FGradColors[1].x := FPolyShape.FBoundBoxMaxPoint.x;
+        if FPolyShape.Style.FGradColors[1].y = -1.0 then
+    FPolyShape.Style.FGradColors[1].y := FPolyShape.FBoundBoxMaxPoint.y;
+
+
+    if FPolyShape.Style.FillType = glvgLinearGradient then
+    begin
+      FPolyShape.ApplyGradFill();
+    end;
+
+    if FPolyShape.Style.FAlphaFillType = glvgLinearGradient then
+    begin
+      FPolyShape.ApplyAlphaGradFill();
+    end;
   end;
 
   if FPolyShape.Style.FillType = glvgTexture then
@@ -1083,8 +1087,8 @@ begin
 
   FColor := TColor.Create;
   FLineColor := TColor.Create;
-  FGradColorPoint1 := TColor.Create;
-  FGradColorPoint2 := TColor.Create;
+  //FGradColorPoint1 := TColor.Create;
+  //FGradColorPoint2 := TColor.Create;
 
   FFillType := glvgnone;
   FLineType := glvgsolid;
@@ -1096,19 +1100,19 @@ begin
   FGradColorAngle := 0;
   //FGradColorPoint1.x:=0.0; //min boundbox x
   //FGradColorPoint1.y:=0.0; //min boundbox y
-  FGradColorPoint1.r:=0.0;
-  FGradColorPoint1.g:=1.0;
-  FGradColorPoint1.b:=0.0;
-  FGradColorPoint1.a:=1.0;
+  //FGradColorPoint1.r:=0.0;
+  //FGradColorPoint1.g:=1.0;
+  //FGradColorPoint1.b:=0.0;
+  //FGradColorPoint1.a:=1.0;
 
   //point must make a square (e.g. bounding box of polygon)
 
   //FGradColorPoint2.x:=1.0; //max boundbox x;
   //FGradColorPoint2.y:=1.0; //max boundbox y;
-  FGradColorPoint2.r:=1.0;
-  FGradColorPoint2.g:=0.0;
-  FGradColorPoint2.b:=0.0;
-  FGradColorPoint2.a:=1.0;
+  //FGradColorPoint2.r:=1.0;
+  //FGradColorPoint2.g:=0.0;
+  //FGradColorPoint2.b:=0.0;
+  //FGradColorPoint2.a:=1.0;
 
   ftexture := TglBitmap2D.Create;
 
@@ -1118,8 +1122,8 @@ destructor TStyle.Destroy;
 begin
   FColor.Free;
   FLineColor.Free;
-  FGradColorPoint1.Free;
-  FGradColorPoint2.Free;
+  //FGradColorPoint1.Free;
+  //FGradColorPoint2.Free;
   FTexture.Free;
 end;
 
@@ -1221,20 +1225,22 @@ var
   i: integer;
 
   radius: single;
+  segments:integer;
 begin
+segments:=80;
 radius := colorfrom.x - colorto.x;
 
      y1:=y;
      x1:=x;
      glBegin(GL_TRIANGLES);
-     for i:=0 to 360 do
+     for i:=0 to Segments do
      begin
-       angle:=((i)/57.29577957795135);
+       angle:=i * 2* PI / Segments;//((i)/57.29577957795135);
        x2:=x+(radius*sin(angle));
        y2:=y+(radius*cos(angle));
-       glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,1); //inner
+       glcolor3f(colorfrom.r,colorfrom.g,colorfrom.b); //inner
        glVertex2d(x,y);
-       glcolor4f(colorto.r,colorto.g,colorto.b,1); //outer
+       glcolor3f(colorto.r,colorto.g,colorto.b); //outer
        glVertex2d(x1,y1);
        glVertex2d(x2,y2);
        y1:=y2;
@@ -1258,7 +1264,7 @@ Var
 Begin
     MinRadius:= (x - colorfrom.x) * -1;
     MaxRadius:= (colorfrom.x - colorto.x) * -1;
-    segments := 360;
+    segments := 80; //360;
     If Time < 0Then Exit;
     t := 1;//Time / TTL;
     r2 := MinRadius + MaxRadius * (1- t);
@@ -1266,7 +1272,7 @@ Begin
     If r1 < 0Then r1 := 0;
 
     glPushMatrix;
-        glTranslatef(fgradcolorpoint1.x,fgradcolorpoint1.y,0);
+        glTranslatef(x,y,0);
         glBegin(GL_TRIANGLE_STRIP);
         For p := 0 To Segments Do
         Begin
@@ -1274,19 +1280,20 @@ Begin
             ex := Cos(a);
             ey := Sin(a);
             // inner ring edge
-            glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,1);
+            glcolor3f(colorfrom.r,colorfrom.g,colorfrom.b);
             glVertex3f(r2 * ex,r2 * ey,0);
             // outer ring edge
-            glcolor4f(colorto.r,colorto.g,colorto.b,1);
+            glcolor3f(colorto.r,colorto.g,colorto.b);
             glVertex3f(r1 * ex,r1 * ey,0);
         End;
         glEnd;
     glPopMatrix;
 End;
 
-procedure TStyle.DrawFill;
+procedure TStyle.DrawFill(radius: single);
 var
  i:integer;
+ addcolor: TColor;
 begin
   if fNumGradColors >= 2 then
     DrawCircle(FGradColors[0].x, FGradColors[0].y,FGradColors[0],FGradColors[1]);
@@ -1294,6 +1301,21 @@ begin
   begin
     for i := 2 to fNumGradColors - 1 do
       DrawRing(FGradColors[0].x, FGradColors[0].y,FGradColors[i-1],FGradColors[i]);
+  end;
+
+  //extend (clamping)
+  if (FGradColors[fNumGradColors-1].x) < (radius*2) then
+  begin
+    addcolor := TColor.Create;
+    addcolor.x := radius;
+    addcolor.r := FGradColors[fNumGradColors-1].r;
+    addcolor.g := FGradColors[fNumGradColors-1].g;
+    addcolor.b := FGradColors[fNumGradColors-1].b;
+    addcolor.a := FGradColors[fNumGradColors-1].a;
+
+    DrawRing(FGradColors[0].x, FGradColors[0].y,FGradColors[fNumGradColors-1],AddColor);
+
+    AddColor.Free;
   end;
 end;
 
@@ -1398,9 +1420,11 @@ begin
   FVertex[FVertexCount-1].Z := Z;
 end;
 
-constructor TPolygon.Create(AOwner: TComponent);
+constructor TPolygon.Create();
 begin
-  Inherited Create(AOwner);
+  Inherited Create();
+
+  FId := FId +1;
 
   FcPath := TPath.Create;
   FcPath.Text:='';
@@ -1494,6 +1518,8 @@ end;
 Procedure TPolygon.CalculateBoundBox();
 var
   loop: integer;
+  thirdpoint: TPoint;
+  dx,dy: single;
 begin
   if FCount>0 then
   begin
@@ -1523,6 +1549,18 @@ begin
       FBoundBoxMaxPoint.y := FPoints[loop].y;
     end;
   end;
+
+  //calculate radius
+  thirdpoint.x := (FBoundBoxMinPoint.x+FBoundBoxMaxPoint.x)/2;
+  thirdpoint.y := (FBoundBoxMinPoint.y+FBoundBoxMaxPoint.y)/2;
+
+  //Then you calculate the three distances between cp and p1,p2,p3 using the Pythagorean theorem.
+
+  dx := thirdpoint.x;// - FBoundBoxMinPoint.x;
+  dy := thirdpoint.y;// - FBoundBoxMinPoint.y;
+  FBoundBoxRadius := sqrt(dx*dx) + sqrt(dy*dy) /2;
+
+
 end;
 
 procedure TPolygon.ApplyGradFill();
@@ -1532,7 +1570,7 @@ var
 begin
   for loop:=0 to FCount-1 do
   begin
-    CurColor:=FStyle.CalcGradColor(FPoints[loop].x, FPoints[loop].y, FStyle.GradColorPoint1.GetColorPoint, FStyle.GradColorPoint2.GetColorPoint, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
+    CurColor:=FStyle.CalcGradColor(FPoints[loop].x, FPoints[loop].y, FStyle.GradColor[0].GetColorPoint, FStyle.GradColor[1].GetColorPoint, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngle);
     FPoints[loop].r := CurColor.r;
     FPoints[loop].g := CurColor.g;
     FPoints[loop].b := CurColor.b;
@@ -1541,7 +1579,7 @@ begin
   for loop:=0 to FVertexCount-1 do
   begin
 
-    CurColor:=FStyle.CalcGradColor(FVertex[loop].x, FVertex[loop].y, FStyle.GradColorPoint1.GetColorPoint, FStyle.GradColorPoint2.GetColorPoint, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngle);
+    CurColor:=FStyle.CalcGradColor(FVertex[loop].x, FVertex[loop].y, FStyle.GradColor[0].GetColorPoint, FStyle.GradColor[1].GetColorPoint, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngle);
     FVertex[loop].r := CurColor.r;
     FVertex[loop].g := CurColor.g;
     FVertex[loop].b := CurColor.b;
@@ -1555,12 +1593,12 @@ var
 begin
   for loop:=0 to FCount-1 do
   begin
-    FPoints[loop].a := FStyle.CalcGradAlpha(FPoints[loop].x, FPoints[loop].y, FStyle.GradColorPoint1.a, FStyle.GradColorPoint2.a, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngleAlpha);
+    FPoints[loop].a := FStyle.CalcGradAlpha(FPoints[loop].x, FPoints[loop].y, FStyle.GradColor[0].a, FStyle.GradColor[1].a, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngleAlpha);
   end;
 
   for loop:=0 to FVertexCount-1 do
   begin
-    FVertex[loop].a := FStyle.CalcGradAlpha(FVertex[loop].x, FVertex[loop].y, FStyle.GradColorPoint1.a, FStyle.GradColorPoint2.a, FStyle.GradColorPoint1.x, FStyle.GradColorPoint1.y, FStyle.GradColorPoint2.x, FStyle.GradColorPoint2.y, FStyle.GradColorAngleAlpha);
+    FVertex[loop].a := FStyle.CalcGradAlpha(FVertex[loop].x, FVertex[loop].y, FStyle.GradColor[0].a, FStyle.GradColor[1].a, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngleAlpha);
   end;
 
 end;
@@ -1609,7 +1647,7 @@ begin
     //enable stencil buffer
     glEnable(GL_STENCIL_TEST);
     //write a one to the stencil buffer everywhere we are about to draw
-    glStencilFunc(GL_ALWAYS, 2, $FFFFFFFF);
+    glStencilFunc(GL_ALWAYS, fid, $FFFFFFFF);
     //this is to always pass a one to the stencil buffer where we draw
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
     //draw shape
@@ -1617,24 +1655,26 @@ begin
     glbegin(GL_TRIANGLES);
     for loop:=0 to FVertexCount-1 do
     begin
-      //gltexcoord2f(FVertex[loop].S, FVertex[loop].T);
-      glcolor4f(FVertex[loop].R,FVertex[loop].G,FVertex[loop].B,FVertex[loop].A);
       glvertex3f(FVertex[loop].X,FVertex[loop].Y,FVertex[loop].Z);
     end;
     glend;
 
     //prepare draw fill
     //turn the color and depth buffers back on
-    glColorMask(TRUE,TRUE, TRUE, TRUE);
+    glColorMask(TRUE,TRUE, TRUE, TRUE); //but not yet alpha
     glDepthMask(TRUE);
     //until stencil test is diabled, only write to areas where the
     //stencil buffer has a one. This fills the shape
-    glStencilFunc(GL_EQUAL, 2, $FFFFFFFF);
+    glStencilFunc(GL_EQUAL, fid, $FFFFFFFF);
     // don't modify the contents of the stencil buffer
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     //draw fill
-    fStyle.DrawFill;
+    fStyle.DrawFill(fBoundBoxRadius);
+    //draw fill alpha
+    //glColorMask(FALSE,FALSE,FALSE, TRUE);
+    //fStyle.DrawFill(fBoundBoxRadius);
     //back to normal
+    glColorMask(TRUE,TRUE, TRUE, TRUE);
     glDisable(GL_STENCIL_TEST);
   end
   else
@@ -1908,12 +1948,14 @@ begin
 
       FCharGlyph[loop].Init;
 
-      FCharGlyph[loop].Style.GradColorPoint1.x := FCharGlyph[loop].FPolyShape.FBoundBoxMinPoint.x;
-      FCharGlyph[loop].Style.GradColorPoint1.y := FCharGlyph[loop].FPolyShape.FBoundBoxMinPoint.y;
+      if FCharGlyph[loop].Style.NumGradColors >= 2 then
+      begin
+        FCharGlyph[loop].Style.GradColor[0].x := FCharGlyph[loop].FPolyShape.FBoundBoxMinPoint.x;
+        FCharGlyph[loop].Style.GradColor[0].y := FCharGlyph[loop].FPolyShape.FBoundBoxMinPoint.y;
 
-      FCharGlyph[loop].Style.GradColorPoint2.x := FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.x;
-      FCharGlyph[loop].Style.GradColorPoint2.y := FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.y;
-
+        FCharGlyph[loop].Style.GradColor[1].x := FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.x;
+        FCharGlyph[loop].Style.GradColor[1].y := FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.y;
+      end;
       //if FCharGlyph[loop].Style.FillType = glvgLinearGradient then
       //  FCharGlyph[loop].ApplyGradFill();
     end;
