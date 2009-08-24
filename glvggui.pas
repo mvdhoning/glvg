@@ -182,8 +182,9 @@ uses dglopengl;
     TglvgRect(FElements[0]).Rx := 15;
     TglvgRect(FElements[0]).Ry := 15;
 
-    TglvgRect(FElements[0]).Style.GradColorPoint1.SetColor('#00C0C0');
-    TglvgRect(FElements[0]).Style.GradColorPoint2.SetColor('#0000C0');
+    TglvgRect(FElements[0]).Style.NumGradColors:=2;
+    TglvgRect(FElements[0]).Style.GradColor[0].SetColor('#00C0C0');
+    TglvgRect(FElements[0]).Style.GradColor[1].SetColor('#0000C0');
 
     TglvgRect(FElements[0]).Style.FillType := glvgLinearGradient;
     TglvgRect(FElements[0]).Style.LineType := glvgNone;
@@ -202,10 +203,12 @@ uses dglopengl;
     TglvgRect(FElements[1]).Ry := 15;
 
     TglvgRect(FElements[1]).Style.Color.SetColor('#FFFFFF');
-    TglvgRect(FElements[1]).Style.GradColorPoint1.a:=1.0;
-    TglvgRect(FElements[1]).Style.GradColorPoint1.y:=0.0;
-    TglvgRect(FElements[1]).Style.GradColorPoint2.y:=10.0;
-    TglvgRect(FElements[1]).Style.GradColorPoint2.a:=0.0;
+
+    TglvgRect(FElements[1]).Style.NumGradColors:=2;
+    TglvgRect(FElements[1]).Style.GradColor[0].a:=1.0;
+    TglvgRect(FElements[1]).Style.GradColor[0].y:=0.0;
+    TglvgRect(FElements[1]).Style.GradColor[1].y:=10.0;
+    TglvgRect(FElements[1]).Style.GradColor[1].a:=0.0;
 
 
     TglvgRect(FElements[1]).Style.FillType := glvgSolid;
@@ -227,10 +230,11 @@ uses dglopengl;
     TglvgRect(FElements[2]).Ry := 15;
 
     TglvgRect(FElements[2]).Style.Color.SetColor('#000000');
-    TglvgRect(FElements[2]).Style.GradColorPoint1.a:=0.0;
-    TglvgRect(FElements[2]).Style.GradColorPoint1.y:=20.0;
-    TglvgRect(FElements[2]).Style.GradColorPoint2.y:=30.0;
-    TglvgRect(FElements[2]).Style.GradColorPoint2.a:=1.0;
+    TglvgRect(FElements[2]).Style.NumGradColors:=2;
+    TglvgRect(FElements[2]).Style.GradColor[0].a:=0.0;
+    TglvgRect(FElements[2]).Style.GradColor[0].y:=20.0;
+    TglvgRect(FElements[2]).Style.GradColor[1].y:=30.0;
+    TglvgRect(FElements[2]).Style.GradColor[1].a:=1.0;
 
 
     TglvgRect(FElements[2]).Style.FillType := glvgSolid;
