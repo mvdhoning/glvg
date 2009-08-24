@@ -60,6 +60,7 @@ var
   polytext: TglvgText;
   pt2: TglvgText;
   texturepoly: TglvgRect;
+  circfillpoly: TglvgRect;
 
   polyuitest: TglvgGuiObject;
 
@@ -114,6 +115,16 @@ const
   ambient:  TGLArrayf4=( 1, 1, 1, 0);
 var
   mypath: string;
+  temppath: string;
+  angle2: single;
+  vectorx: single;
+  vectory: single;
+  vectorx1: single;
+  vectory1: single;
+  fx: single;
+  fy: single;
+  frx: single;
+  fry: single;
 begin
 
   InitOpenGL;
@@ -316,6 +327,57 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   texturepoly.Polygon.Tesselate;
   texturepoly.Polygon.ApplyTextureFill;
 
+  circfillpoly := TglvgRect.Create;
+  circfillpoly.X:= 100.0;
+  circfillpoly.Y:= 300.0;
+  circfillpoly.Width:=300.0; //128 is texture width
+  circfillpoly.Height:=128.0;
+  circfillpoly.Rx:=20.0;
+  circfillpoly.Ry:=20.0; //Optional
+  circfillpoly.Style.Color.SetColor(1,1,1,0.5);
+  circfillpoly.Style.NumGradColors := 4;
+
+  with circfillpoly.Style.GradColor[0] do
+  begin
+    x:=100; //use x pos from figure should autocalc center but be overideable
+    y:=300; //use y pos from figure should autocalc center but be overideable
+    r:=0.0;
+    g:=1.0;
+    b:=0.0;
+    a:=0.0;
+  end;
+
+  with circfillpoly.Style.GradColor[1] do
+  begin
+    x:=200; //the x coord is used for gradient color position on the radius
+    r:=0.0;
+    g:=0.0;
+    b:=1.0;
+    a:=0.0;
+  end;
+
+  with circfillpoly.Style.GradColor[2] do
+  begin
+    x:=300;
+    r:=1.0;
+    g:=0.0;
+    b:=0.0;
+    a:=0.0;
+  end;
+
+  with circfillpoly.Style.GradColor[3] do
+  begin
+    x:=400;
+    r:=1.0;
+    g:=0.0;
+    b:=1.0;
+    a:=0.0;
+  end;
+
+  circfillpoly.Style.FillType := glvgCircularGradient;
+  //radfillpoly.Style.Init; //load texture
+  circfillpoly.Init;
+  circfillpoly.Polygon.Tesselate;
 
 
   // Enable or Disable V-Sync
@@ -324,6 +386,98 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   VBL2(VSync);
 
 end;
+
+//! Draw Circle to bitmap or passed bitmap
+procedure doCircle(x: single; y: single; radius: single);
+var
+  y1: single;
+  x1: single;
+  y2: single;
+  x2: single;
+  angle: single;
+begin
+     // TODO: Set to specified texture if necessary
+//     glEnable(GL_BLEND);
+     glcolor4f(1,1,1,1);
+     y1:=y+radius;
+     x1:=x;
+     glBegin(GL_LINE_STRIP);
+     angle:=0.0;
+     repeat
+       x2:=x+(radius*sin(angle));
+       y2:=y+(radius*cos(angle));
+       glVertex2f(x1,y1);
+       y1:=y2;
+       x1:=x2;
+       angle:=angle+0.01;
+     until angle = (2.0*3.14159);
+     glEnd();
+//     glDisable(GL_BLEND);
+end;
+
+//! Draw Filled Circle to bitmap or passed bitmap
+procedure doCirclefill(x: single; y: single; radius: single);
+var
+  y1: single;
+  x1: single;
+  y2: single;
+  x2: single;
+  angle: single;
+  i: integer;
+begin
+     y1:=y;
+     x1:=x;
+     glBegin(GL_TRIANGLES);
+     for i:=0 to 360 do
+     begin
+       angle:=((i)/57.29577957795135);
+       x2:=x+(radius*sin(angle));
+       y2:=y+(radius*cos(angle));
+       glcolor4f(0,0,1,1); //inner
+       glVertex2d(x,y);
+       glcolor4f(1,1,0,1); //outer
+       glVertex2d(x1,y1);
+       glVertex2d(x2,y2);
+       y1:=y2;
+       x1:=x2;
+     end;
+     glEnd();
+end;
+
+Procedure DrawRing(x: single;y: single;minradius:single;maxradius:single;segments: integer);
+Var
+    p  : Integer;
+    t  : Single;
+    a  : Single;
+    r2 : Single;
+    r1 : Single;
+    ex : Single;
+    ey : Single;
+Begin
+    If Time < 0Then Exit;
+    t := 1;//Time / TTL;
+    r2 := MinRadius + MaxRadius * (1- t);
+    r1 := r2 + MaxRadius;
+    If r1 < 0Then r1 := 0;
+
+    glPushMatrix;
+        glTranslatef(x,y,0);
+        glBegin(GL_TRIANGLE_STRIP);
+        For p := 0 To Segments Do
+        Begin
+            a := p * 2* PI / Segments;
+            ex := Cos(a);
+            ey := Sin(a);
+            // inner ring edge
+            glColor4f(1,1,0,1);
+            glVertex3f(r2 * ex,r2 * ey,0);
+            // outer ring edge
+            glColor4f(1,0,0,1);
+            glVertex3f(r1 * ex,r1 * ey,0);
+        End;
+        glEnd;
+    glPopMatrix;
+End;
 
 procedure TOpenGLRender.Draw;
 begin
@@ -341,10 +495,7 @@ begin
   //glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
-
   angle:=angle+1;
-
 
 //gui test
 glpushmatrix();
@@ -370,6 +521,9 @@ glpopmatrix();
 
 
   texturepoly.Render;
+
+  circfillpoly.Render;
+
 
   (*
     // draw debug for texture
