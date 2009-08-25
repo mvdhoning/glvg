@@ -337,7 +337,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   circfillpoly := TglvgRect.Create;
   circfillpoly.X:= 100.0;
-  circfillpoly.Y:= 300.0;
+  circfillpoly.Y:= 250.0;
   circfillpoly.Width:=300.0; //128 is texture width
   circfillpoly.Height:=128.0;
   circfillpoly.Rx:=20.0;
@@ -352,7 +352,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
     r:=0.0;
     g:=1.0;
     b:=0.0;
-    a:=0.0;
+    a:=1.0;
   end;
 
   with circfillpoly.Style.GradColor[1] do
@@ -361,7 +361,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
     r:=0.0;
     g:=0.0;
     b:=1.0;
-    a:=0.0;
+    a:=1.0;
   end;
 
   with circfillpoly.Style.GradColor[2] do
@@ -370,7 +370,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
     r:=1.0;
     g:=0.0;
     b:=0.0;
-    a:=0.0;
+    a:=1.0;
   end;
 
   with circfillpoly.Style.GradColor[3] do
@@ -379,11 +379,34 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
     r:=1.0;
     g:=0.0;
     b:=1.0;
-    a:=0.0;
+    a:=1.0;
   end;
 
   circfillpoly.Style.FillType := glvgCircularGradient;
-  //radfillpoly.Style.Init; //load texture
+
+  circfillpoly.Style.NumAlphaGradColors := 2;
+
+  with circfillpoly.Style.AlphaGradColor[0] do
+  begin
+    x:=200; //use x pos from figure should autocalc center but be overideable
+    y:=400; //use y pos from figure should autocalc center but be overideable
+    r:=1.0;
+    g:=1.0;
+    b:=1.0;
+    a:=1.0;
+  end;
+
+  with circfillpoly.Style.AlphaGradColor[1] do
+  begin
+    x:=400; //use x pos from figure should autocalc center but be overideable
+    r:=1.0;
+    g:=1.0;
+    b:=1.0;
+    a:=0.5;
+  end;
+
+  circfillpoly.Style.AlphaFillType := glvgCircularGradient;
+
   circfillpoly.Init;
   circfillpoly.Polygon.Tesselate;
 
@@ -494,6 +517,7 @@ begin
 
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
 
+
   //AntiAlias (may or may not work)
   glEnable (GL_BLEND);
   //glEnable (GL_POLYGON_SMOOTH);
@@ -530,7 +554,32 @@ glpopmatrix();
 
   texturepoly.Render;
 
+
+
   circfillpoly.Render;
+
+(*
+  glDisable(GL_BLEND);
+glColorMask(false, false,false, true);
+glColor4f(1,1,1,1.0);
+
+  glBegin(GL_TRIANGLES);		// Drawing Using Triangles
+	glVertex3f( 0.0, 100.0, 0.0);		// Top
+	glVertex3f(-100.0,-100.0, 0.0);		// Bottom Left
+	glVertex3f( 100.0,-100.0, 0.0);		// Bottom Right
+    glEnd();					// Finished Drawing
+
+
+glColorMask(true,true,true,false);
+glEnable(GL_BLEND);
+glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+glcolor3f(1,0,0);
+  glBegin(GL_TRIANGLES);		// Drawing Using Triangles
+	glVertex3f( 0.0, 100.0, 0.0);		// Top
+	glVertex3f(-100.0,-100.0, 0.0);		// Bottom Left
+	glVertex3f( 100.0,-100.0, 0.0);		// Bottom Right
+    glEnd();					// Finished Drawing
+  *)
 
 
   (*
@@ -552,10 +601,10 @@ glpopmatrix();
   glDisable(GL_TEXTURE_2D);
   *)
   //rotate rounded rectangle
-
+  (*
   glrotatef(angle,0,0,1);
   polyrect.Render;
-
+  *)
   //swap buffer (aka draw)
   SwapBuffers(DC);
 
