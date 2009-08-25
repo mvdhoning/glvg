@@ -228,30 +228,18 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyelipse := TglvgCircle.Create();
   polyelipse.X := 400;
   polyelipse.Y := 200;
-  //polyelipse.Rx := 50;
-  //polyelipse.Ry := 25;
   polyelipse.Radius := 100;
-  //polyelipse.Style.LineWidth := 2.0;
   polyelipse.Style.GradColorAngle:= 45;
-
-// Ok this does not work when using an angle
-// Possible solutions
-// 1) use shader
-// 2) add (interpolated)points to FPolygonShape ...
-// 3) keep using calculated boundingbox points
-  
-//  polyelipse.Style.GradColorPoint1.x := -25 + polyelipse.X;
-//  polyelipse.Style.GradColorPoint1.y := -25 + polyelipse.Y;
-
-//  polyelipse.Style.GradColorPoint2.x := 25 + polyelipse.X;
-//  polyelipse.Style.GradColorPoint2.y := 25 + polyelipse.Y;
-
   polyelipse.Style.NumGradColors:=2;
   polyelipse.Style.GradColor[0].SetColor('#FF0000');
   polyelipse.Style.GradColor[1].SetColor('#00FF00');
+  polyelipse.Style.GradColor[0].z:=0;
+  polyelipse.Style.GradColor[1].z:=0;
   polyelipse.Style.FillType := glvgLinearGradient;
   polyelipse.Style.LineType := glvgNone;
+  polyelipse.Polygon.Id := 3;
   polyelipse.Init;
+
 
   polyline := TglvgLine.Create;
   polyline.X1 := 100;
@@ -349,6 +337,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   begin
     x:=200; //use x pos from figure should autocalc center but be overideable
     y:=400; //use y pos from figure should autocalc center but be overideable
+    z:=1;
     r:=0.0;
     g:=1.0;
     b:=0.0;
@@ -358,6 +347,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   with circfillpoly.Style.GradColor[1] do
   begin
     x:=250; //the x coord is used for gradient color position on the radius
+    z:=1;
     r:=0.0;
     g:=0.0;
     b:=1.0;
@@ -367,6 +357,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   with circfillpoly.Style.GradColor[2] do
   begin
     x:=300;
+    z:=1;
     r:=1.0;
     g:=0.0;
     b:=0.0;
@@ -376,6 +367,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   with circfillpoly.Style.GradColor[3] do
   begin
     x:=400;
+    z:=1;
     r:=1.0;
     g:=0.0;
     b:=1.0;
@@ -390,25 +382,30 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   begin
     x:=200; //use x pos from figure should autocalc center but be overideable
     y:=400; //use y pos from figure should autocalc center but be overideable
+    z:=1;
     r:=1.0;
     g:=1.0;
     b:=1.0;
-    a:=1.0;
+    a:=0.1;
   end;
 
   with circfillpoly.Style.AlphaGradColor[1] do
   begin
     x:=400; //use x pos from figure should autocalc center but be overideable
+    z:=1;
     r:=1.0;
     g:=1.0;
     b:=1.0;
-    a:=0.5;
+    a:=0.6;
   end;
 
   circfillpoly.Style.AlphaFillType := glvgCircularGradient;
 
   circfillpoly.Init;
   circfillpoly.Polygon.Tesselate;
+  circfillpoly.Polygon.Id:=2;
+
+
 
 
   // Enable or Disable V-Sync
@@ -417,98 +414,6 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   VBL2(VSync);
 
 end;
-
-//! Draw Circle to bitmap or passed bitmap
-procedure doCircle(x: single; y: single; radius: single);
-var
-  y1: single;
-  x1: single;
-  y2: single;
-  x2: single;
-  angle: single;
-begin
-     // TODO: Set to specified texture if necessary
-//     glEnable(GL_BLEND);
-     glcolor4f(1,1,1,1);
-     y1:=y+radius;
-     x1:=x;
-     glBegin(GL_LINE_STRIP);
-     angle:=0.0;
-     repeat
-       x2:=x+(radius*sin(angle));
-       y2:=y+(radius*cos(angle));
-       glVertex2f(x1,y1);
-       y1:=y2;
-       x1:=x2;
-       angle:=angle+0.01;
-     until angle = (2.0*3.14159);
-     glEnd();
-//     glDisable(GL_BLEND);
-end;
-
-//! Draw Filled Circle to bitmap or passed bitmap
-procedure doCirclefill(x: single; y: single; radius: single);
-var
-  y1: single;
-  x1: single;
-  y2: single;
-  x2: single;
-  angle: single;
-  i: integer;
-begin
-     y1:=y;
-     x1:=x;
-     glBegin(GL_TRIANGLES);
-     for i:=0 to 360 do
-     begin
-       angle:=((i)/57.29577957795135);
-       x2:=x+(radius*sin(angle));
-       y2:=y+(radius*cos(angle));
-       glcolor4f(0,0,1,1); //inner
-       glVertex2d(x,y);
-       glcolor4f(1,1,0,1); //outer
-       glVertex2d(x1,y1);
-       glVertex2d(x2,y2);
-       y1:=y2;
-       x1:=x2;
-     end;
-     glEnd();
-end;
-
-Procedure DrawRing(x: single;y: single;minradius:single;maxradius:single;segments: integer);
-Var
-    p  : Integer;
-    t  : Single;
-    a  : Single;
-    r2 : Single;
-    r1 : Single;
-    ex : Single;
-    ey : Single;
-Begin
-    If Time < 0Then Exit;
-    t := 1;//Time / TTL;
-    r2 := MinRadius + MaxRadius * (1- t);
-    r1 := r2 + MaxRadius;
-    If r1 < 0Then r1 := 0;
-
-    glPushMatrix;
-        glTranslatef(x,y,0);
-        glBegin(GL_TRIANGLE_STRIP);
-        For p := 0 To Segments Do
-        Begin
-            a := p * 2* PI / Segments;
-            ex := Cos(a);
-            ey := Sin(a);
-            // inner ring edge
-            glColor4f(1,1,0,1);
-            glVertex3f(r2 * ex,r2 * ey,0);
-            // outer ring edge
-            glColor4f(1,0,0,1);
-            glVertex3f(r1 * ex,r1 * ey,0);
-        End;
-        glEnd;
-    glPopMatrix;
-End;
 
 procedure TOpenGLRender.Draw;
 begin
@@ -526,6 +431,7 @@ begin
     // Alpha Blending
   //glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  //glBlendFunc (GL_SRC_ALPHA, GL_ONE);
 
   angle:=angle+1;
 
@@ -539,72 +445,25 @@ glpopmatrix();
 //end gui test
 
   //polygon render
-  polystar.Render;
-  polystar.RenderPath;
+//  polystar.Render;
+//  polystar.RenderPath;
 
   polyelipse.Render;
 
-  polyline.Render;
+//  polyline.Render;
 
   pt2.Text:=FloatTostr(Round(fFPS))+ ' fps';
   pt2.Render;
   polytext.Render;
 
-
-
-  texturepoly.Render;
-
-
+//  texturepoly.Render;
 
   circfillpoly.Render;
 
-(*
-  glDisable(GL_BLEND);
-glColorMask(false, false,false, true);
-glColor4f(1,1,1,1.0);
-
-  glBegin(GL_TRIANGLES);		// Drawing Using Triangles
-	glVertex3f( 0.0, 100.0, 0.0);		// Top
-	glVertex3f(-100.0,-100.0, 0.0);		// Bottom Left
-	glVertex3f( 100.0,-100.0, 0.0);		// Bottom Right
-    glEnd();					// Finished Drawing
-
-
-glColorMask(true,true,true,false);
-glEnable(GL_BLEND);
-glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-glcolor3f(1,0,0);
-  glBegin(GL_TRIANGLES);		// Drawing Using Triangles
-	glVertex3f( 0.0, 100.0, 0.0);		// Top
-	glVertex3f(-100.0,-100.0, 0.0);		// Bottom Left
-	glVertex3f( 100.0,-100.0, 0.0);		// Bottom Right
-    glEnd();					// Finished Drawing
-  *)
-
-
-  (*
-    // draw debug for texture
-
-  glcolor3f(1,1,1);
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture( GL_TEXTURE_2D, TexturePoly.Style.TextureId );
-
-  glbegin(GL_QUADS);
-
-  glTexCoord2f(0.0, 1.0); glVertex3f(-100.0, 100.0, 1.0);
-  glTexCoord2f(0.0, 0.0); glVertex3f(100.0, 100.0, 1.0);
-  glTexCoord2f(1.0, 0.0); glVertex3f(100.0, -100.0, 1.0);
-  glTexCoord2f(1.0, 1.0); glVertex3f(-100.0, -100.0, 1.0);
-
-  glend;
-
-  glDisable(GL_TEXTURE_2D);
-  *)
   //rotate rounded rectangle
-  (*
   glrotatef(angle,0,0,1);
   polyrect.Render;
-  *)
+
   //swap buffer (aka draw)
   SwapBuffers(DC);
 
