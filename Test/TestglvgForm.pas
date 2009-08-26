@@ -214,20 +214,21 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Style.GradColorAngle:=90;
   polyrect.Style.GradColorAngleAlpha:=0;
   polyrect.Style.NumGradColors := 2;
-  polyrect.Style.NumAlphaGradColors := 2;
-  polyrect.Style.AlphaGradColor[0].a :=1.0;
-  polyrect.Style.AlphaGradColor[1].a :=0.0;
+//  polyrect.Style.NumAlphaGradColors := 2;
+//  polyrect.Style.AlphaGradColor[0].a :=1.0;
+//  polyrect.Style.AlphaGradColor[1].a :=0.0;
   polyrect.Style.GradColor[0].a :=1.0;
   polyrect.Style.GradColor[1].a :=1.0;
 
   polyrect.Style.GradColor[0].SetColor('#FF0000');
   polyrect.Style.GradColor[1].SetColor('#00FF00');
 
-  polyrect.Style.AlphaFillType := glvgLinearGradient;
+//  polyrect.Style.AlphaFillType := glvgLinearGradient;
 
   polyrect.Style.FillType := glvgLinearGradient;
   polyrect.Style.LineType := glvgSolid;
   polyrect.Polygon.Id:=7;
+  polyrect.Style.Color.a:=0.8;
   polyrect.Init;
 
   polyelipse := TglvgCircle.Create();
@@ -238,18 +239,9 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyelipse.Style.NumGradColors:=2;
   polyelipse.Style.GradColor[0].SetColor('#FF0000');
   polyelipse.Style.GradColor[1].SetColor('#00FF00');
-  //polyelipse.Style.GradColor[0].z:=0;
-  //polyelipse.Style.GradColor[1].z:=0;
   polyelipse.Style.FillType := glvgLinearGradient;
-  polyelipse.Style.AlphaFillType := glvgLinearGradient;
   polyelipse.Style.LineType := glvgNone;
   polyelipse.Polygon.Id := 3;
-
-  //TODO: setting an alpha fill should be optional!
-  polyelipse.Style.NumAlphaGradColors := 2;
-  polyelipse.Style.AlphaGradColor[0].a:=0;
-  polyelipse.Style.AlphaGradColor[1].a:=1;
-
   polyelipse.Init;
 
 
@@ -388,9 +380,9 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   circfillpoly.Style.FillType := glvgCircularGradient;
 
-  circfillpoly.Style.NumAlphaGradColors := 2;
+//  circfillpoly.Style.NumAlphaGradColors := 2;
 
-  with circfillpoly.Style.AlphaGradColor[0] do
+(*  with circfillpoly.Style.AlphaGradColor[0] do
   begin
     x:=200; //use x pos from figure should autocalc center but be overideable
     y:=200; //use y pos from figure should autocalc center but be overideable
@@ -398,7 +390,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
     r:=1.0;
     g:=1.0;
     b:=1.0;
-    a:=0.8;
+    a:=0.5;
   end;
 
   with circfillpoly.Style.AlphaGradColor[1] do
@@ -408,11 +400,11 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
     r:=1.0;
     g:=1.0;
     b:=1.0;
-    a:=1.0;
-  end;
+    a:=0.5;
+  end; *)
 
 //  circfillpoly.Style.AlphaFillType := glvgCircularGradient;
-  circfillpoly.Style.AlphaFillType := glvgLinearGradient;
+//  circfillpoly.Style.AlphaFillType := glvgLinearGradient;
 
   circfillpoly.Init;
   circfillpoly.Polygon.Tesselate;
@@ -428,25 +420,8 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
 end;
 
-procedure TOpenGLRender.Draw;
+procedure quad1;
 begin
-  glMatrixMode (GL_PROJECTION); glLoadIdentity(); glOrtho (0, 640, 480, 0,-100,100);
-  glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
-
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
-(*
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_BLEND);
-
-  glcolor4f(0,1,0,1);
-  glbegin(GL_QUADS);
-	  glVertex3f(0, 480, 0.0);		// Top Left
-	  glVertex3f(640, 480, 0.0);		// Top Right
-
-	  glVertex3f(640, 0, 0.0);		// Bottom Right
-	  glVertex3f(0, 0, 0.0);		// Bottom Left
-  glend;
-
   //FIRST QUAD
 
   //turning off writing to the color buffer and depth buffer so we only
@@ -475,8 +450,8 @@ begin
 
 
   //draw alpha fill
-  glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glColorMask(FALSE,FALSE,FALSE, TRUE);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glColorMask(TRUE,TRUE,TRUE, TRUE);
 
   glbegin(GL_QUADS);
     glcolor4f(1,1,1,1); //SOLID
@@ -488,7 +463,7 @@ begin
   glend;
 
   //draw fill
-  glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+  //glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
   glColorMask(TRUE,TRUE, TRUE, FALSE); //but not alpha
 
   glbegin(GL_QUADS);
@@ -503,8 +478,11 @@ begin
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glColorMask(TRUE,TRUE, TRUE, TRUE);
   glDisable(GL_STENCIL_TEST);
+end;
 
-  //SECOND QUAD
+procedure quad2;
+begin
+    //SECOND QUAD
 
     //turning off writing to the color buffer and depth buffer so we only
   //write to stencil buffer
@@ -532,11 +510,11 @@ begin
 
 
   //draw alpha fill
-  glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   glColorMask(FALSE,FALSE,FALSE, TRUE);
 
   glbegin(GL_QUADS);
-    glcolor4f(1,1,1,1); //SOLID
+    glcolor4f(0,0,0,1); //SOLID
 	  glVertex3f(100, 360, 0.0);		// Top Left
 	  glVertex3f(380, 360, 0.0);		// Top Right
     glcolor4f(1,1,1,0.0); //TRANSPARENT
@@ -545,7 +523,7 @@ begin
   glend;
 
   //draw fill
-  glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
   glColorMask(TRUE,TRUE, TRUE, FALSE); //but not alpha
 
   glbegin(GL_QUADS);
@@ -560,7 +538,35 @@ begin
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glColorMask(TRUE,TRUE, TRUE, TRUE);
   glDisable(GL_STENCIL_TEST);
+end;
+
+procedure TOpenGLRender.Draw;
+begin
+  glMatrixMode (GL_PROJECTION); glLoadIdentity(); glOrtho (0, 640, 480, 0,-100,100);
+  glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
+
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT OR GL_STENCIL_BUFFER_BIT);
+  (*
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+
+  glcolor4f(0,1,0,1);
+  glbegin(GL_QUADS);
+	  glVertex3f(0, 480, 0.0);		// Top Left
+	  glVertex3f(640, 480, 0.0);		// Top Right
+
+	  glVertex3f(640, 0, 0.0);		// Bottom Right
+	  glVertex3f(0, 0, 0.0);		// Bottom Left
+  glend;
+
+  //quad2;
+  quad1;
   *)
+
+
+
+
+
 
 
   //AntiAlias (may or may not work)
@@ -586,11 +592,11 @@ glpopmatrix();
 
   //polygon render
 //  polystar.Render;
-//  polystar.RenderPath;
+  polystar.RenderPath;
 
   polyelipse.Render;
 
-//  polyline.Render;
+  polyline.Render;
 
   pt2.Text:=FloatTostr(Round(fFPS))+ ' fps';
   pt2.Render;
@@ -601,7 +607,7 @@ glpopmatrix();
   circfillpoly.Render;
 
   //rotate rounded rectangle
-  glrotatef(angle,0,0,1);
+  //glrotatef(angle,0,0,1);
   polyrect.Render;
 
 
