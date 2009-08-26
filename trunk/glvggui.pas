@@ -212,7 +212,7 @@ uses dglopengl;
 
 
     TglvgRect(FElements[1]).Style.FillType := glvgSolid;
-    TglvgRect(FElements[1]).Style.AlphaFillType := glvgLinearGradient;
+//    TglvgRect(FElements[1]).Style.AlphaFillType := glvgLinearGradient;
     TglvgRect(FElements[1]).Style.LineType := glvgNone;
 
     TglvgRect(FElements[1]).Init;
@@ -238,7 +238,7 @@ uses dglopengl;
 
 
     TglvgRect(FElements[2]).Style.FillType := glvgSolid;
-    TglvgRect(FElements[2]).Style.AlphaFillType := glvgLinearGradient;
+//    TglvgRect(FElements[2]).Style.AlphaFillType := glvgLinearGradient;
     TglvgRect(FElements[2]).Style.LineType := glvgNone;
 
     TglvgRect(FElements[2]).Init;

@@ -101,13 +101,13 @@ private
   FGradColorAngleAlpha: single;  //TODO: consider gradient to be a seperate class
   FNumGradColors: integer;
   FGradColors: array of TColor;
-  FNumAlphaGradColors: integer;
-  FAlphaGradColors: array of TColor;
+//  FNumAlphaGradColors: integer;
+//  FAlphaGradColors: array of TColor;
   FLineWidth: single;
   FFillType: TglvgFillType;
-  FAlphaFillType: TglvgFillType;
+//  FAlphaFillType: TglvgFillType;
   FlineType: TglvgFillType;
-  FAlphaLineType: TglvgFillType;
+//  FAlphaLineType: TglvgFillType;
   FTextureFileName: string;
   FTexture: TglBitmap2D;
   FTextureId: GLuInt;
@@ -116,13 +116,13 @@ private
   procedure DrawCircle(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
   procedure DrawRing(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
   procedure DrawFill(radius: single; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
-  procedure DrawAlphaFill(radius: single; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
+//  procedure DrawAlphaFill(radius: single; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
   procedure SetGradColor(Index: integer; AValue: TColor);
   function GetGradColor(Index: integer): TColor;
   procedure SetNumGradColors(AValue: integer);
-  procedure SetAlphaGradColor(Index: integer; AValue: TColor);
-  function GetAlphaGradColor(Index: integer): TColor;
-  procedure SetNumAlphaGradColors(AValue: integer);
+//  procedure SetAlphaGradColor(Index: integer; AValue: TColor);
+//  function GetAlphaGradColor(Index: integer): TColor;
+//  procedure SetNumAlphaGradColors(AValue: integer);
 public
   constructor Create();
   destructor Destroy(); override;
@@ -130,15 +130,15 @@ public
   property GradColorAngleAlpha: single read FGradColorAngleAlpha write FGradColorAngleAlpha;
   property GradColor[i: integer]: TColor read GetGradColor write SetGradColor;
   property NumGradColors: integer read FNumGradColors write SetNumGradColors;
-  property AlphaGradColor[i: integer]: TColor read GetAlphaGradColor write SetAlphaGradColor;
-  property NumAlphaGradColors: integer read FNumGradColors write SetNumAlphaGradColors;
+//  property AlphaGradColor[i: integer]: TColor read GetAlphaGradColor write SetAlphaGradColor;
+//  property NumAlphaGradColors: integer read FNumGradColors write SetNumAlphaGradColors;
   property Color: TColor read FColor write FColor;
   property LineColor: TColor read FLineColor write FLineColor;
   property LineWidth: single read FLineWidth  write FLineWidth;
   property FillType: TglvgFillType read FFillType write FFillType;
   property LineType: TglvgFillType read FLineType write FLineType;
-  property AlphaFillType: TglvgFillType read FAlphaFillType write FAlphaFillType;
-  property AlphaLineType: TglvgFillType read FAlphaLineType write FAlphaLineType;
+//  property AlphaFillType: TglvgFillType read FAlphaFillType write FAlphaFillType;
+//  property AlphaLineType: TglvgFillType read FAlphaLineType write FAlphaLineType;
   property TextureAngle: single read FTextureAngle write FTextureAngle;
   property TextureId: GluInt read FTextureId;
   property TextureFileName: string read FTextureFileName write FTextureFileName;
@@ -390,10 +390,10 @@ begin
       FPolyShape.ApplyGradFill();
     end;
 
-    if FPolyShape.Style.FAlphaFillType = glvgLinearGradient then
-    begin
-      FPolyShape.ApplyAlphaGradFill();
-    end;
+//    if FPolyShape.Style.FAlphaFillType = glvgLinearGradient then
+//    begin
+//      FPolyShape.ApplyAlphaGradFill();
+//    end;
   end;
 
   if FPolyShape.Style.FillType = glvgTexture then
@@ -1101,8 +1101,9 @@ begin
 
   FFillType := glvgnone;
   FLineType := glvgsolid;
+//  FAlphaFillType := glvgSolid;
 
-  FColor.SetColor(1,0,0,1.0);     //first set color etc
+  FColor.SetColor(1.0,0,0,1.0);     //first set color etc
   FLineWidth := 1.0;
   FLineColor.SetColor(1,1,1,1);
 
@@ -1234,10 +1235,10 @@ begin
 
 //draw filled boundingbox
 glBegin(GL_QUADS);				// Draw A Quad
-  glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
+  glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
 	glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMaxPoint.Y, 0.0);		// Top Left
 	glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMaxPoint.Y, 0.0);		// Top Right
-  glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a); //inner
+  glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a); //inner
 	glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMinPoint.Y, 0.0);		// Bottom Right
 	glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMinPoint.Y, 0.0);		// Bottom Left
 
@@ -1280,9 +1281,9 @@ radius := colorfrom.x - colorto.x;
        angle:=i * 2* PI / Segments;
        x2:=x+(radius*sin(angle));
        y2:=y+(radius*cos(angle));
-       glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a); //inner
+       glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a); //inner
        glVertex2d(x,y);
-       glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a); //outer
+       glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a); //outer
        glVertex2d(x1,y1);
        glVertex2d(x2,y2);
        y1:=y2;
@@ -1322,10 +1323,10 @@ Begin
             ex := Cos(a);
             ey := Sin(a);
             // inner ring edge
-            glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
+            glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
             glVertex3f(r2 * ex,r2 * ey,0);
             // outer ring edge
-            glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a);
+            glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
             glVertex3f(r1 * ex,r1 * ey,0);
         End;
         glEnd;
@@ -1337,6 +1338,11 @@ var
  i:integer;
  addcolor: TColor;
 begin
+  if FFillType = glvgSolid then
+  begin
+    DrawBox(FColor.x, FColor.y, FColor, FColor, aboundboxminpoint, aboundboxmaxpoint);
+  end;
+
   if FFillType = glvgLinearGradient then
   begin
     if fNumGradColors >= 2 then
@@ -1362,7 +1368,7 @@ begin
       addcolor.r := FGradColors[fNumGradColors-1].r;
       addcolor.g := FGradColors[fNumGradColors-1].g;
       addcolor.b := FGradColors[fNumGradColors-1].b;
-      addcolor.a := FGradColors[fNumGradColors-1].a;
+      addcolor.a := FColor.a;//[fNumGradColors-1].a;
 
       DrawRing(FGradColors[0].x, FGradColors[0].y,FGradColors[fNumGradColors-1],AddColor);
 
@@ -1370,17 +1376,24 @@ begin
     end;
   end;
 end;
-
+(*
 procedure TStyle.DrawAlphaFill(radius: single; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
 var
  i:integer;
  addcolor: TColor;
 begin
+  if FAlphaFillType = glvgSolid then
+  begin
+    DrawBox(FColor.x, FColor.y, FColor, FColor, aboundboxminpoint, aboundboxmaxpoint);
+  end;
+
   if FAlphaFillType = glvgLinearGradient then
   begin
     if fNumAlphaGradColors >= 2 then
     DrawBox(FAlphaGradColors[0].x, FAlphaGradColors[0].y, FAlphaGradColors[0], FAlphaGradColors[1], aboundboxminpoint, aboundboxmaxpoint);
   end;
+
+
 
   if FAlphaFillType = glvgCircularGradient then
   begin
@@ -1410,6 +1423,7 @@ begin
     end;
   end;
 end;
+*)
 
 procedure TStyle.SetNumGradColors(AValue: integer);
 var
@@ -1436,7 +1450,7 @@ begin
 
   result := self.FGradColors[Index];
 end;
-
+(*
 procedure TStyle.SetNumAlphaGradColors(AValue: integer);
 var
   i: integer;
@@ -1462,6 +1476,7 @@ begin
 
   result := self.FAlphaGradColors[Index];
 end;
+*)
 
 //TPolygon
 
@@ -1753,8 +1768,9 @@ if FStyle.FillType <> glvgNone then
 begin
   if FTesselated = false then Tesselate;
 
-  if (FStyle.FillType = glvgCircularGradient) or (FStyle.FillType = glvgLinearGradient)  then
-  begin
+//  if (FStyle.FillType = glvgCircularGradient) or (FStyle.FillType = glvgLinearGradient)  then
+//  begin
+
     //prepare draw shape
     //turning off writing to the color buffer and depth buffer so we only
     //write to stencil buffer
@@ -1780,29 +1796,24 @@ begin
     // don't modify the contents of the stencil buffer
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
+    //draw colors again
+    glColorMask(TRUE,TRUE, TRUE, TRUE);
 
     //draw alpha fill
-    //glBlendFunc(GL_DST_COLOR, GL_ZERO);
-    //glBlendFunc(GL_ONE_MINUS_SRC_ALPHA,GL_SRC_ALPHA);
-    glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColorMask(FALSE,FALSE,FALSE, TRUE);
-    fStyle.DrawAlphaFill(fBoundBoxRadius,fboundboxminpoint, fboundboxmaxpoint);
-
-
+    //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    //fStyle.DrawAlphaFill(fBoundBoxRadius,fboundboxminpoint, fboundboxmaxpoint);
     //draw fill
-    //glBlendFunc(GL_ONE_MINUS_DST_ALPHA,GL_SRC_ALPHA);
-      glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
-    glColorMask(TRUE,TRUE, TRUE, FALSE); //but not alpha
+    //glBlendFuncSeparate(GL_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA,GL_ZERO, GL_ONE);
     fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
 
     //'default' rendering again
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glColorMask(TRUE,TRUE, TRUE, TRUE);
     glDisable(GL_STENCIL_TEST);
-  end
-  else
-  begin
-
+//  end
+//  else
+//  begin
+  (*
   if FStyle.FillType = glvgTexture then
   begin
     FStyle.FTexture.Bind();
@@ -1835,8 +1846,9 @@ begin
   begin
     FStyle.FTexture.UnBind();
   end;
+  *)
 end;
-end;
+//end;
 end;
 
 procedure TPolygon.RenderBoundingBox;
@@ -2069,6 +2081,7 @@ begin
       if FFontHeight < FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.y then
         FFontHeight := FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.y;
 
+      FCharGlyph[loop].FPolyShape.Id:=loop;
       FCharGlyph[loop].Init;
 
       if FCharGlyph[loop].Style.NumGradColors >= 2 then
