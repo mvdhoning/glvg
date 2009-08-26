@@ -214,8 +214,12 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Style.GradColorAngle:=90;
   polyrect.Style.GradColorAngleAlpha:=0;
   polyrect.Style.NumGradColors := 2;
+  polyrect.Style.NumAlphaGradColors := 2;
+  polyrect.Style.AlphaGradColor[0].a :=1.0;
+  polyrect.Style.AlphaGradColor[1].a :=0.0;
   polyrect.Style.GradColor[0].a :=1.0;
-  polyrect.Style.GradColor[1].a :=0.0;
+  polyrect.Style.GradColor[1].a :=1.0;
+
   polyrect.Style.GradColor[0].SetColor('#FF0000');
   polyrect.Style.GradColor[1].SetColor('#00FF00');
 
@@ -223,6 +227,7 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   polyrect.Style.FillType := glvgLinearGradient;
   polyrect.Style.LineType := glvgSolid;
+  polyrect.Polygon.Id:=7;
   polyrect.Init;
 
   polyelipse := TglvgCircle.Create();
@@ -233,11 +238,18 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyelipse.Style.NumGradColors:=2;
   polyelipse.Style.GradColor[0].SetColor('#FF0000');
   polyelipse.Style.GradColor[1].SetColor('#00FF00');
-  polyelipse.Style.GradColor[0].z:=0;
-  polyelipse.Style.GradColor[1].z:=0;
+  //polyelipse.Style.GradColor[0].z:=0;
+  //polyelipse.Style.GradColor[1].z:=0;
   polyelipse.Style.FillType := glvgLinearGradient;
+  polyelipse.Style.AlphaFillType := glvgLinearGradient;
   polyelipse.Style.LineType := glvgNone;
   polyelipse.Polygon.Id := 3;
+
+  //TODO: setting an alpha fill should be optional!
+  polyelipse.Style.NumAlphaGradColors := 2;
+  polyelipse.Style.AlphaGradColor[0].a:=0;
+  polyelipse.Style.AlphaGradColor[1].a:=1;
+
   polyelipse.Init;
 
 
@@ -381,25 +393,26 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   with circfillpoly.Style.AlphaGradColor[0] do
   begin
     x:=200; //use x pos from figure should autocalc center but be overideable
-    y:=400; //use y pos from figure should autocalc center but be overideable
+    y:=200; //use y pos from figure should autocalc center but be overideable
     z:=1;
     r:=1.0;
     g:=1.0;
     b:=1.0;
-    a:=0.1;
+    a:=0.8;
   end;
 
   with circfillpoly.Style.AlphaGradColor[1] do
   begin
-    x:=400; //use x pos from figure should autocalc center but be overideable
+    x:=200; //use x pos from figure should autocalc center but be overideable
     z:=1;
     r:=1.0;
     g:=1.0;
     b:=1.0;
-    a:=0.6;
+    a:=1.0;
   end;
 
-  circfillpoly.Style.AlphaFillType := glvgCircularGradient;
+//  circfillpoly.Style.AlphaFillType := glvgCircularGradient;
+  circfillpoly.Style.AlphaFillType := glvgLinearGradient;
 
   circfillpoly.Init;
   circfillpoly.Polygon.Tesselate;
@@ -421,17 +434,144 @@ begin
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+(*
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+
+  glcolor4f(0,1,0,1);
+  glbegin(GL_QUADS);
+	  glVertex3f(0, 480, 0.0);		// Top Left
+	  glVertex3f(640, 480, 0.0);		// Top Right
+
+	  glVertex3f(640, 0, 0.0);		// Bottom Right
+	  glVertex3f(0, 0, 0.0);		// Bottom Left
+  glend;
+
+  //FIRST QUAD
+
+  //turning off writing to the color buffer and depth buffer so we only
+  //write to stencil buffer
+  glColorMask(FALSE, FALSE, FALSE, FALSE);
+  //enable stencil buffer
+  glEnable(GL_STENCIL_TEST);
+  //write a one to the stencil buffer everywhere we are about to draw
+  glStencilFunc(GL_ALWAYS, 2, $FFFFFFFF);
+  //this is to always pass a one to the stencil buffer where we draw
+  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+  //draw shape
+
+  glbegin(GL_QUADS);
+	  glVertex3f(0, 260, 0.0);		// Top Left
+	  glVertex3f(280, 260, 0.0);		// Top Right
+	  glVertex3f(280, 0, 0.0);		// Bottom Right
+	  glVertex3f(0, 0, 0.0);		// Bottom Left
+  glend;
+
+  //until stencil test is diabled, only write to areas where the
+  //stencil buffer has a one. This fills the shape
+  glStencilFunc(GL_EQUAL, 2, $FFFFFFFF);
+  // don't modify the contents of the stencil buffer
+  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+
+  //draw alpha fill
+  glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glColorMask(FALSE,FALSE,FALSE, TRUE);
+
+  glbegin(GL_QUADS);
+    glcolor4f(1,1,1,1); //SOLID
+	  glVertex3f(0, 260, 0.0);		// Top Left
+	  glVertex3f(280, 260, 0.0);		// Top Right
+    glcolor4f(1,1,1,0.0); //TRANSPARENT
+	  glVertex3f(280, 0, 0.0);		// Bottom Right
+	  glVertex3f(0, 0, 0.0);		// Bottom Left
+  glend;
+
+  //draw fill
+  glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+  glColorMask(TRUE,TRUE, TRUE, FALSE); //but not alpha
+
+  glbegin(GL_QUADS);
+    glcolor4f(1,0,0,1); //RED
+	  glVertex3f(0, 260, 0.0);		// Top Left
+	  glVertex3f(280, 260, 0.0);		// Top Right
+	  glVertex3f(280, 0, 0.0);		// Bottom Right
+	  glVertex3f(0, 0, 0.0);		// Bottom Left
+  glend;
+
+  //'default' rendering again
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glColorMask(TRUE,TRUE, TRUE, TRUE);
+  glDisable(GL_STENCIL_TEST);
+
+  //SECOND QUAD
+
+    //turning off writing to the color buffer and depth buffer so we only
+  //write to stencil buffer
+  glColorMask(FALSE, FALSE, FALSE, FALSE);
+  //enable stencil buffer
+  glEnable(GL_STENCIL_TEST);
+  //write a one to the stencil buffer everywhere we are about to draw
+  glStencilFunc(GL_ALWAYS, 4, $FFFFFFFF);
+  //this is to always pass a one to the stencil buffer where we draw
+  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+  //draw shape
+
+  glbegin(GL_QUADS);
+	  glVertex3f(100, 360, 0.0);		// Top Left
+	  glVertex3f(380, 360, 0.0);		// Top Right
+	  glVertex3f(380, 100, 0.0);		// Bottom Right
+	  glVertex3f(100, 100, 0.0);		// Bottom Left
+  glend;
+
+  //until stencil test is diabled, only write to areas where the
+  //stencil buffer has a one. This fills the shape
+  glStencilFunc(GL_EQUAL, 4, $FFFFFFFF);
+  // don't modify the contents of the stencil buffer
+  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+
+  //draw alpha fill
+  glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glColorMask(FALSE,FALSE,FALSE, TRUE);
+
+  glbegin(GL_QUADS);
+    glcolor4f(1,1,1,1); //SOLID
+	  glVertex3f(100, 360, 0.0);		// Top Left
+	  glVertex3f(380, 360, 0.0);		// Top Right
+    glcolor4f(1,1,1,0.0); //TRANSPARENT
+	  glVertex3f(380, 0, 0.0);		// Bottom Right
+	  glVertex3f(100, 100, 0.0);		// Bottom Left
+  glend;
+
+  //draw fill
+  glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+  glColorMask(TRUE,TRUE, TRUE, FALSE); //but not alpha
+
+  glbegin(GL_QUADS);
+    glcolor4f(0,0,1,1); //BLUE
+	  glVertex3f(100, 360, 0.0);		// Top Left
+	  glVertex3f(380, 360, 0.0);		// Top Right
+	  glVertex3f(380, 100, 0.0);		// Bottom Right
+	  glVertex3f(100, 100, 0.0);		// Bottom Left
+  glend;
+
+  //'default' rendering again
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glColorMask(TRUE,TRUE, TRUE, TRUE);
+  glDisable(GL_STENCIL_TEST);
+  *)
 
 
   //AntiAlias (may or may not work)
-  glEnable (GL_BLEND);
+  //glEnable (GL_BLEND);
   //glEnable (GL_POLYGON_SMOOTH);
-  glDisable (GL_DEPTH_TEST);
+  //glDisable (GL_DEPTH_TEST);
 
     // Alpha Blending
-  //glEnable (GL_BLEND);
+  glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  //glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+//  glBlendFunc(GL_DST_COLOR, GL_ZERO);
 
   angle:=angle+1;
 
@@ -454,15 +594,16 @@ glpopmatrix();
 
   pt2.Text:=FloatTostr(Round(fFPS))+ ' fps';
   pt2.Render;
-  polytext.Render;
+  //polytext.Render;
 
-//  texturepoly.Render;
+  texturepoly.Render;
 
   circfillpoly.Render;
 
   //rotate rounded rectangle
   glrotatef(angle,0,0,1);
   polyrect.Render;
+
 
   //swap buffer (aka draw)
   SwapBuffers(DC);
