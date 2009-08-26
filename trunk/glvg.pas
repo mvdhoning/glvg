@@ -1229,29 +1229,29 @@ begin
 
 
 
-gltranslatef(AboundBoxMinPoint.x+100, -AboundBoxMinPoint.y+100,0);
-glrotatef(FGradColorAngle,0,0,1);
+//gltranslatef(AboundBoxMinPoint.x+100, -AboundBoxMinPoint.y+100,0);
+//glrotatef(FGradColorAngle,0,0,1);
 
 //draw filled boundingbox
 glBegin(GL_QUADS);				// Draw A Quad
-//  glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
-//	glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMaxPoint.Y, 0.0);		// Top Left
-//	glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMaxPoint.Y, 0.0);		// Top Right
-//  glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a); //inner
-//	glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMinPoint.Y, 0.0);		// Bottom Right
-//	glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMinPoint.Y, 0.0);		// Bottom Left
+  glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
+	glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMaxPoint.Y, 0.0);		// Top Left
+	glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMaxPoint.Y, 0.0);		// Top Right
+  glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a); //inner
+	glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMinPoint.Y, 0.0);		// Bottom Right
+	glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMinPoint.Y, 0.0);		// Bottom Left
 
 //TODO: Values below should be calculated using size corrected by real screen size
-  glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
-	glVertex3f(0, 260, 0.0);		// Top Left
-	glVertex3f(280, 260, 0.0);		// Top Right
-  glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a); //inner
-	glVertex3f(280, 0, 0.0);		// Bottom Right
-	glVertex3f(0, 0, 0.0);		// Bottom Left
+//  glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
+//	glVertex3f(0, 260, 0.0);		// Top Left
+//	glVertex3f(280, 260, 0.0);		// Top Right
+//  glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a); //inner
+//	glVertex3f(280, 0, 0.0);		// Bottom Right
+//	glVertex3f(0, 0, 0.0);		// Bottom Left
 glEnd();
 
-glrotatef(-FGradColorAngle,0,0,1);
-gltranslatef(-AboundBoxMinPoint.x-100, +AboundBoxMinPoint.y-100,0);
+//glrotatef(-FGradColorAngle,0,0,1);
+//gltranslatef(-AboundBoxMinPoint.x-100, +AboundBoxMinPoint.y-100,0);
 
 
 
@@ -1376,7 +1376,7 @@ var
  i:integer;
  addcolor: TColor;
 begin
-  if FFillType = glvgLinearGradient then
+  if FAlphaFillType = glvgLinearGradient then
   begin
     if fNumAlphaGradColors >= 2 then
     DrawBox(FAlphaGradColors[0].x, FAlphaGradColors[0].y, FAlphaGradColors[0], FAlphaGradColors[1], aboundboxminpoint, aboundboxmaxpoint);
@@ -1753,7 +1753,7 @@ if FStyle.FillType <> glvgNone then
 begin
   if FTesselated = false then Tesselate;
 
-  if (FStyle.FillType = glvgCircularGradient) {or (FStyle.FillType = glvgLinearGradient)}  then
+  if (FStyle.FillType = glvgCircularGradient) or (FStyle.FillType = glvgLinearGradient)  then
   begin
     //prepare draw shape
     //turning off writing to the color buffer and depth buffer so we only
@@ -1782,13 +1782,16 @@ begin
 
 
     //draw alpha fill
-    glBlendFunc(GL_DST_COLOR, GL_ZERO);
+    //glBlendFunc(GL_DST_COLOR, GL_ZERO);
+    //glBlendFunc(GL_ONE_MINUS_SRC_ALPHA,GL_SRC_ALPHA);
+    glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glColorMask(FALSE,FALSE,FALSE, TRUE);
     fStyle.DrawAlphaFill(fBoundBoxRadius,fboundboxminpoint, fboundboxmaxpoint);
 
 
     //draw fill
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+    //glBlendFunc(GL_ONE_MINUS_DST_ALPHA,GL_SRC_ALPHA);
+      glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
     glColorMask(TRUE,TRUE, TRUE, FALSE); //but not alpha
     fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
 
