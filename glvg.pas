@@ -1226,35 +1226,51 @@ begin
 end;
 
 procedure TStyle.DrawBox(x: Single; y: Single; colorfrom: TColor; colorto: TColor; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
+var
+  range: TPoint;
+  offset: TPoint;
+  loop: integer;
 begin
+  //caclulate st coords
+  range.x := (FTexture.Width);
+  range.y := (FTexture.Height);
+  offset.x := 0 + x;
+  offset.y := 0 + y;
 
+  //gltranslatef(AboundBoxMinPoint.x+100, -AboundBoxMinPoint.y+100,0);
+  //glrotatef(FGradColorAngle,0,0,1);
 
+  //draw filled boundingbox using triangles
+  glBegin(GL_TRIANGLES);
 
-//gltranslatef(AboundBoxMinPoint.x+100, -AboundBoxMinPoint.y+100,0);
-//glrotatef(FGradColorAngle,0,0,1);
+    glTexCoord2f((ABoundBoxMinPoint.X-offset.x) / range.x, (ABoundBoxMinPoint.Y-offset.y) / range.y);
+    glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
+    glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMinPoint.Y, 0.0);
 
-//draw filled boundingbox
-glBegin(GL_QUADS);				// Draw A Quad
-  glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
-	glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMaxPoint.Y, 0.0);		// Top Left
-	glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMaxPoint.Y, 0.0);		// Top Right
-  glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a); //inner
-	glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMinPoint.Y, 0.0);		// Bottom Right
-	glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMinPoint.Y, 0.0);		// Bottom Left
+    glTexCoord2f((ABoundBoxMaxPoint.X-offset.x) / range.x, (ABoundBoxMinPoint.Y-offset.y) / range.y);
+    glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
+    glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMinPoint.Y, 0.0);
 
-//TODO: Values below should be calculated using size corrected by real screen size
-//  glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
-//	glVertex3f(0, 260, 0.0);		// Top Left
-//	glVertex3f(280, 260, 0.0);		// Top Right
-//  glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a); //inner
-//	glVertex3f(280, 0, 0.0);		// Bottom Right
-//	glVertex3f(0, 0, 0.0);		// Bottom Left
-glEnd();
+    glTexCoord2f((ABoundBoxMaxPoint.X-offset.x) / range.x, (ABoundBoxMaxPoint.Y-offset.y) / range.y);
+    glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
+    glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMaxPoint.Y, 0.0);
 
-//glrotatef(-FGradColorAngle,0,0,1);
-//gltranslatef(-AboundBoxMinPoint.x-100, +AboundBoxMinPoint.y-100,0);
+    glTexCoord2f((ABoundBoxMaxPoint.X-offset.x) / range.x, (ABoundBoxMaxPoint.Y-offset.y) / range.y);
+    glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
+    glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMaxPoint.Y, 0.0);
 
+    glTexCoord2f((ABoundBoxMinPoint.X-offset.x) / range.x, (ABoundBoxMaxPoint.Y-offset.y) / range.y);
+    glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
+    glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMaxPoint.Y, 0.0);
 
+    glTexCoord2f((ABoundBoxMinPoint.X-offset.x) / range.x, (ABoundBoxMinPoint.Y-offset.y) / range.y);
+    glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
+    glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMinPoint.Y, 0.0);
+
+  glEnd();
+
+  //glrotatef(-FGradColorAngle,0,0,1);
+  //gltranslatef(-AboundBoxMinPoint.x-100, +AboundBoxMinPoint.y-100,0);
 
 end;
 
@@ -1338,6 +1354,26 @@ var
  i:integer;
  addcolor: TColor;
 begin
+  if FillType = glvgTexture then
+  begin
+    FTexture.Bind();
+
+    //experimental texture matrix (rotating around center)
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    glTranslatef(0.5,0.5,0.0); //no need to know the size of the texture
+    glRotatef(FTextureAngle,0.0,0.0,1.0);
+    glTranslatef(-0.5,-0.5,0.0);
+    glMatrixMode(GL_MODELVIEW);
+
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                     GL_REPEAT  );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                     GL_REPEAT );
+
+    DrawBox(ABoundBoxMinPoint.x, ABoundBoxMinPoint.y, FColor, FColor, aboundboxminpoint, aboundboxmaxpoint);
+  end;
+
   if FFillType = glvgSolid then
   begin
     DrawBox(FColor.x, FColor.y, FColor, FColor, aboundboxminpoint, aboundboxmaxpoint);
@@ -1375,55 +1411,12 @@ begin
       AddColor.Free;
     end;
   end;
-end;
-(*
-procedure TStyle.DrawAlphaFill(radius: single; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
-var
- i:integer;
- addcolor: TColor;
-begin
-  if FAlphaFillType = glvgSolid then
+
+  if FillType = glvgTexture then
   begin
-    DrawBox(FColor.x, FColor.y, FColor, FColor, aboundboxminpoint, aboundboxmaxpoint);
-  end;
-
-  if FAlphaFillType = glvgLinearGradient then
-  begin
-    if fNumAlphaGradColors >= 2 then
-    DrawBox(FAlphaGradColors[0].x, FAlphaGradColors[0].y, FAlphaGradColors[0], FAlphaGradColors[1], aboundboxminpoint, aboundboxmaxpoint);
-  end;
-
-
-
-  if FAlphaFillType = glvgCircularGradient then
-  begin
-
-    if fNumAlphaGradColors >= 2 then
-      DrawCircle(FAlphaGradColors[0].x, FAlphaGradColors[0].y,FAlphaGradColors[0],FAlphaGradColors[1]);
-
-    if fNumAlphaGradColors >=3 then
-    begin
-      for i := 2 to fNumAlphaGradColors - 1 do
-        DrawRing(FAlphaGradColors[0].x, FAlphaGradColors[0].y,FAlphaGradColors[i-1],FAlphaGradColors[i]);
-    end;
-
-    //extend (clamping)
-    if (FAlphaGradColors[fNumAlphaGradColors-1].x) < (radius*2) then
-    begin
-      addcolor := TColor.Create;
-      addcolor.x := radius * 2; //just to be sure it is large enough
-      addcolor.r := FAlphaGradColors[fNumAlphaGradColors-1].r;
-      addcolor.g := FALphaGradColors[fNumAlphaGradColors-1].g;
-      addcolor.b := FAlphaGradColors[fNumAlphaGradColors-1].b;
-      addcolor.a := FAlphaGradColors[fNumAlphaGradColors-1].a;
-
-      DrawRing(FAlphaGradColors[0].x, FAlphaGradColors[0].y,FAlphaGradColors[fNumAlphaGradColors-1],AddColor);
-
-      AddColor.Free;
-    end;
+    FTexture.UnBind();
   end;
 end;
-*)
 
 procedure TStyle.SetNumGradColors(AValue: integer);
 var
@@ -1450,33 +1443,6 @@ begin
 
   result := self.FGradColors[Index];
 end;
-(*
-procedure TStyle.SetNumAlphaGradColors(AValue: integer);
-var
-  i: integer;
-begin
-if AValue > FNumAlphaGradColors then
-begin
-
-  SetLength(FAlphaGradColors, AValue);
-  for i := FNumAlphaGradColors to AValue - 1 do
-    FAlphaGradColors[i] := TColor.Create;
-  FNumAlphaGradColors:=AValue;
-end;
-end;
-
-procedure TStyle.SetAlphaGradColor(Index: Integer; AValue: TColor);
-begin
-  self.FAlphaGradColors[Index] := AValue;
-end;
-
-function TStyle.GetAlphaGradColor(Index: Integer): TColor;
-begin
-  if FNumALphaGradColors>=Index then
-
-  result := self.FAlphaGradColors[Index];
-end;
-*)
 
 //TPolygon
 
@@ -1764,91 +1730,52 @@ Procedure TPolygon.Render();
 var
   loop: integer;
 begin
-if FStyle.FillType <> glvgNone then
+if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
 begin
   if FTesselated = false then Tesselate;
 
-//  if (FStyle.FillType = glvgCircularGradient) or (FStyle.FillType = glvgLinearGradient)  then
-//  begin
+  //prepare draw shape
 
-    //prepare draw shape
-    //turning off writing to the color buffer and depth buffer so we only
-    //write to stencil buffer
-    glColorMask(FALSE, FALSE, FALSE, FALSE);
-    //enable stencil buffer
-    glEnable(GL_STENCIL_TEST);
-    //write a one to the stencil buffer everywhere we are about to draw
-    glStencilFunc(GL_ALWAYS, fid, $FFFFFFFF);
-    //this is to always pass a one to the stencil buffer where we draw
-    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-    //draw shape
+  //turning off writing to the color buffer and depth buffer so we only
+  //write to stencil buffer
+  glColorMask(FALSE, FALSE, FALSE, FALSE);
 
-    glbegin(GL_TRIANGLES);
-    for loop:=0 to FVertexCount-1 do
-    begin
-      glvertex3f(FVertex[loop].X,FVertex[loop].Y,FVertex[loop].Z);
-    end;
-    glend;
+  //enable stencil buffer
+  glEnable(GL_STENCIL_TEST);
 
-    //until stencil test is diabled, only write to areas where the
-    //stencil buffer has a one. This fills the shape
-    glStencilFunc(GL_EQUAL, fid, $FFFFFFFF);
-    // don't modify the contents of the stencil buffer
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+  //write a one to the stencil buffer everywhere we are about to draw
+  glStencilFunc(GL_ALWAYS, fid, $FFFFFFFF);
 
-    //draw colors again
-    glColorMask(TRUE,TRUE, TRUE, TRUE);
+  //this is to always pass a one to the stencil buffer where we draw
+  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
-    //draw alpha fill
-    //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    //fStyle.DrawAlphaFill(fBoundBoxRadius,fboundboxminpoint, fboundboxmaxpoint);
-    //draw fill
-    //glBlendFuncSeparate(GL_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA,GL_ZERO, GL_ONE);
-    fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
-
-    //'default' rendering again
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColorMask(TRUE,TRUE, TRUE, TRUE);
-    glDisable(GL_STENCIL_TEST);
-//  end
-//  else
-//  begin
-  (*
-  if FStyle.FillType = glvgTexture then
-  begin
-    FStyle.FTexture.Bind();
-
-    //experimental texture matrix (rotating around center)
-    glMatrixMode(GL_TEXTURE);
-    glLoadIdentity();
-    glTranslatef(0.5,0.5,0.0); //no need to know the size of the texture
-    glRotatef(FStyle.FTextureAngle,0.0,0.0,1.0);
-    glTranslatef(-0.5,-0.5,0.0);
-    glMatrixMode(GL_MODELVIEW);
-
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                     GL_REPEAT  );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                     GL_REPEAT );
-
-  end;
-
+  //draw shape
   glbegin(GL_TRIANGLES);
   for loop:=0 to FVertexCount-1 do
   begin
-    gltexcoord2f(FVertex[loop].S, FVertex[loop].T);
-    glcolor4f(FVertex[loop].R,FVertex[loop].G,FVertex[loop].B,FVertex[loop].A);
     glvertex3f(FVertex[loop].X,FVertex[loop].Y,FVertex[loop].Z);
   end;
   glend;
 
-  if FStyle.FillType = glvgTexture then
-  begin
-    FStyle.FTexture.UnBind();
-  end;
-  *)
+  //until stencil test is diabled, only write to areas where the
+  //stencil buffer has a one. This fills the shape
+  glStencilFunc(GL_EQUAL, fid, $FFFFFFFF);
+
+  // don't modify the contents of the stencil buffer
+  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+  //draw colors again
+  glColorMask(TRUE,TRUE, TRUE, TRUE);
+
+  //draw fill
+  fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
+
+  //'default' rendering again
+  glColorMask(TRUE,TRUE, TRUE, TRUE);
+  glDisable(GL_STENCIL_TEST);
+
 end;
-//end;
+
 end;
 
 procedure TPolygon.RenderBoundingBox;
