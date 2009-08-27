@@ -141,18 +141,14 @@ begin
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
   // track material ambient and diffuse from surface color, call it before glEnable(GL_COLOR_MATERIAL)
-  glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-  glEnable(GL_COLOR_MATERIAL);
+//  glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+//  glEnable(GL_COLOR_MATERIAL);
 
   // Set lighting
-  glEnable(GL_LIGHTING);
-  glLightfv(GL_LIGHT0, GL_POSITION, @light0_position);
-  glLightfv(GL_LIGHT0, GL_AMBIENT, @ambient);
-  glEnable(GL_LIGHT0);
-
-  // Alpha Blending
-  //glEnable (GL_BLEND);
-  //glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//  glEnable(GL_LIGHTING);
+//  glLightfv(GL_LIGHT0, GL_POSITION, @light0_position);
+//  glLightfv(GL_LIGHT0, GL_AMBIENT, @ambient);
+//  glEnable(GL_LIGHT0);
 
   // Set clear background color
   glClearColor(0,0,0,0);
@@ -163,40 +159,39 @@ begin
   polystar.Style.LineWidth := 1.0;
   polystar.Style.LineColor.SetColor(1,1,1,1);
 
-//  polystar.Path := 'M100,200 C100,100 400,100 400,200'; //only then path
+  //polystar.Path := 'M100,200 C100,100 400,100 400,200'; //only then path
 
-  //  http://commons.wikimedia.org/wiki/File:Cat_drawing.svg
+  //http://commons.wikimedia.org/wiki/File:Cat_drawing.svg
   mypath := 'M 380.76986,379.21038 C 380.76986,439.81681 324.84665,489.00463 255.94126,489.00463';
   mypath := mypath + ' C 187.03587,489.00463 131.11266,439.81681 131.11266,379.21038 C 131.11266';
   mypath := mypath + ',348.90716 118.81375,247.16173 141.40773,227.28897 C 152.70472,217.35259 192.4347';
   mypath := mypath + ',283.60703 207.36733,278.0487 C 222.29995,272.49036 238.71492,269.41612 255.94126,269.41612';
   mypath := mypath + ' C 273.16761,269.41612 289.58257,272.49036 304.51519,278.0487 C 319.44781,283.60703 357.30068';
   mypath := mypath + ',223.95676 368.59767,233.89313 C 391.19165,253.76589 380.76986,348.90716 380.76986,379.21038 z';
-//  polystar.Path := mypath;
+  //polystar.Path := mypath;
 
   mypath := 'M371,1 H 29 V144 H264 Q 264,151 264,166 Q265,180 265, 188 Q 265,212 249,212 H 132 Q 83,212 55,247 Q 29,279 29,329 V 566 H 335 V 422 H 136 V 375 Q 136,360 144,356 Q 148,355 168,355 H 279 Q 327,355 352,309 Q 371,273 371,221 V 1 Z';
-//  mypath := 'M365,563 L 183,-33 L 0,563 H 101 L 183, 296 L 270, 563 H365 Z';
-//  mypath := 'M35,1 H 18 V 564 H 355 V 420 H 125 V 144 H 248 V 211 H 156 V 355 H 355 V 1 Z';
+  //mypath := 'M365,563 L 183,-33 L 0,563 H 101 L 183, 296 L 270, 563 H365 Z';
+  //mypath := 'M35,1 H 18 V 564 H 355 V 420 H 125 V 144 H 248 V 211 H 156 V 355 H 355 V 1 Z';
 
-mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
-//mypath := 'M 95 712 c 41 0 66 -28 66 -67 c 0 -7 -1 -12 -2 -19 c -19 -117 -44 -249 -47 -327 c -1 -28 -2 -57 -2 -93 h -29 c 0 127 -8 177 -29 295 c -24 132 -26 135 -26 143 c 0 40 30 68 69 68 z ';
-//mypath := mypath + ' M 97 138 c 36 0 62 -32 62 -68 c 0 -37 -26 -70 -62 -70 s -63 33 -63 70 c 0 36 27 68 63 68 z';
+  mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
+  //mypath := 'M 95 712 c 41 0 66 -28 66 -67 c 0 -7 -1 -12 -2 -19 c -19 -117 -44 -249 -47 -327 c -1 -28 -2 -57 -2 -93 h -29 c 0 127 -8 177 -29 295 c -24 132 -26 135 -26 143 c 0 40 30 68 69 68 z ';
+  //mypath := mypath + ' M 97 138 c 36 0 62 -32 62 -68 c 0 -37 -26 -70 -62 -70 s -63 33 -63 70 c 0 36 27 68 63 68 z';
 
-//mypath := 'M 420 -75 L 420 -75 L 420 0 L 420 0 L 34 0 L 34 0 L 34 25 L 34 25 L 65.921875 25 C 65.921875 25 121.765625';
-//mypath := mypath + ' 25 147.046875 57.59375 C 147.046875 57.59375 163 78.859375 163 160 L 163 160 L 163 744 C 163 744 163';
-//mypath := mypath + ' 812.5 154.359375 834.4375 C 154.359375 834.4375 147.703125 851.0625 127.09375 863.046875 C 127.09375 863.046875';
-//mypath := mypath + ' 97.828125 879 65.921875 879 L 65.921875 879 L 34 879 L 34 879 L 34 904 L 34 904 L 420 904 L 420 904 L 420 879 L 420';
-//mypath := mypath + ' 879 L 387.578125 879 C 387.578125 879 332.671875 879 307.53125 846.40625 C 307.53125 846.40625 291 825.140625 291 744';
-//mypath := mypath + ' L 291 744 L 291 160 C 291 160 291 91.5 299.59375 69.5625 C 299.59375 69.5625 306.21875 52.9375 327.390625 40.953125 C 327.390625 40.953125 355.828125 25 387.578125 25 L 387.578125 25 Z';
+  //mypath := 'M 420 -75 L 420 -75 L 420 0 L 420 0 L 34 0 L 34 0 L 34 25 L 34 25 L 65.921875 25 C 65.921875 25 121.765625';
+  //mypath := mypath + ' 25 147.046875 57.59375 C 147.046875 57.59375 163 78.859375 163 160 L 163 160 L 163 744 C 163 744 163';
+  //mypath := mypath + ' 812.5 154.359375 834.4375 C 154.359375 834.4375 147.703125 851.0625 127.09375 863.046875 C 127.09375 863.046875';
+  //mypath := mypath + ' 97.828125 879 65.921875 879 L 65.921875 879 L 34 879 L 34 879 L 34 904 L 34 904 L 420 904 L 420 904 L 420 879 L 420';
+  //mypath := mypath + ' 879 L 387.578125 879 C 387.578125 879 332.671875 879 307.53125 846.40625 C 307.53125 846.40625 291 825.140625 291 744';
+  //mypath := mypath + ' L 291 744 L 291 160 C 291 160 291 91.5 299.59375 69.5625 C 299.59375 69.5625 306.21875 52.9375 327.390625 40.953125 C 327.390625 40.953125 355.828125 25 387.578125 25 L 387.578125 25 Z';
 
   polystar.Path := mypath;
 
   //cubic spline curve example
-//  polystar.Path := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
+  //polystar.Path := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
   //quadratic Bezier curve example
   //polystar.Path := 'M200,300 Q400,50 600,300 T1000,300';
-
 
   //polyfont := TPolygonfont.Create();
   //polyfont.LoadFromFile('font.txt');
@@ -214,16 +209,11 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   polyrect.Style.GradColorAngle:=90;
   polyrect.Style.GradColorAngleAlpha:=0;
   polyrect.Style.NumGradColors := 2;
-//  polyrect.Style.NumAlphaGradColors := 2;
-//  polyrect.Style.AlphaGradColor[0].a :=1.0;
-//  polyrect.Style.AlphaGradColor[1].a :=0.0;
   polyrect.Style.GradColor[0].a :=1.0;
   polyrect.Style.GradColor[1].a :=1.0;
 
   polyrect.Style.GradColor[0].SetColor('#FF0000');
   polyrect.Style.GradColor[1].SetColor('#00FF00');
-
-//  polyrect.Style.AlphaFillType := glvgLinearGradient;
 
   polyrect.Style.FillType := glvgLinearGradient;
   polyrect.Style.LineType := glvgSolid;
@@ -276,7 +266,6 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   end;
 
   polytext.Style.GradColorAngle:=90;
-  //polytext.Font.Style.SetColor(0,0,1,1);
 
   polytext.Style.FillType := glvgLinearGradient;
   polytext.Style.LineType := glvgNone; //glvgSolid;
@@ -297,8 +286,6 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   pt2.Font.LoadFromFile('times.txt');
   pt2.Font.Scale := 0.2; //TODO: Should be related to font-size?
   pt2.Text:=FloatTostr(fFPS)+ ' fps';
-  //pt2.LineWidth:=1.0;
-
 
   polyuitest := TglvgGuiObject.Create;
   polyuitest.X := 100;
@@ -379,39 +366,9 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   end;
 
   circfillpoly.Style.FillType := glvgCircularGradient;
-
-//  circfillpoly.Style.NumAlphaGradColors := 2;
-
-(*  with circfillpoly.Style.AlphaGradColor[0] do
-  begin
-    x:=200; //use x pos from figure should autocalc center but be overideable
-    y:=200; //use y pos from figure should autocalc center but be overideable
-    z:=1;
-    r:=1.0;
-    g:=1.0;
-    b:=1.0;
-    a:=0.5;
-  end;
-
-  with circfillpoly.Style.AlphaGradColor[1] do
-  begin
-    x:=200; //use x pos from figure should autocalc center but be overideable
-    z:=1;
-    r:=1.0;
-    g:=1.0;
-    b:=1.0;
-    a:=0.5;
-  end; *)
-
-//  circfillpoly.Style.AlphaFillType := glvgCircularGradient;
-//  circfillpoly.Style.AlphaFillType := glvgLinearGradient;
-
   circfillpoly.Init;
   circfillpoly.Polygon.Tesselate;
   circfillpoly.Polygon.Id:=2;
-
-
-
 
   // Enable or Disable V-Sync
   VSync := vsmSync;
@@ -420,178 +377,33 @@ mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
 
 end;
 
-procedure quad1;
-begin
-  //FIRST QUAD
-
-  //turning off writing to the color buffer and depth buffer so we only
-  //write to stencil buffer
-  glColorMask(FALSE, FALSE, FALSE, FALSE);
-  //enable stencil buffer
-  glEnable(GL_STENCIL_TEST);
-  //write a one to the stencil buffer everywhere we are about to draw
-  glStencilFunc(GL_ALWAYS, 2, $FFFFFFFF);
-  //this is to always pass a one to the stencil buffer where we draw
-  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-  //draw shape
-
-  glbegin(GL_QUADS);
-	  glVertex3f(0, 260, 0.0);		// Top Left
-	  glVertex3f(280, 260, 0.0);		// Top Right
-	  glVertex3f(280, 0, 0.0);		// Bottom Right
-	  glVertex3f(0, 0, 0.0);		// Bottom Left
-  glend;
-
-  //until stencil test is diabled, only write to areas where the
-  //stencil buffer has a one. This fills the shape
-  glStencilFunc(GL_EQUAL, 2, $FFFFFFFF);
-  // don't modify the contents of the stencil buffer
-  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-
-  //draw alpha fill
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glColorMask(TRUE,TRUE,TRUE, TRUE);
-
-  glbegin(GL_QUADS);
-    glcolor4f(1,1,1,1); //SOLID
-	  glVertex3f(0, 260, 0.0);		// Top Left
-	  glVertex3f(280, 260, 0.0);		// Top Right
-    glcolor4f(1,1,1,0.0); //TRANSPARENT
-	  glVertex3f(280, 0, 0.0);		// Bottom Right
-	  glVertex3f(0, 0, 0.0);		// Bottom Left
-  glend;
-
-  //draw fill
-  //glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-  glColorMask(TRUE,TRUE, TRUE, FALSE); //but not alpha
-
-  glbegin(GL_QUADS);
-    glcolor4f(1,0,0,1); //RED
-	  glVertex3f(0, 260, 0.0);		// Top Left
-	  glVertex3f(280, 260, 0.0);		// Top Right
-	  glVertex3f(280, 0, 0.0);		// Bottom Right
-	  glVertex3f(0, 0, 0.0);		// Bottom Left
-  glend;
-
-  //'default' rendering again
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glColorMask(TRUE,TRUE, TRUE, TRUE);
-  glDisable(GL_STENCIL_TEST);
-end;
-
-procedure quad2;
-begin
-    //SECOND QUAD
-
-    //turning off writing to the color buffer and depth buffer so we only
-  //write to stencil buffer
-  glColorMask(FALSE, FALSE, FALSE, FALSE);
-  //enable stencil buffer
-  glEnable(GL_STENCIL_TEST);
-  //write a one to the stencil buffer everywhere we are about to draw
-  glStencilFunc(GL_ALWAYS, 4, $FFFFFFFF);
-  //this is to always pass a one to the stencil buffer where we draw
-  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-  //draw shape
-
-  glbegin(GL_QUADS);
-	  glVertex3f(100, 360, 0.0);		// Top Left
-	  glVertex3f(380, 360, 0.0);		// Top Right
-	  glVertex3f(380, 100, 0.0);		// Bottom Right
-	  glVertex3f(100, 100, 0.0);		// Bottom Left
-  glend;
-
-  //until stencil test is diabled, only write to areas where the
-  //stencil buffer has a one. This fills the shape
-  glStencilFunc(GL_EQUAL, 4, $FFFFFFFF);
-  // don't modify the contents of the stencil buffer
-  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-
-  //draw alpha fill
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-  glColorMask(FALSE,FALSE,FALSE, TRUE);
-
-  glbegin(GL_QUADS);
-    glcolor4f(0,0,0,1); //SOLID
-	  glVertex3f(100, 360, 0.0);		// Top Left
-	  glVertex3f(380, 360, 0.0);		// Top Right
-    glcolor4f(1,1,1,0.0); //TRANSPARENT
-	  glVertex3f(380, 0, 0.0);		// Bottom Right
-	  glVertex3f(100, 100, 0.0);		// Bottom Left
-  glend;
-
-  //draw fill
-glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
-  glColorMask(TRUE,TRUE, TRUE, FALSE); //but not alpha
-
-  glbegin(GL_QUADS);
-    glcolor4f(0,0,1,1); //BLUE
-	  glVertex3f(100, 360, 0.0);		// Top Left
-	  glVertex3f(380, 360, 0.0);		// Top Right
-	  glVertex3f(380, 100, 0.0);		// Bottom Right
-	  glVertex3f(100, 100, 0.0);		// Bottom Left
-  glend;
-
-  //'default' rendering again
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glColorMask(TRUE,TRUE, TRUE, TRUE);
-  glDisable(GL_STENCIL_TEST);
-end;
-
 procedure TOpenGLRender.Draw;
 begin
   glMatrixMode (GL_PROJECTION); glLoadIdentity(); glOrtho (0, 640, 480, 0,-100,100);
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT OR GL_STENCIL_BUFFER_BIT);
-  (*
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_BLEND);
-
-  glcolor4f(0,1,0,1);
-  glbegin(GL_QUADS);
-	  glVertex3f(0, 480, 0.0);		// Top Left
-	  glVertex3f(640, 480, 0.0);		// Top Right
-
-	  glVertex3f(640, 0, 0.0);		// Bottom Right
-	  glVertex3f(0, 0, 0.0);		// Bottom Left
-  glend;
-
-  //quad2;
-  quad1;
-  *)
-
-
-
-
-
-
 
   //AntiAlias (may or may not work)
   //glEnable (GL_BLEND);
   //glEnable (GL_POLYGON_SMOOTH);
   //glDisable (GL_DEPTH_TEST);
 
-    // Alpha Blending
+  // Alpha Blending
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//  glBlendFunc(GL_DST_COLOR, GL_ZERO);
 
   angle:=angle+1;
 
-//gui test
-glpushmatrix();
-
- //glscalef(10,10,1);
-// polyuitest.Render;
-
-glpopmatrix();
-//end gui test
+  //gui test
+  //glpushmatrix();
+  //  glscalef(10,10,1);
+  //  polyuitest.Render;
+  //glpopmatrix();
+  //end gui test
 
   //polygon render
-//  polystar.Render;
+  //  polystar.Render;
   polystar.RenderPath;
 
   polyelipse.Render;
@@ -600,20 +412,18 @@ glpopmatrix();
 
   pt2.Text:=FloatTostr(Round(fFPS))+ ' fps';
   pt2.Render;
-  //polytext.Render;
+  polytext.Render;
 
   texturepoly.Render;
 
   circfillpoly.Render;
 
   //rotate rounded rectangle
-  //glrotatef(angle,0,0,1);
+  glrotatef(angle,0,0,1);
   polyrect.Render;
-
 
   //swap buffer (aka draw)
   SwapBuffers(DC);
-
 
   //fps calculation ...
   inc(fFrames);
