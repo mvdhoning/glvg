@@ -226,9 +226,17 @@ begin
   polyelipse.Y := 200;
   polyelipse.Radius := 100;
   polyelipse.Style.GradColorAngle:= 45;
-  polyelipse.Style.NumGradColors:=2;
+  polyelipse.Style.NumGradColors:=3;
   polyelipse.Style.GradColor[0].SetColor('#FF0000');
-  polyelipse.Style.GradColor[1].SetColor('#00FF00');
+  polyelipse.Style.GradColor[0].x:=400-100+25;
+
+  polyelipse.Style.GradColor[1].SetColor('#0000FF');
+  polyelipse.Style.GradColor[1].x:=400+100-45;
+
+  polyelipse.Style.GradColor[2].SetColor('#00FF00');
+  polyelipse.Style.GradColor[2].x:=400+100-25;
+
+
   polyelipse.Style.FillType := glvgLinearGradient;
   polyelipse.Style.LineType := glvgNone;
   polyelipse.Polygon.Id := 3;
