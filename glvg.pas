@@ -98,7 +98,7 @@ private
   FColor: TColor;
   FLineColor: TColor;
   FGradColorAngle: single;  //TODO: consider gradient to be a seperate class
-  FGradColorAngleAlpha: single;  //TODO: consider gradient to be a seperate class
+  //FGradColorAngleAlpha: single;  //TODO: consider gradient to be a seperate class
   FNumGradColors: integer;
   FGradColors: array of TColor;
 //  FNumAlphaGradColors: integer;
@@ -127,7 +127,7 @@ public
   constructor Create();
   destructor Destroy(); override;
   property GradColorAngle: single read FGradColorAngle write FGradColorAngle;
-  property GradColorAngleAlpha: single read FGradColorAngleAlpha write FGradColorAngleAlpha;
+//  property GradColorAngleAlpha: single read FGradColorAngleAlpha write FGradColorAngleAlpha;
   property GradColor[i: integer]: TColor read GetGradColor write SetGradColor;
   property NumGradColors: integer read FNumGradColors write SetNumGradColors;
 //  property AlphaGradColor[i: integer]: TColor read GetAlphaGradColor write SetAlphaGradColor;
@@ -193,9 +193,9 @@ public
   procedure Extrude();
   procedure RenderExtruded();
   procedure CalculateBoundBox();
-  procedure ApplyGradFill();
-  procedure ApplyAlphaGradFill();
-  procedure ApplyTextureFill();
+//  procedure ApplyGradFill();
+//  procedure ApplyAlphaGradFill();
+//  procedure ApplyTextureFill();
   property Id: integer read Fid write Fid;
   property Path: string read GetPathText write SetPathText;
   property Points[I: integer]: TPoint read GetPoint write SetPoint;
@@ -385,10 +385,10 @@ begin
     FPolyShape.Style.FGradColors[1].y := FPolyShape.FBoundBoxMaxPoint.y;
 
 
-    if FPolyShape.Style.FillType = glvgLinearGradient then
-    begin
-      FPolyShape.ApplyGradFill();
-    end;
+//    if FPolyShape.Style.FillType = glvgLinearGradient then
+//    begin
+//      FPolyShape.ApplyGradFill();
+//    end;
 
 //    if FPolyShape.Style.FAlphaFillType = glvgLinearGradient then
 //    begin
@@ -396,10 +396,11 @@ begin
 //    end;
   end;
 
-  if FPolyShape.Style.FillType = glvgTexture then
-  begin
-    FPolyShape.ApplyTextureFill();
-  end;
+//  if FPolyShape.Style.FillType = glvgTexture then
+//  begin
+//    FPolyShape.ApplyTextureFill();
+//  end;
+
 end;
 
 procedure TglvgObject.CleanUp;
@@ -1240,11 +1241,10 @@ begin
   offset.y := 0 + y;
 
   fx:=colorfrom.x;
-  fy:=ABoundBoxMinPoint.y;
+  fy:=ABoundBoxMinPoint.y-AboundBoxMaxPoint.y;
 
   tx:=colorto.x;
-  ty:=ABoundBoxMaxPoint.y;
-
+  ty:=ABoundBoxMaxPoint.y+AboundBoxMaxPoint.y;
 
 
   //gltranslatef(AboundBoxMinPoint.x+100, -AboundBoxMinPoint.y+100,0);
@@ -1363,6 +1363,8 @@ procedure TStyle.DrawFill(radius: single; aboundboxminpoint: tpoint; aboundboxma
 var
  i:integer;
  addcolor: TColor;
+ cx, cy: single  ;
+
 begin
   if FillType = glvgTexture then
   begin
@@ -1413,11 +1415,26 @@ begin
 
   if FFillType = glvgLinearGradient then
   begin
-  //extend (clamping)
-    if (FGradColors[0].x) > ABoundBoxMinPoint.x then
+
+    cx:=((ABoundBoxMaxPoint.x-ABoundBoxMinPoint.x)/2);
+    cy:=((ABoundBoxMaxPoint.y-ABoundBoxMinPoint.y)/2);
+
+    glpushmatrix;
+
+    if FGradColorAngle > 0  then
     begin
+    gltranslatef(+cx, +cy,0);
+    gltranslatef(+ABoundBoxMinPoint.x, +ABoundBoxMinPoint.y,0);
+    glrotatef(FGradColorAngle,0,0,1);
+    gltranslatef(-ABoundBoxMinPoint.x, -ABoundBoxMinPoint.y,0);
+    gltranslatef(-cx, -cy,0);
+    end;
+
+    //extend (clamping)
+//    if (FGradColors[0].x) >= ABoundBoxMinPoint.x then
+//    begin
       addcolor := TColor.Create;
-      addcolor.x := ABoundBoxMinPoint.x;
+      addcolor.x := ABoundBoxMinPoint.x-(ABoundBoxMaxPoint.x*2);
       addcolor.y := FGradColors[0].y;
       addcolor.r := FGradColors[0].r;
       addcolor.g := FGradColors[0].g;
@@ -1427,12 +1444,13 @@ begin
       DrawBox(FGradColors[0].x, FGradColors[0].y, AddColor, FGradColors[0], aboundboxminpoint, aboundboxmaxpoint);
 
       AddColor.Free;
-    end;
+//    end;
 
-
+    //draw 2 color gradient fill
     if fNumGradColors >= 2 then
     DrawBox(FGradColors[0].x, FGradColors[0].y, FGradColors[0], FGradColors[1], aboundboxminpoint, aboundboxmaxpoint);
 
+    //draw additional 2 color gradient fills
     if fNumGradColors >=3 then
     begin
       for i := 2 to fNumGradColors - 1 do
@@ -1440,10 +1458,10 @@ begin
     end;
 
     //extend (clamping)
-    if (FGradColors[fNumGradColors-1].x) < ABoundBoxMaxPoint.x then
-    begin
+//    if (FGradColors[fNumGradColors-1].x) <= ABoundBoxMaxPoint.x then
+//    begin
       addcolor := TColor.Create;
-      addcolor.x := ABoundBoxMaxPoint.x;
+      addcolor.x := ABoundBoxMaxPoint.x+(ABoundBoxMaxPoint.x*2);
       addcolor.y := FGradColors[fNumGradColors-1].y;
       addcolor.r := FGradColors[fNumGradColors-1].r;
       addcolor.g := FGradColors[fNumGradColors-1].g;
@@ -1453,7 +1471,14 @@ begin
       DrawBox(FGradColors[0].x, FGradColors[0].y, FGradColors[fNumGradColors-1], AddColor, aboundboxminpoint, aboundboxmaxpoint);
 
       AddColor.Free;
-    end;
+//    end;
+
+    glpopmatrix;
+
+//    gltranslatef(ABoundBoxMinPoint.x-cy, ABoundBoxMinPoint.y-cy,0);
+//    glrotatef(-FGradColorAngle,0,0,1);
+//    gltranslatef(-ABoundBoxMinPoint.x+cx, -ABoundBoxMinPoint.y+cy,0);
+
 
   end;
 
@@ -1727,6 +1752,7 @@ begin
 
 end;
 
+(*
 procedure TPolygon.ApplyGradFill();
 var
   loop: integer;
@@ -1792,6 +1818,7 @@ begin
   end;
 
 end;
+*)
 
 Procedure TPolygon.Render();
 var
@@ -1800,9 +1827,7 @@ begin
 if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
 begin
   if FTesselated = false then Tesselate;
-
   //prepare draw shape
-
   //turning off writing to the color buffer and depth buffer so we only
   //write to stencil buffer
   glColorMask(FALSE, FALSE, FALSE, FALSE);

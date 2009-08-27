@@ -207,7 +207,7 @@ begin
   polyrect.Style.Color.SetColor(1,0,0,1);
 
   polyrect.Style.GradColorAngle:=90;
-  polyrect.Style.GradColorAngleAlpha:=0;
+  //polyrect.Style.GradColorAngleAlpha:=0;
   polyrect.Style.NumGradColors := 2;
   polyrect.Style.GradColor[0].a :=1.0;
   polyrect.Style.GradColor[1].a :=1.0;
@@ -318,9 +318,10 @@ begin
   texturepoly.Style.Color.SetColor(1,1,1,0.5);
   texturepoly.Style.FillType := glvgTexture;
   texturepoly.Style.Init; //load texture
+  texturepoly.Polygon.id:=9;
   texturepoly.Init;
   texturepoly.Polygon.Tesselate;
-  texturepoly.Polygon.ApplyTextureFill;
+//  texturepoly.Polygon.ApplyTextureFill;
 
   circfillpoly := TglvgRect.Create;
   circfillpoly.X:= 100.0;
@@ -331,6 +332,7 @@ begin
   circfillpoly.Ry:=20.0; //Optional
   circfillpoly.Style.Color.SetColor(1,1,1,0.5);
   circfillpoly.Style.NumGradColors := 4;
+
 
   with circfillpoly.Style.GradColor[0] do
   begin
