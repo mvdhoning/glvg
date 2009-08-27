@@ -1230,6 +1230,8 @@ var
   range: TPoint;
   offset: TPoint;
   loop: integer;
+  fx,fy,tx,ty,s,t: single;
+
 begin
   //caclulate st coords
   range.x := (FTexture.Width);
@@ -1237,35 +1239,43 @@ begin
   offset.x := 0 + x;
   offset.y := 0 + y;
 
+  fx:=colorfrom.x;
+  fy:=ABoundBoxMinPoint.y;
+
+  tx:=colorto.x;
+  ty:=ABoundBoxMaxPoint.y;
+
+
+
   //gltranslatef(AboundBoxMinPoint.x+100, -AboundBoxMinPoint.y+100,0);
   //glrotatef(FGradColorAngle,0,0,1);
 
   //draw filled boundingbox using triangles
   glBegin(GL_TRIANGLES);
 
-    glTexCoord2f((ABoundBoxMinPoint.X-offset.x) / range.x, (ABoundBoxMinPoint.Y-offset.y) / range.y);
+    glTexCoord2f((fx-offset.x) / range.x, (fy-offset.y) / range.y);
     glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
-    glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMinPoint.Y, 0.0);
+    glVertex3f(fx, fy, 0.0);
 
-    glTexCoord2f((ABoundBoxMaxPoint.X-offset.x) / range.x, (ABoundBoxMinPoint.Y-offset.y) / range.y);
+    glTexCoord2f((tx-offset.x) / range.x, (fy-offset.y) / range.y);
     glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
-    glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMinPoint.Y, 0.0);
+    glVertex3f(tx, fy, 0.0);
 
-    glTexCoord2f((ABoundBoxMaxPoint.X-offset.x) / range.x, (ABoundBoxMaxPoint.Y-offset.y) / range.y);
+    glTexCoord2f((tx-offset.x) / range.x, (ty-offset.y) / range.y);
     glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
-    glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMaxPoint.Y, 0.0);
+    glVertex3f(tx, ty, 0.0);
 
-    glTexCoord2f((ABoundBoxMaxPoint.X-offset.x) / range.x, (ABoundBoxMaxPoint.Y-offset.y) / range.y);
+    glTexCoord2f((tx-offset.x) / range.x, (ty-offset.y) / range.y);
     glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
-    glVertex3f(ABoundBoxMaxPoint.X, ABoundBoxMaxPoint.Y, 0.0);
+    glVertex3f(tx, ty, 0.0);
 
-    glTexCoord2f((ABoundBoxMinPoint.X-offset.x) / range.x, (ABoundBoxMaxPoint.Y-offset.y) / range.y);
+    glTexCoord2f((fx-offset.x) / range.x, (ty-offset.y) / range.y);
     glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
-    glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMaxPoint.Y, 0.0);
+    glVertex3f(fx, ty, 0.0);
 
-    glTexCoord2f((ABoundBoxMinPoint.X-offset.x) / range.x, (ABoundBoxMinPoint.Y-offset.y) / range.y);
+    glTexCoord2f((fx-offset.x) / range.x, (fy-offset.y) / range.y);
     glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
-    glVertex3f(ABoundBoxMinPoint.X, ABoundBoxMinPoint.Y, 0.0);
+    glVertex3f(fx, fy, 0.0);
 
   glEnd();
 
@@ -1371,18 +1381,80 @@ begin
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                      GL_REPEAT );
 
-    DrawBox(ABoundBoxMinPoint.x, ABoundBoxMinPoint.y, FColor, FColor, aboundboxminpoint, aboundboxmaxpoint);
+    FColor.x:=ABoundBoxMinPoint.x;
+    FColor.y:=ABoundBoxMinPoint.y;
+    AddColor:=TColor.Create;
+    AddColor.x:=ABoundBoxMaxPoint.x;
+    AddColor.y:=ABoundBoxMaxPoint.y;
+    AddColor.r:=FColor.r;
+    AddColor.g:=FColor.g;
+    AddColor.b:=FColor.b;
+    AddColor.a:=FColor.a;
+
+    DrawBox(ABoundBoxMinPoint.x, ABoundBoxMinPoint.y, FColor, AddColor, aboundboxminpoint, aboundboxmaxpoint);
+    AddColor.Free;
+    FTexture.UnBind();
   end;
 
   if FFillType = glvgSolid then
   begin
-    DrawBox(FColor.x, FColor.y, FColor, FColor, aboundboxminpoint, aboundboxmaxpoint);
+    FColor.x:=ABoundBoxMinPoint.x;
+    FColor.y:=ABoundBoxMinPoint.y;
+    AddColor:=TColor.Create;
+    AddColor.x:=ABoundBoxMaxPoint.x;
+    AddColor.y:=ABoundBoxMaxPoint.y;
+    AddColor.r:=FColor.r;
+    AddColor.g:=FColor.g;
+    AddColor.b:=FColor.b;
+    AddColor.a:=FColor.a;
+    DrawBox(FColor.x, FColor.y, FColor, AddColor, aboundboxminpoint, aboundboxmaxpoint);
+    AddColor.Free;
   end;
 
   if FFillType = glvgLinearGradient then
   begin
+  //extend (clamping)
+    if (FGradColors[0].x) > ABoundBoxMinPoint.x then
+    begin
+      addcolor := TColor.Create;
+      addcolor.x := ABoundBoxMinPoint.x;
+      addcolor.y := FGradColors[0].y;
+      addcolor.r := FGradColors[0].r;
+      addcolor.g := FGradColors[0].g;
+      addcolor.b := FGradColors[0].b;
+      addcolor.a := FColor.a;
+
+      DrawBox(FGradColors[0].x, FGradColors[0].y, AddColor, FGradColors[0], aboundboxminpoint, aboundboxmaxpoint);
+
+      AddColor.Free;
+    end;
+
+
     if fNumGradColors >= 2 then
     DrawBox(FGradColors[0].x, FGradColors[0].y, FGradColors[0], FGradColors[1], aboundboxminpoint, aboundboxmaxpoint);
+
+    if fNumGradColors >=3 then
+    begin
+      for i := 2 to fNumGradColors - 1 do
+        DrawBox(FGradColors[0].x, FGradColors[0].y, FGradColors[i-1], FGradColors[i], aboundboxminpoint, aboundboxmaxpoint);
+    end;
+
+    //extend (clamping)
+    if (FGradColors[fNumGradColors-1].x) < ABoundBoxMaxPoint.x then
+    begin
+      addcolor := TColor.Create;
+      addcolor.x := ABoundBoxMaxPoint.x;
+      addcolor.y := FGradColors[fNumGradColors-1].y;
+      addcolor.r := FGradColors[fNumGradColors-1].r;
+      addcolor.g := FGradColors[fNumGradColors-1].g;
+      addcolor.b := FGradColors[fNumGradColors-1].b;
+      addcolor.a := FColor.a;
+
+      DrawBox(FGradColors[0].x, FGradColors[0].y, FGradColors[fNumGradColors-1], AddColor, aboundboxminpoint, aboundboxmaxpoint);
+
+      AddColor.Free;
+    end;
+
   end;
 
   if FFillType = glvgCircularGradient then
@@ -1410,11 +1482,6 @@ begin
 
       AddColor.Free;
     end;
-  end;
-
-  if FillType = glvgTexture then
-  begin
-    FTexture.UnBind();
   end;
 end;
 
