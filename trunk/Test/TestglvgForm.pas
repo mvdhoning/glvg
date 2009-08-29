@@ -61,6 +61,7 @@ var
   pt2: TglvgText;
   texturepoly: TglvgRect;
   circfillpoly: TglvgRect;
+  bg1: TglvgRect;
 
   polyuitest: TglvgGuiObject;
 
@@ -205,12 +206,13 @@ begin
   polyrect.Rx:=20.0;
   polyrect.Ry:=20.0; //Optional
   polyrect.Style.Color.SetColor(1,0,0,1);
+  polyrect.Style.Color.a:=0.8;
 
   polyrect.Style.GradColorAngle:=90;
   //polyrect.Style.GradColorAngleAlpha:=0;
   polyrect.Style.NumGradColors := 2;
   polyrect.Style.GradColor[0].a :=1.0;
-  polyrect.Style.GradColor[1].a :=1.0;
+  //polyrect.Style.GradColor[1].a :=1.0;
 
   polyrect.Style.GradColor[0].SetColor('#FF0000');
   polyrect.Style.GradColor[1].SetColor('#00FF00');
@@ -218,7 +220,6 @@ begin
   polyrect.Style.FillType := glvgLinearGradient;
   polyrect.Style.LineType := glvgSolid;
   polyrect.Polygon.Id:=7;
-  polyrect.Style.Color.a:=0.8;
   polyrect.Init;
 
   polyelipse := TglvgCircle.Create();
@@ -342,7 +343,7 @@ begin
     r:=0.0;
     g:=1.0;
     b:=0.0;
-    a:=1.0;
+//    a:=0.5;
   end;
 
   with circfillpoly.Style.GradColor[1] do
@@ -352,7 +353,7 @@ begin
     r:=0.0;
     g:=0.0;
     b:=1.0;
-    a:=1.0;
+//    a:=0.5;
   end;
 
   with circfillpoly.Style.GradColor[2] do
@@ -362,7 +363,7 @@ begin
     r:=1.0;
     g:=0.0;
     b:=0.0;
-    a:=1.0;
+//    a:=0.5;
   end;
 
   with circfillpoly.Style.GradColor[3] do
@@ -372,13 +373,63 @@ begin
     r:=1.0;
     g:=0.0;
     b:=1.0;
-    a:=1.0;
+    a:=0.9;
   end;
 
   circfillpoly.Style.FillType := glvgCircularGradient;
   circfillpoly.Init;
   circfillpoly.Polygon.Tesselate;
   circfillpoly.Polygon.Id:=2;
+
+  bg1 := TglvgRect.Create;
+  bg1.X:=100;
+  bg1.Y:=300;
+  bg1.Width:=300;
+  bg1.Height:=100;
+  bg1.Style.Color.SetColor(0,1,0,1);
+  bg1.Style.Pattern.Width:=10;
+  bg1.Style.Pattern.Height:=10;
+
+  bg1.Style.Pattern.AddElement(TglvgRect.Create);
+  TglvgRect(bg1.Style.Pattern.Element[0]).Polygon.id := 3;
+  TglvgRect(bg1.Style.Pattern.Element[0]).x := 0;
+  TglvgRect(bg1.Style.Pattern.Element[0]).y := 0;
+  TglvgRect(bg1.Style.Pattern.Element[0]).width := 10;
+  TglvgRect(bg1.Style.Pattern.Element[0]).height := 10;
+  TglvgRect(bg1.Style.Pattern.Element[0]).Style.Color.SetColor(1,1,1,1);
+  TglvgRect(bg1.Style.Pattern.Element[0]).Style.FillType := glvgSolid;
+  TglvgRect(bg1.Style.Pattern.Element[0]).Style.LineType := glvgNone;
+  TglvgRect(bg1.Style.Pattern.Element[0]).Init;
+  TglvgRect(bg1.Style.Pattern.Element[0]).Polygon.Tesselate;
+
+  bg1.Style.Pattern.AddElement(TglvgRect.Create);
+  TglvgRect(bg1.Style.Pattern.Element[1]).Polygon.id := 1;
+  TglvgRect(bg1.Style.Pattern.Element[1]).x := 0;
+  TglvgRect(bg1.Style.Pattern.Element[1]).y := 0;
+  TglvgRect(bg1.Style.Pattern.Element[1]).width := 5;
+  TglvgRect(bg1.Style.Pattern.Element[1]).height := 5;
+  TglvgRect(bg1.Style.Pattern.Element[1]).Style.Color.SetColor('#add8e6');
+  TglvgRect(bg1.Style.Pattern.Element[1]).Style.FillType := glvgSolid;
+  TglvgRect(bg1.Style.Pattern.Element[1]).Style.LineType := glvgNone;
+  TglvgRect(bg1.Style.Pattern.Element[1]).Init;
+  TglvgRect(bg1.Style.Pattern.Element[1]).Polygon.Tesselate;
+
+  bg1.Style.Pattern.AddElement(TglvgRect.Create);
+  TglvgRect(bg1.Style.Pattern.Element[2]).Polygon.id := 2;
+  TglvgRect(bg1.Style.Pattern.Element[2]).x := 5;
+  TglvgRect(bg1.Style.Pattern.Element[2]).y := 5;
+  TglvgRect(bg1.Style.Pattern.Element[2]).width := 5;
+  TglvgRect(bg1.Style.Pattern.Element[2]).height := 5;
+  TglvgRect(bg1.Style.Pattern.Element[2]).Style.Color.SetColor('#add8e6');
+  TglvgRect(bg1.Style.Pattern.Element[2]).Style.FillType := glvgSolid;
+  TglvgRect(bg1.Style.Pattern.Element[2]).Style.LineType := glvgNone;
+  TglvgRect(bg1.Style.Pattern.Element[2]).Init;
+  TglvgRect(bg1.Style.Pattern.Element[2]).Polygon.Tesselate;
+
+  bg1.Style.FillType := glvgpattern;
+  bg1.Style.LineType := glvgNone;
+  bg1.Polygon.Id := 10;
+  bg1.Init;
 
   // Enable or Disable V-Sync
   VSync := vsmSync;
@@ -412,6 +463,8 @@ begin
   //glpopmatrix();
   //end gui test
 
+  bg1.Render;
+
   //polygon render
   //  polystar.Render;
   polystar.RenderPath;
@@ -431,6 +484,7 @@ begin
   //rotate rounded rectangle
   glrotatef(angle,0,0,1);
   polyrect.Render;
+
 
   //swap buffer (aka draw)
   SwapBuffers(DC);
