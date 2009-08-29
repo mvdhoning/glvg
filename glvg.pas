@@ -68,7 +68,7 @@ public
   property Count: integer read FCount;
 end;
 
-TglvgFillType = (glvgNone, glvgSolid, glvgLinearGradient, glvgCircularGradient,glvgTexture);
+TglvgFillType = (glvgNone, glvgSolid, glvgLinearGradient, glvgCircularGradient,glvgTexture,glvgPattern);
 
 TColor = class
 private
@@ -93,8 +93,11 @@ public
   property a: single read fa write fa;
 end;
 
+TglvgPattern= class;
+
 TStyle = class
 private
+  FPattern: TglvgPattern;
   FColor: TColor;
   FLineColor: TColor;
   FGradColorAngle: single;  //TODO: consider gradient to be a seperate class
@@ -133,6 +136,7 @@ public
 //  property AlphaGradColor[i: integer]: TColor read GetAlphaGradColor write SetAlphaGradColor;
 //  property NumAlphaGradColors: integer read FNumGradColors write SetNumAlphaGradColors;
   property Color: TColor read FColor write FColor;
+  property Pattern: TglvgPattern read FPattern write Fpattern;
   property LineColor: TColor read FLineColor write FLineColor;
   property LineWidth: single read FLineWidth  write FLineWidth;
   property FillType: TglvgFillType read FFillType write FFillType;
@@ -340,6 +344,35 @@ private
 public
 end;
 
+TglvgGroup = class
+private
+protected
+  FElements: array of TglvgObject;
+  FNumElements: integer;
+  function  GetElement(Index: Integer): TglvgObject;
+  procedure SetElement(Index: Integer; Value: TglvgObject);
+public
+  Constructor Create();
+  Destructor Destroy(); override;
+  procedure AddElement(AElement: TglvgObject);
+  procedure Render;
+  property Count: integer read FNumElements;
+  property Element[index: integer]: TglvgObject read GetElement write SetElement;
+published
+end;
+
+TglvgPattern = class(TglvgGroup)
+private
+  Fid: integer;
+protected
+  FWidth: single;
+  FHeight: single;
+public
+  procedure TileRender(bbmin: TPoint; bbmax: TPoint);
+  property Width: single read FWidth write FWidth;
+  property Height: single read FHeight write FHeight;
+end;
+
 implementation
 
 uses math, sysutils;
@@ -449,6 +482,19 @@ procedure TglvgRect.Init;
 begin
   //Ok Clean Up for a high speed gain ...
   self.CleanUp;
+  if (Frx = 0) and (Fry = 0) then
+  begin
+  //simple cube no rounded colors.
+  FPolyShape.Path :=
+
+    'M '+FloatToStr(Fx)+' '+FloatToStr(Fy)+
+    ' L '+FloatToStr(Fx)+' '+FloatToStr(Fy+FHeight)+
+    ' L '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy+FHeight)+
+    ' L '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy) +
+    ' Z';
+  end
+  else
+  begin
 
   FPolyShape.Path :=
 
@@ -471,6 +517,8 @@ begin
     ' '+FloatToStr(Fx+FWidth-Frx)+' '+FloatToStr(Fy)+
 
     ' Z';
+
+  end;
 
     FPolyShape.Origin.x := Fx;
     FPolyShape.Origin.y := Fy;
@@ -1095,6 +1143,7 @@ constructor TStyle.Create;
 begin
   inherited Create;
 
+  FPattern := TglvgPattern.Create;
   FColor := TColor.Create;
   FLineColor := TColor.Create;
   //FGradColorPoint1 := TColor.Create;
@@ -1131,6 +1180,7 @@ end;
 
 destructor TStyle.Destroy;
 begin
+  FPattern.Free;
   FColor.Free;
   FLineColor.Free;
   //FGradColorPoint1.Free;
@@ -1231,7 +1281,7 @@ var
   range: TPoint;
   offset: TPoint;
   loop: integer;
-  fx,fy,tx,ty,s,t: single;
+  fx,fy,tx,ty,ts,tt,fs,ft: single;
 
 begin
   //caclulate st coords
@@ -1246,42 +1296,39 @@ begin
   tx:=colorto.x;
   ty:=ABoundBoxMaxPoint.y+AboundBoxMaxPoint.y;
 
-
-  //gltranslatef(AboundBoxMinPoint.x+100, -AboundBoxMinPoint.y+100,0);
-  //glrotatef(FGradColorAngle,0,0,1);
+  fs := (fx-offset.x) / range.x;
+  ft := (fy-offset.y) / range.y;
+  ts := (tx-offset.x) / range.x;
+  tt := (ty-offset.y) / range.y;
 
   //draw filled boundingbox using triangles
   glBegin(GL_TRIANGLES);
 
-    glTexCoord2f((fx-offset.x) / range.x, (fy-offset.y) / range.y);
-    glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
+    glTexCoord2f(fs, ft);
+    glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
     glVertex3f(fx, fy, 0.0);
 
-    glTexCoord2f((tx-offset.x) / range.x, (fy-offset.y) / range.y);
-    glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
+    glTexCoord2f(ts, ft);
+    glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a);
     glVertex3f(tx, fy, 0.0);
 
-    glTexCoord2f((tx-offset.x) / range.x, (ty-offset.y) / range.y);
-    glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
+    glTexCoord2f(ts, tt);
+    glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a);
     glVertex3f(tx, ty, 0.0);
 
-    glTexCoord2f((tx-offset.x) / range.x, (ty-offset.y) / range.y);
-    glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
+    glTexCoord2f(ts, tt);
+    glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a);
     glVertex3f(tx, ty, 0.0);
 
-    glTexCoord2f((fx-offset.x) / range.x, (ty-offset.y) / range.y);
-    glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
+    glTexCoord2f(fs, tt);
+    glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
     glVertex3f(fx, ty, 0.0);
 
-    glTexCoord2f((fx-offset.x) / range.x, (fy-offset.y) / range.y);
-    glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
+    glTexCoord2f(fs, ft);
+    glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
     glVertex3f(fx, fy, 0.0);
 
   glEnd();
-
-  //glrotatef(-FGradColorAngle,0,0,1);
-  //gltranslatef(-AboundBoxMinPoint.x-100, +AboundBoxMinPoint.y-100,0);
-
 end;
 
 procedure TStyle.DrawCircle(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
@@ -1307,9 +1354,9 @@ radius := colorfrom.x - colorto.x;
        angle:=i * 2* PI / Segments;
        x2:=x+(radius*sin(angle));
        y2:=y+(radius*cos(angle));
-       glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a); //inner
+       glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a); //inner
        glVertex2d(x,y);
-       glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a); //outer
+       glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a); //outer
        glVertex2d(x1,y1);
        glVertex2d(x2,y2);
        y1:=y2;
@@ -1349,10 +1396,10 @@ Begin
             ex := Cos(a);
             ey := Sin(a);
             // inner ring edge
-            glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,fcolor.a);
+            glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
             glVertex3f(r2 * ex,r2 * ey,0);
             // outer ring edge
-            glcolor4f(colorto.r,colorto.g,colorto.b,fcolor.a);
+            glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a);
             glVertex3f(r1 * ex,r1 * ey,0);
         End;
         glEnd;
@@ -1366,6 +1413,14 @@ var
  cx, cy: single  ;
 
 begin
+  if FillType = glvgPattern then
+  begin
+    glPushAttrib(GL_STENCIL_BUFFER_BIT);
+    FPattern.TileRender(aboundboxminpoint,aboundboxmaxpoint);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glPopAttrib();
+  end;
+
   if FillType = glvgTexture then
   begin
     FTexture.Bind();
@@ -1519,7 +1574,13 @@ begin
 
   SetLength(FGradColors, AValue);
   for i := FNumGradColors to AValue - 1 do
+  begin
     FGradColors[i] := TColor.Create;
+    FGradColors[i].r:=FColor.r;
+    FGradColors[i].g:=FColor.g;
+    FGradColors[i].b:=FColor.b;
+    FGradColors[i].a:=FColor.a;
+  end;
   FNumGradColors:=AValue;
 end;
 end;
@@ -1863,7 +1924,7 @@ begin
   fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
 
   //'default' rendering again
-  glColorMask(TRUE,TRUE, TRUE, TRUE);
+//  glColorMask(TRUE,TRUE, TRUE, TRUE);
   glDisable(GL_STENCIL_TEST);
 
 end;
@@ -2118,6 +2179,102 @@ begin
 
 end;
 
+//TglvgGroup
 
+constructor TglvgGroup.Create;
+begin
+  inherited Create;
+  FNumElements:=0;
+end;
+
+destructor TglvgGroup.Destroy;
+var
+    i: integer;
+begin
+  if FElements <> nil then
+  begin
+    For i:=FNumElements-1 downto 0 do
+    begin
+      FElements[i].Free;
+    end;
+  end;
+
+  SetLength(FElements,0);
+  inherited Destroy;
+end;
+
+procedure TglvgGroup.AddElement(AElement: TglvgObject);
+begin
+  FNumElements:=FNumElements+1;
+  SetLength(FElements,FNumElements);
+  FElements[FNumElements-1] := AElement;
+end;
+
+function  TglvgGroup.GetElement(Index: Integer): TglvgObject;
+begin
+  result := fElements[Index];
+end;
+
+procedure TglvgGroup.SetElement(Index: Integer; Value: TglvgObject);
+begin
+  fElements[Index] := Value;
+end;
+
+procedure TglvgGroup.Render;
+var
+  i: integer;
+begin
+  for i:=0 to FNumElements-1 do
+  begin
+    FElements[i].Render;
+  end;
+end;
+
+procedure TglvgPattern.TileRender(bbmin: TPoint; bbmax: TPoint);
+var
+  xpos,ypos: single;
+begin
+
+//if fid<>0 then
+//begin
+//  glCallList(fid);
+//end
+//else
+//begin
+
+// create one display list
+//Fid := glGenLists(1);
+
+// compile the display list, store a triangle in it
+//glNewList(Fid, GL_COMPILE);
+
+
+  if (width>0) or (height >0) then
+  begin
+
+  xpos:=bbmin.x;
+  ypos:=bbmin.y;
+
+  glpushmatrix();
+  gltranslatef(xpos, ypos, 0);
+
+  repeat
+
+    glpushmatrix();
+    repeat
+      self.Render;
+      xpos:=xpos+fwidth;
+      gltranslatef(fwidth, 0, 0);
+    until (xpos>=bbmax.x);
+    glpopmatrix();
+    xpos:=bbmin.x;
+    ypos:=ypos+fheight;
+    gltranslatef(0, fheight, 0);
+    until (ypos>=bbmax.y);
+  glpopmatrix();
+  end;
+//  glendlist;
+//end;
+end;
 
 end.
