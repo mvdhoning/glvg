@@ -115,7 +115,7 @@ private
   FTexture: TglBitmap2D;
   FTextureId: GLuInt;
   FTextureAngle: single;
-  procedure DrawBox(x: single; y: single; colorfrom: tcolor; colorto: tcolor; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
+  procedure DrawBox(x: single; y: single; colorfrom: tcolor; colorto: tcolor);// aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
   procedure DrawCircle(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
   procedure DrawRing(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
   procedure DrawFill(radius: single; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
@@ -386,6 +386,28 @@ type
 
 threadvar
   PolygonClass: TPolygon;
+
+
+procedure TestRenderBoundingBox(AMin: TPoint; AMax: TPoint);
+var
+  loop: integer;
+begin
+  glcolor4f(0,0,1,0.5);
+  glLineWidth(1.0);
+  glbegin(GL_LINES);
+    glvertex3f(AMin.X,AMin.Y,0);
+    glvertex3f(AMin.X,AMax.Y,0);
+
+    glvertex3f(AMin.X,AMax.Y,0);
+    glvertex3f(AMax.X,AMax.Y,0);
+
+    glvertex3f(AMax.X,AMax.Y,0);
+    glvertex3f(AMax.X,AMin.Y,0);
+
+    glvertex3f(AMax.X,AMin.Y,0);
+    glvertex3f(AMin.X,AMin.Y,0);
+  glend;
+end;
 
 //TglvgObject
 constructor TglvgObject.Create();
@@ -1276,7 +1298,7 @@ begin
   ftextureid := ftexture.ID;
 end;
 
-procedure TStyle.DrawBox(x: Single; y: Single; colorfrom: TColor; colorto: TColor; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
+procedure TStyle.DrawBox(x: Single; y: Single; colorfrom: TColor; colorto: TColor);//; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
 var
   range: TPoint;
   offset: TPoint;
@@ -1291,10 +1313,10 @@ begin
   offset.y := 0 + y;
 
   fx:=colorfrom.x;
-  fy:=ABoundBoxMinPoint.y-AboundBoxMaxPoint.y;
+  fy:=colorfrom.y;//ABoundBoxMinPoint.y;//-AboundBoxMaxPoint.y;
 
   tx:=colorto.x;
-  ty:=ABoundBoxMaxPoint.y+AboundBoxMaxPoint.y;
+  ty:=colorto.y;//ABoundBoxMaxPoint.y;//+AboundBoxMaxPoint.y;
 
   fs := (fx-offset.x) / range.x;
   ft := (fy-offset.y) / range.y;
@@ -1406,13 +1428,52 @@ Begin
     glPopMatrix;
 End;
 
+
+
+Function RotatePoint(pPoint: TPOINT; pOrigin: TPOINT; Degrees: Single): TPOINT;
+var
+  cosAng : single;
+  sinAng : single;
+  x: single;
+  y: single;
+
+begin
+//  RotatePoint.X := pOrigin.X + ( Cos(DegToRad(Degrees)) * (pPoint.X - pOrigin.X) + Sin(DegToRad(Degrees)) * (pPoint.Y - pOrigin.Y) );
+//  RotatePoint.Y := pOrigin.Y - ( Sin(DegToRad(Degrees)) * (pPoint.X - pOrigin.X) - Cos(DegToRad(Degrees)) * (pPoint.Y - pOrigin.Y) );
+
+  x := ppoint.X - porigin.X;
+  y := ppoint.Y - porigin.Y;
+
+  cosAng := cos(DegToRad(Degrees));
+  sinAng := sin(DegToRad(Degrees));
+
+  RotatePoint.X := (x * cosAng) + (y * sinAng) + porigin.X;
+  RotatePoint.Y := (x * sinAng) + (y * cosAng) + porigin.Y;
+
+
+End;
+
 procedure TStyle.DrawFill(radius: single; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
 var
  i:integer;
  addcolor: TColor;
- cx, cy: single  ;
+// cx, cy, mx, my: single  ;
+cp,cp2: tpoint;
+mpmin,mpmax: tpoint;
+rotpoint: tpoint;
+curpoint: tpoint;
+temp: tpoint;
+
+curpoint2: tpoint;
+temp2: tpoint;
+
+colorfrom, colorto: tcolor;
 
 begin
+
+colorfrom := tcolor.Create;
+colorto := tcolor.Create;
+
   if FillType = glvgPattern then
   begin
     glPushAttrib(GL_STENCIL_BUFFER_BIT);
@@ -1448,7 +1509,7 @@ begin
     AddColor.b:=FColor.b;
     AddColor.a:=FColor.a;
 
-    DrawBox(ABoundBoxMinPoint.x, ABoundBoxMinPoint.y, FColor, AddColor, aboundboxminpoint, aboundboxmaxpoint);
+    DrawBox(ABoundBoxMinPoint.x, ABoundBoxMinPoint.y, FColor, AddColor);//, aboundboxminpoint, aboundboxmaxpoint);
     AddColor.Free;
     FTexture.UnBind();
   end;
@@ -1464,66 +1525,208 @@ begin
     AddColor.g:=FColor.g;
     AddColor.b:=FColor.b;
     AddColor.a:=FColor.a;
-    DrawBox(FColor.x, FColor.y, FColor, AddColor, aboundboxminpoint, aboundboxmaxpoint);
+    DrawBox(FColor.x, FColor.y, FColor, AddColor);//, aboundboxminpoint, aboundboxmaxpoint);
     AddColor.Free;
   end;
 
   if FFillType = glvgLinearGradient then
   begin
 
-    cx:=((ABoundBoxMaxPoint.x-ABoundBoxMinPoint.x)/2);
-    cy:=((ABoundBoxMaxPoint.y-ABoundBoxMinPoint.y)/2);
+    cp.x:=((ABoundBoxMaxPoint.x-ABoundBoxMinPoint.x)/2);
+    cp.y:=((ABoundBoxMaxPoint.y-ABoundBoxMinPoint.y)/2);
+
+    glBegin(GL_POINTS);
+      glcolor3f(1,1,1);
+      glVertex3f(cp.x,cp.y,0);
+    glEnd;
+
+
+    rotpoint:=cp;
+
+    mpmin.x:=0;
+    mpmin.y:=0;
+    mpmin.z:=0;
+    mpmin.r:=0;
+    mpmin.g:=0;
+    mpmin.b:=0;
+    mpmin.a:=0;
+
+    mpmax.x:=0;
+    mpmax.y:=0;
+    mpmax.z:=0;
+    mpmax.r:=0;
+    mpmax.g:=0;
+    mpmax.b:=0;
+    mpmax.a:=0;
+
+    rotpoint.x:=0+(aboundboxminpoint.x+cp.x);
+    rotpoint.y:=0+(aboundboxminpoint.y+cp.y);
+    //rotpoint.x:=0;
+    //rotpoint.y:=0;
+
+    temp.x:=ABoundBoxMinPoint.x;//+cp.x+ABoundBoxMinPoint.x;
+    temp.y:=ABoundBoxMinPoint.y;//+cp.y+ABoundBoxMinPoint.y;
+    mpmin:=RotatePoint(temp, rotpoint, FGradColorAngle);
+
+    temp.x:=ABoundBoxMaxPoint.x;//+cp.x+ABoundBoxMinPoint.x;
+    temp.y:=ABoundBoxMaxPoint.y;//+cp.y+ABoundBoxMinPoint.y;
+    mpmax:=RotatePoint(temp, rotpoint, FGradColorAngle);
+
+    temp.x:=cp.x;
+    temp.y:=cp.y;
+    cp2:=RotatePoint(temp, rotpoint, FGradColorAngle);
+
+
+
+
+
+    temp.x:=FGradColors[0].x;
+    temp.y:=FGradColors[0].y;
+    curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
+    curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+
+    //TestRenderBoundingBox(mpmin,mpmax);
 
     glpushmatrix;
 
     if FGradColorAngle > 0  then
     begin
-    gltranslatef(+cx, +cy,0);
-    gltranslatef(+ABoundBoxMinPoint.x, +ABoundBoxMinPoint.y,0);
-    glrotatef(FGradColorAngle,0,0,1);
-    gltranslatef(-ABoundBoxMinPoint.x, -ABoundBoxMinPoint.y,0);
-    gltranslatef(-cx, -cy,0);
+
+      gltranslatef(+cp.x, +cp.y,0);
+      gltranslatef(+ABoundBoxMinPoint.x,+ABoundBoxMinPoint.y,0);
+      glrotatef(FGradColorAngle,0,0,1);
+      gltranslatef(-ABoundBoxMinPoint.x,-ABoundBoxMinPoint.y,0);
+      gltranslatef(-cp.x, -cp.y,0);
+
     end;
+
+    //TestRenderBoundingBox(mpmin,mpmax);
+
 
     //extend (clamping)
 //    if (FGradColors[0].x) >= ABoundBoxMinPoint.x then
 //    begin
       addcolor := TColor.Create;
-      addcolor.x := ABoundBoxMinPoint.x-(ABoundBoxMaxPoint.x*2);
-      addcolor.y := FGradColors[0].y;
+      addcolor.x := mpmin.x;//ABoundBoxMinPoint.x;
+      addcolor.y := mpmin.y;//FGradColors[0].y;
       addcolor.r := FGradColors[0].r;
       addcolor.g := FGradColors[0].g;
       addcolor.b := FGradColors[0].b;
       addcolor.a := FColor.a;
 
-      DrawBox(FGradColors[0].x, FGradColors[0].y, AddColor, FGradColors[0], aboundboxminpoint, aboundboxmaxpoint);
+      temp.x:=FGradColors[0].x;
+      temp.y:=FGradColors[0].y;
+
+      //temp.x:=temp.x+cp.x+aboundboxminpoint.x;
+      //temp.y:=temp.y+cp.y+aboundboxminpoint.y;
+
+      curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
+      curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+
+      //curpoint.x:=curpoint.x-cp.x-aboundboxminpoint.x;
+      //curpoint.y:=curpoint.y-cp.y-aboundboxminpoint.y;
+
+      colorto.x:=curpoint.x;
+      colorto.y:=mpmax.y;
+      colorto.r:=FGradColors[0].r;
+      colorto.g:=FGradColors[0].g;
+      colorto.b:=FGradColors[0].b;
+      colorto.a:=FGradColors[0].a;
+
+      DrawBox(curpoint.x, curpoint.y, AddColor, colorto);// mpmin, mpmax);
 
       AddColor.Free;
 //    end;
 
     //draw 2 color gradient fill
     if fNumGradColors >= 2 then
-    DrawBox(FGradColors[0].x, FGradColors[0].y, FGradColors[0], FGradColors[1], aboundboxminpoint, aboundboxmaxpoint);
+    begin
 
+      temp.x:=FGradColors[0].x;
+      temp.y:=FGradColors[0].y;
+      //temp.x:=temp.x+cp.x+aboundboxminpoint.x;
+      //temp.y:=temp.y+cp.y+aboundboxminpoint.y;
+
+      curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
+      curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+
+      //curpoint.x:=curpoint.x-cp.x-aboundboxminpoint.x;
+      //curpoint.y:=curpoint.y-cp.y-aboundboxminpoint.y;
+
+      colorfrom.x:=curpoint.x;
+      colorfrom.y:=mpmin.y;
+      colorfrom.r:=FGradColors[0].r;
+      colorfrom.g:=FGradColors[0].g;
+      colorfrom.b:=FGradColors[0].b;
+      colorfrom.a:=FGradColors[0].a;
+
+
+      temp.x:=FGradColors[1].x;
+      temp.y:=FGradColors[1].y;
+
+      //temp.x:=temp.x+cp.x+aboundboxminpoint.x;
+      //temp.y:=temp.y+cp.y+aboundboxminpoint.y;
+
+      curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
+      curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+
+      //curpoint.x:=curpoint.x-cp.x-aboundboxminpoint.x;
+      //curpoint.y:=curpoint.y-cp.y-aboundboxminpoint.y;
+
+      colorto.x:=curpoint.x;
+      colorto.y:=mpmax.y;
+      colorto.r:=FGradColors[1].r;
+      colorto.g:=FGradColors[1].g;
+      colorto.b:=FGradColors[1].b;
+      colorto.a:=FGradColors[1].a;
+
+      temp.x:=FGradColors[0].x;
+      temp.y:=FGradColors[0].y;
+      curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
+      curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+
+      DrawBox(curpoint.x, curpoint.y, colorfrom, colorto);// mpmin, mpmax);
+    end;
+                    (*
     //draw additional 2 color gradient fills
     if fNumGradColors >=3 then
     begin
       for i := 2 to fNumGradColors - 1 do
-        DrawBox(FGradColors[0].x, FGradColors[0].y, FGradColors[i-1], FGradColors[i], aboundboxminpoint, aboundboxmaxpoint);
+      begin
+    temp.x:=FGradColors[i-1].x;
+    temp.y:=FGradColors[i-1].y;
+    curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
+    curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+        DrawBox(curpoint.x, curpoint.y, FGradColors[i-1], FGradColors[i]);// mpmin, mpmax);
+      end;
     end;
+                      *)
 
     //extend (clamping)
 //    if (FGradColors[fNumGradColors-1].x) <= ABoundBoxMaxPoint.x then
 //    begin
       addcolor := TColor.Create;
-      addcolor.x := ABoundBoxMaxPoint.x+(ABoundBoxMaxPoint.x*2);
-      addcolor.y := FGradColors[fNumGradColors-1].y;
+      addcolor.x := mpmax.x;
+      addcolor.y := mpmax.y;
       addcolor.r := FGradColors[fNumGradColors-1].r;
       addcolor.g := FGradColors[fNumGradColors-1].g;
       addcolor.b := FGradColors[fNumGradColors-1].b;
       addcolor.a := FColor.a;
 
-      DrawBox(FGradColors[0].x, FGradColors[0].y, FGradColors[fNumGradColors-1], AddColor, aboundboxminpoint, aboundboxmaxpoint);
+      temp.x:=FGradColors[fNumGradColors-1].x;
+      temp.y:=FGradColors[fNumGradColors-1].y;
+      curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
+      curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+
+
+      colorfrom.x:=curpoint.x;
+      colorfrom.y:=mpmin.y;
+      colorfrom.r:=FGradColors[fNumGradColors-1].r;
+      colorfrom.g:=FGradColors[fNumGradColors-1].g;
+      colorfrom.b:=FGradColors[fNumGradColors-1].b;
+      colorfrom.a:=FGradColors[fNumGradColors-1].a;
+
+      DrawBox(curpoint2.x, curpoint2.y, colorfrom, AddColor);// mpmin, mpmax);
 
       AddColor.Free;
 //    end;
@@ -1563,6 +1766,10 @@ begin
       AddColor.Free;
     end;
   end;
+
+  colorfrom.Free;
+colorto.Free;
+
 end;
 
 procedure TStyle.SetNumGradColors(AValue: integer);
@@ -1924,7 +2131,7 @@ begin
   fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
 
   //'default' rendering again
-//  glColorMask(TRUE,TRUE, TRUE, TRUE);
+  glColorMask(TRUE,TRUE, TRUE, TRUE);
   glDisable(GL_STENCIL_TEST);
 
 end;
@@ -2107,7 +2314,6 @@ begin
     gltranslatef(0,-FFontHeight  ,0);
 
     FCharGlyph[ord(AValue)].Render;
-    //FCharGlyph[ord(AValue)].RenderPath;
 
   glpopmatrix();
 

@@ -199,8 +199,8 @@ begin
   //polyfont.Scale := 0.05; //TODO: Should be related to font-size?
 
   polyrect := TglvgRect.Create;
-  polyrect.X:= 1.0;
-  polyrect.Y:= 1.0;
+  polyrect.X:= 0.0;
+  polyrect.Y:= 0.0;
   polyrect.Width:=100.0;
   polyrect.Height:=200.0;
   polyrect.Rx:=20.0;
@@ -208,7 +208,7 @@ begin
   polyrect.Style.Color.SetColor(1,0,0,1);
   polyrect.Style.Color.a:=0.8;
 
-  polyrect.Style.GradColorAngle:=90;
+  polyrect.Style.GradColorAngle:=45;//90;
   //polyrect.Style.GradColorAngleAlpha:=0;
   polyrect.Style.NumGradColors := 2;
   polyrect.Style.GradColor[0].a :=1.0;
@@ -228,6 +228,7 @@ begin
   polyelipse.Radius := 100;
   polyelipse.Style.GradColorAngle:= 45;
   polyelipse.Style.NumGradColors:=3;
+  //TODO: 3 color fill is realy broken now
   polyelipse.Style.GradColor[0].SetColor('#FF0000');
   polyelipse.Style.GradColor[0].x:=400-100+25;
 
@@ -272,7 +273,7 @@ begin
     b:=1.0;
   end;
 
-  polytext.Style.GradColorAngle:=90;
+  polytext.Style.GradColorAngle:=90; //90
 
   polytext.Style.FillType := glvgLinearGradient;
   polytext.Style.LineType := glvgNone; //glvgSolid;
@@ -464,8 +465,8 @@ begin
   bg1.Render;
 
   //polygon render
-  //  polystar.Render;
-  polystar.RenderPath;
+  polystar.Render;
+  //polystar.RenderPath;
 
   polyelipse.Render;
 
