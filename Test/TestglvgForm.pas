@@ -199,23 +199,25 @@ begin
   //polyfont.Scale := 0.05; //TODO: Should be related to font-size?
 
   polyrect := TglvgRect.Create;
-  polyrect.X:= 0.0;
-  polyrect.Y:= 0.0;
-  polyrect.Width:=100.0;
+  polyrect.X:= 10.0;
+  polyrect.Y:= 10.0;
+  polyrect.Width:=50.0;
   polyrect.Height:=200.0;
   polyrect.Rx:=20.0;
   polyrect.Ry:=20.0; //Optional
   polyrect.Style.Color.SetColor(1,0,0,1);
   polyrect.Style.Color.a:=0.8;
 
-  polyrect.Style.GradColorAngle:=45;//90;
+  polyrect.Style.GradColorAngle:=90;
   //polyrect.Style.GradColorAngleAlpha:=0;
   polyrect.Style.NumGradColors := 2;
   polyrect.Style.GradColor[0].a :=1.0;
   //polyrect.Style.GradColor[1].a :=1.0;
 
   polyrect.Style.GradColor[0].SetColor('#FF0000');
+  polyrect.Style.GradColor[0].x:=0;
   polyrect.Style.GradColor[1].SetColor('#00FF00');
+  polyrect.Style.GradColor[1].x:=100;
 
   polyrect.Style.FillType := glvgLinearGradient;
   polyrect.Style.LineType := glvgSolid;
@@ -261,17 +263,21 @@ begin
   polytext.Style.NumGradColors:=2;
   with polytext.Style.GradColor[0] do
   begin
-    r:=1.0;
+    r:=1.0; //yellow
     g:=1.0;
     b:=0.0;
+    x:=0;
   end;
+
 
   with polytext.Style.GradColor[1] do
   begin
-    r:=0.0;
+    r:=0.0; //blue
     g:=0.0;
     b:=1.0;
+    x:=1000;
   end;
+
 
   polytext.Style.GradColorAngle:=90; //90
 
@@ -466,7 +472,7 @@ begin
 
   //polygon render
   polystar.Render;
-  //polystar.RenderPath;
+  polystar.RenderPath;
 
   polyelipse.Render;
 
