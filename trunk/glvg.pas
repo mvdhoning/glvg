@@ -1530,10 +1530,10 @@ begin
     cp.x:=((ABoundBoxMaxPoint.x-ABoundBoxMinPoint.x)/2);
     cp.y:=((ABoundBoxMaxPoint.y-ABoundBoxMinPoint.y)/2);
 
-    glBegin(GL_POINTS);
-      glcolor3f(1,1,1);
-      glVertex3f(cp.x,cp.y,0);
-    glEnd;
+//    glBegin(GL_POINTS);
+//      glcolor3f(1,1,1);
+//      glVertex3f(cp.x,cp.y,0);
+//    glEnd;
 
     rotpoint:=cp;
 
@@ -2406,6 +2406,7 @@ begin
   FNumElements:=FNumElements+1;
   SetLength(FElements,FNumElements);
   FElements[FNumElements-1] := AElement;
+  FElements[FNumElements-1].FPolyShape.Id :=FNumElements;
 end;
 
 function  TglvgGroup.GetElement(Index: Integer): TglvgObject;

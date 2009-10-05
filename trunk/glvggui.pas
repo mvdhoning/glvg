@@ -130,7 +130,7 @@ uses dglopengl;
     glpushmatrix();
       gltranslatef(Fx,Fy,0);
       //glscalef(5,5,1); //DEBUG scaling...
-      for i:=0 to self.Count do
+      for i:=0 to self.Count-1 do
       begin
         Element[i].Render;
       end;
@@ -184,6 +184,8 @@ uses dglopengl;
     TglvgRect(Element[0]).Rx := 15;
     TglvgRect(Element[0]).Ry := 15;
 
+
+
     TglvgRect(Element[0]).Style.NumGradColors:=2;
     TglvgRect(Element[0]).Style.GradColor[0].SetColor('#00C0C0');
     TglvgRect(Element[0]).Style.GradColor[1].SetColor('#0000C0');
@@ -205,18 +207,14 @@ uses dglopengl;
     TglvgRect(Element[1]).Ry := 15;
 
     TglvgRect(Element[1]).Style.Color.SetColor('#FFFFFF');
-
     TglvgRect(Element[1]).Style.NumGradColors:=2;
+    TglvgRect(Element[1]).Style.GradColorAngle:=90;
     TglvgRect(Element[1]).Style.GradColor[0].a:=1.0;
-    TglvgRect(Element[1]).Style.GradColor[0].y:=0.0;
-    TglvgRect(Element[1]).Style.GradColor[1].y:=10.0;
+    TglvgRect(Element[1]).Style.GradColor[0].x:=0.0;
+    TglvgRect(Element[1]).Style.GradColor[1].x:=10.0;
     TglvgRect(Element[1]).Style.GradColor[1].a:=0.0;
-
-
-    TglvgRect(Element[1]).Style.FillType := glvgSolid;
-//    TglvgRect(FElements[1]).Style.AlphaFillType := glvgLinearGradient;
+    TglvgRect(Element[1]).Style.FillType := glvgLinearGradient;
     TglvgRect(Element[1]).Style.LineType := glvgNone;
-
     TglvgRect(Element[1]).Init;
 
     //hl2
@@ -233,14 +231,17 @@ uses dglopengl;
 
     TglvgRect(Element[2]).Style.Color.SetColor('#000000');
     TglvgRect(Element[2]).Style.NumGradColors:=2;
+    TglvgRect(Element[2]).Style.GradColorAngle:=90;
+    TglvgRect(Element[2]).Style.GradColor[0].SetColor('#000000');
     TglvgRect(Element[2]).Style.GradColor[0].a:=0.0;
-    TglvgRect(Element[2]).Style.GradColor[0].y:=20.0;
-    TglvgRect(Element[2]).Style.GradColor[1].y:=30.0;
+    TglvgRect(Element[2]).Style.GradColor[0].x:=15;
+
+    TglvgRect(Element[2]).Style.GradColor[1].SetColor('#000000');
+    TglvgRect(Element[2]).Style.GradColor[1].x:=29;
     TglvgRect(Element[2]).Style.GradColor[1].a:=1.0;
 
 
-    TglvgRect(Element[2]).Style.FillType := glvgSolid;
-//    TglvgRect(FElements[2]).Style.AlphaFillType := glvgLinearGradient;
+    TglvgRect(Element[2]).Style.FillType := glvgLinearGradient;
     TglvgRect(Element[2]).Style.LineType := glvgNone;
 
     TglvgRect(Element[2]).Init;
