@@ -1571,7 +1571,7 @@ begin
     addcolor.r := FGradColors[0].r;
     addcolor.g := FGradColors[0].g;
     addcolor.b := FGradColors[0].b;
-    addcolor.a := FColor.a;
+    addcolor.a := FGradColors[0].b;//FColor.a;
 
     temp.x:=FGradColors[0].x;
     temp.y:=ABoundBoxMaxPoint.y;//FGradColors[0].y;
@@ -1672,7 +1672,7 @@ begin
     addcolor.r := FGradColors[fNumGradColors-1].r;
     addcolor.g := FGradColors[fNumGradColors-1].g;
     addcolor.b := FGradColors[fNumGradColors-1].b;
-    addcolor.a := FColor.a;
+    addcolor.a := FGradColors[fNumGradColors-1].a;//FColor.a;
 
     temp.x:=FGradColors[fNumGradColors-1].x;
     temp.y:=ABoundBoxMinPoint.y;//FGradColors[fNumGradColors-1].y;

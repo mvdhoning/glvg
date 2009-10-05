@@ -201,7 +201,7 @@ begin
   polyrect := TglvgRect.Create;
   polyrect.X:= 10.0;
   polyrect.Y:= 10.0;
-  polyrect.Width:=50.0;
+  polyrect.Width:=100.0;
   polyrect.Height:=200.0;
   polyrect.Rx:=20.0;
   polyrect.Ry:=20.0; //Optional
