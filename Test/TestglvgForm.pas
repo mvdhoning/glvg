@@ -215,7 +215,7 @@ begin
   //polyrect.Style.GradColor[1].a :=1.0;
 
   polyrect.Style.GradColor[0].SetColor('#FF0000');
-  polyrect.Style.GradColor[0].x:=0;
+  polyrect.Style.GradColor[0].x:=10;
   polyrect.Style.GradColor[1].SetColor('#00FF00');
   polyrect.Style.GradColor[1].x:=100;
 
@@ -228,17 +228,21 @@ begin
   polyelipse.X := 400;
   polyelipse.Y := 200;
   polyelipse.Radius := 100;
+  polyelipse.Style.Color.a:=1;
   polyelipse.Style.GradColorAngle:= 45;
   polyelipse.Style.NumGradColors:=3;
   //TODO: 3 color fill is realy broken now
   polyelipse.Style.GradColor[0].SetColor('#FF0000');
   polyelipse.Style.GradColor[0].x:=400-100+25;
+  polyelipse.Style.GradColor[0].a:=1;
 
   polyelipse.Style.GradColor[1].SetColor('#0000FF');
   polyelipse.Style.GradColor[1].x:=400+100-45;
+  polyelipse.Style.GradColor[1].a:=1;
 
   polyelipse.Style.GradColor[2].SetColor('#00FF00');
   polyelipse.Style.GradColor[2].x:=400+100-25;
+  polyelipse.Style.GradColor[2].a:=1;
 
 
   polyelipse.Style.FillType := glvgLinearGradient;

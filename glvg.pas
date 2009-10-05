@@ -409,6 +409,27 @@ begin
   glend;
 end;
 
+procedure TestColorRenderBoundingBox(AMin: TColor; AMax: TColor);
+var
+  loop: integer;
+begin
+  glcolor4f(AMin.r,AMin.g,AMin.b,0.5);
+  glLineWidth(1.0);
+  glbegin(GL_LINES);
+    glvertex3f(AMin.X,AMin.Y,0);
+    glvertex3f(AMin.X,AMax.Y,0);
+
+    glvertex3f(AMin.X,AMax.Y,0);
+    glvertex3f(AMax.X,AMax.Y,0);
+
+    glvertex3f(AMax.X,AMax.Y,0);
+    glvertex3f(AMax.X,AMin.Y,0);
+
+    glvertex3f(AMax.X,AMin.Y,0);
+    glvertex3f(AMin.X,AMin.Y,0);
+  glend;
+end;
+
 //TglvgObject
 constructor TglvgObject.Create();
 begin
@@ -1433,7 +1454,7 @@ procedure TStyle.DrawFill(radius: single; aboundboxminpoint: tpoint; aboundboxma
 var
   i:integer;
   addcolor: TColor;
-  cp,cp2: tpoint;
+  cp,cp2,cpcol: tpoint;
   mpmin,mpmax: tpoint;
   rotpoint: tpoint;
   curpoint: tpoint;
@@ -1441,6 +1462,7 @@ var
   curpoint2: tpoint;
   temp2: tpoint;
   colorfrom, colorto: tcolor;
+  difpoint: tpoint;
 
 begin
 
@@ -1531,6 +1553,12 @@ begin
     mpmax.b:=0;
     mpmax.a:=0;
 
+    cpcol.x := (FGradColors[fNumGradColors-1].x - FGradColors[0].x)/2;
+    cpcol.y := (FGradColors[fNumGradColors-1].y - FGradColors[0].y)/2;
+    //cpcol.x := 0;//FGradColors[0].x;
+    //cpcol.y := 0;
+
+
     rotpoint.x:=0+(aboundboxminpoint.x+cp.x);
     rotpoint.y:=0+(aboundboxminpoint.y+cp.y);
 
@@ -1551,18 +1579,20 @@ begin
     curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
     curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
 
+    //TestRenderBoundingBox(mpmin,mpmax);
+
     glpushmatrix;
 
     if FGradColorAngle > 0  then
     begin
-
       gltranslatef(+cp.x, +cp.y,0);
       gltranslatef(+ABoundBoxMinPoint.x,+ABoundBoxMinPoint.y,0);
       glrotatef(FGradColorAngle,0,0,1);
       gltranslatef(-ABoundBoxMinPoint.x,-ABoundBoxMinPoint.y,0);
       gltranslatef(-cp.x, -cp.y,0);
-
     end;
+
+    //TestRenderBoundingBox(mpmin,mpmax);
 
     //extend (clamping)
     addcolor := TColor.Create;
@@ -1571,21 +1601,26 @@ begin
     addcolor.r := FGradColors[0].r;
     addcolor.g := FGradColors[0].g;
     addcolor.b := FGradColors[0].b;
-    addcolor.a := FGradColors[0].b;//FColor.a;
+    addcolor.a := FGradColors[0].a;//FColor.a;
 
     temp.x:=FGradColors[0].x;
     temp.y:=ABoundBoxMaxPoint.y;//FGradColors[0].y;
     curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
     curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
 
+    difpoint.x:=curpoint.x - temp.x;
+
+
     //adjust only the 'first' x cooord (only a cosmetic fix)
-    colorto.x:=curpoint.x;//curpoint.x;
+    colorto.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;//curpoint.x;
     colorto.y:=mpmax.y;//curpoint.y;
     colorto.r:=FGradColors[0].r;
     colorto.g:=FGradColors[0].g;
     colorto.b:=FGradColors[0].b;
     colorto.a:=FGradColors[0].a;
 
+
+    //TestColorRenderBoundingBox(addcolor,colorto);
     DrawBox(curpoint.x, curpoint.y, AddColor, colorto);
     AddColor.Free;
 
@@ -1599,7 +1634,8 @@ begin
       curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
 
       //adjust only the 'first' x cooord (only a cosmetic fix)
-      colorfrom.x:=curpoint.x;//curpoint.x;
+      //colorfrom.x:=temp.x;//curpoint.x;
+      colorfrom.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;//curpoint.x;
       colorfrom.y:=mpmin.y;//curpoint.y;//mpmin.y;
       colorfrom.r:=FGradColors[0].r;
       colorfrom.g:=FGradColors[0].g;
@@ -1611,7 +1647,8 @@ begin
       curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
       curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
 
-      colorto.x:=temp.x;//curpoint.x;
+      //colorto.x:=temp.x;//curpoint.x;
+      colorto.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;//curpoint.x;
       colorto.y:=mpmax.y;//curpoint.y;//mpmax.y;
       colorto.r:=FGradColors[1].r;
       colorto.g:=FGradColors[1].g;
@@ -1623,6 +1660,7 @@ begin
       curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
       curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
 
+      // TestColorRenderBoundingBox(colorfrom,colorto);
       DrawBox(curpoint.x, curpoint.y, colorfrom, colorto);
     end;
 
@@ -1637,7 +1675,8 @@ begin
         curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
         curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
 
-        colorfrom.x:=temp.x;//curpoint.x;
+        //colorfrom.x:=temp.x;//curpoint.x;
+        colorfrom.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;//curpoint.x;
         colorfrom.y:=mpmin.y;//curpoint.y;
         colorfrom.r:=FGradColors[i-1].r;
         colorfrom.g:=FGradColors[i-1].g;
@@ -1649,7 +1688,8 @@ begin
         curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
         curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
 
-        colorto.x:=temp.x;//curpoint.x;
+        //colorto.x:=temp.x;//curpoint.x;
+        colorto.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;//curpoint.x;
         colorto.y:=mpmax.y;//curpoint.y;
         colorto.r:=FGradColors[i].r;
         colorto.g:=FGradColors[i].g;
@@ -1679,7 +1719,8 @@ begin
     curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
     curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
 
-    colorfrom.x:=temp.x;//curpoint.x;
+//    colorfrom.x:=temp.x;//curpoint.x;
+    colorfrom.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;//curpoint.x;
     colorfrom.y:=mpmin.y;//curpoint.y;
     colorfrom.r:=FGradColors[fNumGradColors-1].r;
     colorfrom.g:=FGradColors[fNumGradColors-1].g;
