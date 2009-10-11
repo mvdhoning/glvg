@@ -138,7 +138,7 @@ begin
 
   fStartTick := GetTickCount; //Init FPS.
 
-  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 6400, 0, 6400);
+  glMatrixMode (GL_PROJECTION); glLoadIdentity(); gluOrtho2D (0, 640, 0, 480);
   glMatrixMode (GL_MODELVIEW); glLoadIdentity(); glTranslatef (0.375, 0.375, 0.0);
 
   // track material ambient and diffuse from surface color, call it before glEnable(GL_COLOR_MATERIAL)
@@ -288,8 +288,9 @@ begin
   polytext.Style.FillType := glvgLinearGradient;
   polytext.Style.LineType := glvgNone; //glvgSolid;
 
+  polytext.Font.Size := 12; //12pt
   polytext.Font.LoadFromFile('font.txt');
-  polytext.Font.Scale := 0.05; //TODO: Should be related to font-size?
+  //polytext.Font.Scale := 0.05; //TODO: Should be related to font-size?
   polytext.Text := 'Hello World';
   polytext.Style.LineWidth:=2.0;
 
@@ -301,8 +302,9 @@ begin
   pt2.Style.FillType := glvgSolid;
   pt2.Style.LineType := glvgSolid;
 
+  pt2.Font.Size := 24; //24pt
   pt2.Font.LoadFromFile('times.txt');
-  pt2.Font.Scale := 0.2; //TODO: Should be related to font-size?
+  //pt2.Font.Scale := 0.2; //TODO: Should be related to font-size?
   pt2.Text:=FloatTostr(fFPS)+ ' fps';
 
   polyuitest := TglvgGuiObject.Create;

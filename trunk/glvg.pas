@@ -235,15 +235,18 @@ TPolygonFont = class
         FCharWidth: array[0..255] of integer;
         FName: string;
         FScale: single;
+        FSize: single;
         FFontHeight: single;
         FFontWidth: single;
         FStyle: TStyle;
+        procedure SetSize(AValue: single);
      public
         procedure LoadFromFile(AValue: string);
         procedure RenderChar(AValue: char);
         procedure RenderString(AValue: string);
         property Name: string read FName write FName;
         property Scale: single read FScale write FScale;
+        property Size: single read FSize write SetSize;
         property Style: TStyle read FStyle write FStyle;
      end;
 
@@ -2298,6 +2301,18 @@ begin
 end;
 
 //TPolygonFont
+
+procedure TPolygonFont.SetSize(AValue: Single);
+var
+  frs: single; //font render size
+  upm: single; //units per em
+begin
+  //TODO: this calculation asumes 1 unit is 1px so glortho has to be setup alike
+  fsize:=avalue;
+  frs := (fsize/(72))*100; //assume dpi of 72
+  upm := 1000; //units per em for the font
+  scale := frs/upm;
+end;
 
 procedure TPolygonFont.RenderChar(AValue: char);
 begin
