@@ -27,6 +27,11 @@ unit glvg;
 
 interface
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+  {$modeswitch nestedprocvars}
+{$ENDIF}
+
 uses DGLOpenGL, glBitmap, classes;
 
 type
@@ -2101,7 +2106,7 @@ begin
   glEnable(GL_STENCIL_TEST);
 
   //write a one to the stencil buffer everywhere we are about to draw
-  glStencilFunc(GL_ALWAYS, fid, $FFFFFFFF);
+  glStencilFunc(GL_ALWAYS, fid, 1);
 
   //this is to always pass a one to the stencil buffer where we draw
   glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
@@ -2116,7 +2121,7 @@ begin
 
   //until stencil test is diabled, only write to areas where the
   //stencil buffer has a one. This fills the shape
-  glStencilFunc(GL_EQUAL, fid, $FFFFFFFF);
+  glStencilFunc(GL_EQUAL, fid, 1);
 
   // don't modify the contents of the stencil buffer
   glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -2266,7 +2271,7 @@ begin
   gluTessCallback(tess, GLU_TESS_END, @iTessEndCB);
   gluTessCallback(tess, GLU_TESS_VERTEX, @iTessVertexCB);
   gluTessCallback(tess, GLU_TESS_COMBINE, @iTessCombineCB);  //does not work for font?
-  gluTessCallback(tess, GLU_TESS_EDGE_FLAG_DATA, @iTessEdgeCB); //force triangles
+  gluTessCallback(tess, GLU_TESS_EDGE_FLAG_DATA, @iTessEdgeCB); //force triangles and cleanup
 
   gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_NONZERO );
 
