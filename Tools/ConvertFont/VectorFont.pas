@@ -59,6 +59,11 @@ unit VectorFont;
     (?) = may be
 }
 
+//compatibility for FPC
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
 uses
@@ -379,15 +384,16 @@ var res, bufSize : integer;
 
 begin
   Result := nil;
-  if Font.Handle = 0 then
-    exit;
+  //if Font.Handle = 0 then
+  //  exit;
 
   dc := GetDC( 0 );
   mdc := CreateCompatibleDC( dc );
   ReleaseDC( 0, dc );
 
   FFont.Size := EMSIZE;
-  ofont := SelectObject( mdc, FFont.Handle );
+  //ofont := SelectObject( mdc, FFont.Handle );
+  ofont := SelectObject( mdc, CreateFont(12,0,0,0,0,0,0,0,0,0,0,0,0,pchar(FFont.Name))); //12=size
 
   m2.eM11.value := 1; m2.eM11.fract := 1; { Identity matrix }
   m2.eM12.value := 0; m2.eM12.fract := 1; { |1,0|           }
@@ -573,22 +579,26 @@ var res, bufSize : integer;
   end;
 
 begin
+  writeln('GetCharacterPath');
   Result := '';
-  if Font.Handle = 0 then
-    exit;
+  //if Font.Handle = 0 then
+  //  exit;
 
+  writeln('About to get a device context');
   dc := GetDC( 0 );
   mdc := CreateCompatibleDC( dc );
   ReleaseDC( 0, dc );
 
   FFont.Size := EMSIZE;
-  ofont := SelectObject( mdc, FFont.Handle );
+  //ofont := SelectObject( mdc, FFont.Handle );
+  ofont := SelectObject( mdc, CreateFont(12,0,0,0,0,0,0,0,0,0,0,0,0,pchar(FFont.Name))); //12=size
 
   m2.eM11.value := 1; m2.eM11.fract := 1; { Identity matrix }
   m2.eM12.value := 0; m2.eM12.fract := 1; { |1,0|           }
   m2.eM21.value := 0; m2.eM21.fract := 1; { |0,1|           }
   m2.eM22.value := 1; m2.eM22.fract := 1;
 
+  writeln('About to get GlyphOutline');
   {$IFDEF WIN32}
   if not FUNICODE then
     bufSize := GetGlyphOutline( mdc,
@@ -619,6 +629,7 @@ begin
     exit;
   end;
 
+  writeln('About to get bufPtr');
   bufPtr := AllocMem( bufSize );
   buf := bufPtr;
 
