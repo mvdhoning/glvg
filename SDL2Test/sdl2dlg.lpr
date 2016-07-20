@@ -285,6 +285,11 @@ begin
 
   glDisable(GL_DEPTH_TEST);
 
+  //AntiAlias
+  //glEnable (GL_BLEND);
+  //glEnable (GL_POLYGON_SMOOTH); //makes triangle faces show up
+  //glDisable (GL_DEPTH_TEST);
+
   // Alpha Blending
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
