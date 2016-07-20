@@ -591,7 +591,7 @@ begin
 
   FFont.Size := EMSIZE;
   //ofont := SelectObject( mdc, FFont.Handle );
-  ofont := SelectObject( mdc, CreateFont(12,0,0,0,0,0,0,0,0,0,0,0,0,pchar(FFont.Name))); //12=size
+  ofont := SelectObject( mdc, CreateFont(FFont.Size,0,0,0,0,0,0,0,0,0,0,0,0,pchar(FFont.Name))); //12=size
 
   m2.eM11.value := 1; m2.eM11.fract := 1; { Identity matrix }
   m2.eM12.value := 0; m2.eM12.fract := 1; { |1,0|           }

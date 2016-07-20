@@ -25,9 +25,11 @@ begin
   TTF2Vector := TTTFToVectorConverter.Create(nil);
   TTF2Vector.Font := TFont.Create();
   TTF2Vector.Font.Name := 'Times New Roman';
+  TTF2Vector.Font.Size:= 24;
 
   writeln(TTF2Vector.Font.Name);
   //writeln(IntToStr(TTF2Vector.Font.Handle)); //font handle is depracted
+  writeln(IntToStr(TTF2Vector.Font.Size));
 
   // Setup spline precision (1 min, 100 max)
   TTF2Vector.Precision := 1;
