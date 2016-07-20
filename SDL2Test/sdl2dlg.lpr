@@ -27,6 +27,7 @@ var
   polystar: TPolygon;
   polyrect,bg1: TglvgRect;
   polycirc: TglvgCircle;
+  polytext: TglvgText;
 
 procedure InitializeVariables;
 begin
@@ -170,6 +171,43 @@ begin
   polyrect.Style.LineType := glvgSolid;
   polycirc.Init;
 
+  //vector font
+  polytext := TglvgText.Create;
+  polytext.X := 100;
+  polytext.Y := 100;
+  polytext.Style.Color.SetColor(1,0,0,1);
+  polytext.Style.LineColor.SetColor(1,0,1,1);
+
+  polytext.Style.NumGradColors:=2;
+  with polytext.Style.GradColor[0] do
+  begin
+    r:=1.0; //yellow
+    g:=1.0;
+    b:=0.0;
+    x:=0;
+  end;
+
+
+  with polytext.Style.GradColor[1] do
+  begin
+    r:=0.0; //blue
+    g:=0.0;
+    b:=1.0;
+    x:=1000;
+  end;
+
+
+  polytext.Style.GradColorAngle:=90; //90
+
+  polytext.Style.FillType := glvgSolid; //glvgLinearGradient;
+  polytext.Style.LineType := glvgNone; //glvgSolid;
+
+  polytext.Font.Size := 12; //12pt
+  polytext.Font.LoadFromFile('font.txt');
+  //polytext.Font.Scale := 0.05; //TODO: Should be related to font-size?
+  polytext.Text := 'Hello World!';
+  polytext.Style.LineWidth:=2.0;
+
 end;
 
 procedure ResizeOpenGL(w,h: Integer);
@@ -303,6 +341,11 @@ begin
   polyrect.Render;
   polycirc.Render;
 
+  //render text with vector font
+  //AntiAlias
+  glEnable (GL_POLYGON_SMOOTH);
+  polytext.Render;
+  glDisable (GL_POLYGON_SMOOTH);
 
   glFlush(); //for opengl to do its thing
 end;
@@ -369,6 +412,7 @@ begin
   polyrect.Free;
   polycirc.Free;
   bg1.Free;
+  polytext.Free;
 
   SDL_GL_DeleteContext(context);
   SDL_DestroyWindow(window);
