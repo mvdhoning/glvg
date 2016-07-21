@@ -2106,7 +2106,7 @@ begin
   glEnable(GL_STENCIL_TEST);
 
   //write a one to the stencil buffer everywhere we are about to draw
-  glStencilFunc(GL_ALWAYS, fid, 1);
+  glStencilFunc(GL_ALWAYS, fid, fid);
 
   //this is to always pass a one to the stencil buffer where we draw
   glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
@@ -2121,7 +2121,7 @@ begin
 
   //until stencil test is diabled, only write to areas where the
   //stencil buffer has a one. This fills the shape
-  glStencilFunc(GL_EQUAL, fid, 1);
+  glStencilFunc(GL_EQUAL, fid, fid);
 
   // don't modify the contents of the stencil buffer
   glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);

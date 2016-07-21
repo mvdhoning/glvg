@@ -9,11 +9,17 @@ program opengl_onewindow;
 {$APPTYPE CONSOLE}
 
 uses
-  dglOpenGL, sysutils, SDL2, glvg, uglutest;
+  dglOpenGL, sysutils, SDL2, glvg, glvggui;
 
 const
   screenwidth: integer = 640;
   screenheight: integer = 480;
+
+type
+  TMyApplication = object
+    public
+      procedure OnClick(x:integer;y:integer);
+  end;
 
 var
   //needed for application itself
@@ -27,6 +33,17 @@ var
   line1: TPolygon;
   node1,node2: TglvgRect;
   circ1,circ2: TglvgCircle;
+  text1: TglvgText;
+  //glvggui
+  button1: TglvgGuiButton;
+  //my application
+  myapp: TMyApplication;
+
+
+procedure TMyApplication.OnClick(x: integer;y: integer);
+begin
+  writeln('Click!');
+end;
 
 procedure InitializeVariables;
 begin
@@ -120,6 +137,27 @@ begin
 
   writeln('M 100,75 C 150,75 150,125 200,125');
   writeln(linepath);
+
+  text1 := TglvgText.Create();
+  text1.Font.LoadFromFile('font.txt');
+  text1.Font.Size:=12;
+  text1.Text:='Hello World';
+  text1.X:=10;
+  text1.Y:=10;
+  text1.Style.Color.SetColor(1,1,1,1);
+  text1.Style.FillType:=glvgsolid;
+  text1.Style.LineType:=glvgnone;
+  text1.Init;
+
+  //glvggui
+  button1 := TglvgguiButton.Create();
+  button1.Text:='Test';
+  button1.X:=400;
+  button1.Y:=400;
+  button1.Width:=200;
+  button1.Height:=25;
+  button1.Init;
+  button1.OnClick:=myapp.onclick;
 end;
 
 procedure ResizeOpenGL(w,h: Integer);
@@ -138,7 +176,7 @@ end;
 procedure HandleEvents;
 var
   event: TSDL_Event;
-  dx,dy: integer;
+  mouseX,mouseY: integer;
 begin
   while SDL_PollEvent(@event) > 0 do
   begin
@@ -161,12 +199,23 @@ begin
 
       SDL_MOUSEMOTION:
         begin
-          dx := event.motion.xrel;
-          dy := event.motion.yrel;
+          //mouseX := event.motion.xrel; //relative
+          //mouseY := event.motion.yrel;
+          mouseX := event.motion.x; //absolute
+          mouseY := event.motion.y;
+          text1.Text:='mouseX '+inttostr(mouseX)+' mouseY '+inttostr(mouseY);
+
+          //test for handing a button
+          button1.HandleMouseEvent(mousex, mousey, false);
+          //TODO: should be in glvggui windows class that passes mouse coords on the right object hierarchical
         end;
 
       SDL_MOUSEBUTTONDOWN:
         begin
+          if( event.button.button = SDL_BUTTON_LEFT ) then
+            begin
+              button1.HandleMouseEvent(event.button.x, event.button.y, true);
+            end;
         end;
 		
     end;
@@ -248,7 +297,8 @@ begin
 
   circ2.Render;
   node2.Render;
-
+  text1.Render;
+  button1.Render;
 
   glFlush(); //for opengl to do its thing
 end;
@@ -295,6 +345,8 @@ begin
 
   SDL_GL_SetSwapInterval(0); //no vsync
 
+  SDL_SetRelativeMouseMode(SDL_FALSE); //show the mouse cursor
+
   //main-loop
   running := true;
   while running do
@@ -316,6 +368,8 @@ begin
   node1.Free;
   node2.Free;
   line1.Free;
+  text1.Free;
+  button1.Free;
 
   SDL_GL_DeleteContext(context);
   SDL_DestroyWindow(window);

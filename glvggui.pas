@@ -31,6 +31,9 @@ uses glvg, types;
 
 type
 //Experimental idea for making a vector gui ... (or group control)
+
+TOnClickEvent = procedure(x: integer; y: integer) of Object;
+
 TglvgGuiObject = class(TglvgGroup)
 private
 //  FElements: array of TglvgObject;
@@ -41,20 +44,24 @@ private
   FY: single;
   FWidth: single;
   FHeight: single;
+  fonClick : TonClickEvent;
 //  function  GetElement(Index: Integer): TglvgObject;
 //  procedure SetElement(Index: Integer; Value: TglvgObject);
 public
   Constructor Create();
 //  Destructor Destroy(); override;
 //  procedure AddElement(AElement: TglvgObject);
+
   procedure Render;
   procedure RenderMouseOver;
   procedure RenderClicked;
   procedure GetState;
+  procedure HandleMouseEvent(mousex: integer; mousey: integer; leftclick: boolean);
   property X: single read Fx write Fx;
   property Y: single read Fy write Fy;
   property Width: single read FWidth write FWidth;
   property Height: single read FHeight write FHeight;
+  property OnClick: TonClickEvent read fonClick write fonClick;
 //  property Element[index: integer]: TglvgObject read GetElement write SetElement;
 end;
 
@@ -137,6 +144,29 @@ uses dglopengl;
     glpopmatrix();
   end;
 
+  procedure TglvgGuiObject.HandleMouseEvent(mousex: integer; mousey: integer; leftclick: boolean);
+  begin
+     if (MouseX > self.X) AND (MouseX < self.X + self.Width) then
+        if (MouseY > self.Y) AND (MouseY < self.Y + self.Height) then
+           begin
+             TglvgRect(Element[0]).Style.GradColor[0].SetColor('#0000C0');
+             TglvgRect(Element[0]).Style.GradColor[1].SetColor('#00C0C0');
+             self.FMouseOver:=true;
+             if leftclick then
+                begin
+                  //mouseclick
+                  TglvgRect(Element[0]).Style.GradColor[0].SetColor('#0000C0');
+                  TglvgRect(Element[0]).Style.GradColor[1].SetColor('#0000C0');
+                  if Assigned(FOnClick) then FOnClick(mousex,mousey);
+
+                end;
+           end else begin
+             TglvgRect(Element[0]).Style.GradColor[0].SetColor('#00C0C0');
+             TglvgRect(Element[0]).Style.GradColor[1].SetColor('#0000C0');
+             self.FMouseOver:=false;
+           end;
+     TglvgRect(Element[0]).Init;
+  end;
 
   procedure TglvgGuiObject.RenderMouseOver;
   begin
