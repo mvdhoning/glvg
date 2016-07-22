@@ -16,8 +16,10 @@ const
   screenheight: integer = 480;
 
 type
-  TMyApplication = object
+  TMyApplication = class(TglvgGuiWindow)
     public
+      button1: TglvgGuiButton;
+      constructor Create();
       procedure OnClick(x:integer;y:integer);
   end;
 
@@ -35,10 +37,27 @@ var
   circ1,circ2: TglvgCircle;
   text1: TglvgText;
   //glvggui
-  button1: TglvgGuiButton;
+
   //my application
   myapp: TMyApplication;
 
+constructor TMyApplication.Create();
+begin
+  inherited Create(nil);
+  self.X:=0;
+  self.Y:=0;
+  self.Width:=screenwidth;
+  self.Height:=screenheight;
+  button1 := TglvgguiButton.Create(self);
+  button1.Name:='button1';
+  button1.Text:='Test';
+  button1.X:=400;
+  button1.Y:=400;
+  button1.Width:=200;
+  button1.Height:=25;
+  button1.Init;
+  button1.OnClick:=myapp.onclick;
+end;
 
 procedure TMyApplication.OnClick(x: integer;y: integer);
 begin
@@ -77,6 +96,7 @@ end;
 procedure InitializeOpenGLVariables;
 var
   linepath: string;
+  i:integer;
 begin
 
   glClearColor(0,0,0,0);
@@ -150,7 +170,8 @@ begin
   text1.Init;
 
   //glvggui
-  button1 := TglvgguiButton.Create();
+  (*
+  button1 := TglvgguiButton.Create(nil);
   button1.Text:='Test';
   button1.X:=400;
   button1.Y:=400;
@@ -158,6 +179,15 @@ begin
   button1.Height:=25;
   button1.Init;
   button1.OnClick:=myapp.onclick;
+  *)
+  //use commenteded out line below to alter looks of button/control
+  //button1.Element[0].Style.Color.SetColor(1,1,1,1);
+  myapp := TMyApplication.Create();
+
+  for i:=0 to myapp.ComponentCount-1 do
+  begin
+    writeln(myapp.Components[i].Name);
+  end;
 end;
 
 procedure ResizeOpenGL(w,h: Integer);
@@ -206,7 +236,7 @@ begin
           text1.Text:='mouseX '+inttostr(mouseX)+' mouseY '+inttostr(mouseY);
 
           //test for handing a button
-          button1.HandleMouseEvent(mousex, mousey, false);
+          myapp.HandleMouseEvent(mousex, mousey, false);
           //TODO: should be in glvggui windows class that passes mouse coords on the right object hierarchical
         end;
 
@@ -214,7 +244,7 @@ begin
         begin
           if( event.button.button = SDL_BUTTON_LEFT ) then
             begin
-              button1.HandleMouseEvent(event.button.x, event.button.y, true);
+              myapp.HandleMouseEvent(event.button.x, event.button.y, true);
             end;
         end;
 		
@@ -298,7 +328,7 @@ begin
   circ2.Render;
   node2.Render;
   text1.Render;
-  button1.Render;
+  myapp.button1.Render;
 
   glFlush(); //for opengl to do its thing
 end;
@@ -369,7 +399,8 @@ begin
   node2.Free;
   line1.Free;
   text1.Free;
-  button1.Free;
+  myapp.button1.Free;
+  myapp.Free;
 
   SDL_GL_DeleteContext(context);
   SDL_DestroyWindow(window);
