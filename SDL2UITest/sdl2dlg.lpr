@@ -20,7 +20,7 @@ type
     public
       button1: TglvgGuiButton;
       constructor Create();
-      procedure OnClick(x:integer;y:integer);
+      procedure OnClick();
   end;
 
 var
@@ -50,7 +50,7 @@ begin
   self.Height:=screenheight;
   button1 := TglvgguiButton.Create(self);
   button1.Name:='button1';
-  button1.Text:='Test';
+  button1.Caption.Text:='Test';
   button1.X:=400;
   button1.Y:=400;
   button1.Width:=200;
@@ -59,7 +59,7 @@ begin
   button1.OnClick:=myapp.onclick;
 end;
 
-procedure TMyApplication.OnClick(x: integer;y: integer);
+procedure TMyApplication.OnClick();
 begin
   writeln('Click!');
 end;
@@ -170,24 +170,16 @@ begin
   text1.Init;
 
   //glvggui
-  (*
-  button1 := TglvgguiButton.Create(nil);
-  button1.Text:='Test';
-  button1.X:=400;
-  button1.Y:=400;
-  button1.Width:=200;
-  button1.Height:=25;
-  button1.Init;
-  button1.OnClick:=myapp.onclick;
-  *)
-  //use commenteded out line below to alter looks of button/control
-  //button1.Element[0].Style.Color.SetColor(1,1,1,1);
   myapp := TMyApplication.Create();
 
   for i:=0 to myapp.ComponentCount-1 do
   begin
     writeln(myapp.Components[i].Name);
   end;
+
+  //Add a font and some text on the buton
+  myapp.button1.Caption.Font.LoadFromFile('font.txt');
+  myapp.button1.Caption.Text:='This is an test button.';
 end;
 
 procedure ResizeOpenGL(w,h: Integer);

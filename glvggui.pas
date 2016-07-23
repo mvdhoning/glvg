@@ -27,62 +27,70 @@ unit glvggui;
 
 interface
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 uses glvg, types, classes;
 
 type
 //Experimental idea for making a vector gui ... (or group control)
 
-TOnClickEvent = procedure(x: integer; y: integer) of Object;
+TOnClickEvent = procedure() of Object;
 
 TglvgGuiControl = class(TComponent)
 private
   FElements: TglvgGroup;
-//  FNumElements: integer;
   FMouseOver: boolean;
-  FClicked: boolean;
   FX: single;
   FY: single;
   FWidth: single;
   FHeight: single;
   fonClick : TonClickEvent;
-//  function  GetElement(Index: Integer): TglvgObject;
-//  procedure SetElement(Index: Integer; Value: TglvgObject);
-public
-  Constructor Create(aowner:TComponent);
-//  Destructor Destroy(); override;
-//  procedure AddElement(AElement: TglvgObject);
 
-  procedure Render;
-  procedure RenderMouseOver;
-  procedure RenderClicked;
-  procedure GetState;
+public
+  Constructor Create(aowner:TComponent); override;
+
+  procedure Render; virtual;
+
+  procedure MouseOver; virtual;
+  procedure MouseIn; virtual;
+  procedure MouseOut; virtual;
+  procedure Click; virtual;
+
   procedure HandleMouseEvent(mousex: integer; mousey: integer; leftclick: boolean);
+  property Elements: TglvgGroup read fElements write fElements;
+
+published
   property X: single read Fx write Fx;
   property Y: single read Fy write Fy;
   property Width: single read FWidth write FWidth;
   property Height: single read FHeight write FHeight;
   property OnClick: TonClickEvent read fonClick write fonClick;
-  property Elements: TglvgGroup read fElements write fElements;
-//  property Element[index: integer]: TglvgObject read GetElement write SetElement;
+
 end;
 
 TglvgGuiWindow = class ( TglvgGuiControl )
 public
-  Constructor Create(aowner:Tcomponent);
+  Constructor Create(aowner:Tcomponent); override;
 end;
 
 TglvgGuiButton = class ( TglvgGuiControl )
 private
   fdrawtext : TglvgText;
-  ftext : string;
 public
-  Constructor Create(aowner:Tcomponent);
+  Constructor Create(aowner:Tcomponent); override;
+  Destructor Destroy; override;
   procedure Init;
-  property Text: string read ftext write ftext;
+  procedure MouseIn; override;
+  procedure MouseOut; override;
+  procedure Click; override;
+  procedure Render; override;
+published
+  property Caption: TglvgText read Fdrawtext write Fdrawtext;
 end;
 
 TglvgGuiGridDrawState = set of (gdSelected, gdFocused, gdFixed);
-
 
 TglvgGuiGrid = class ( TglvgGuiControl )
 private
@@ -104,46 +112,20 @@ implementation
 
 uses dglopengl;
 
-//TglvguiObject
+  //TglvgGuiControl
 
   constructor TglvgGuiControl.Create(aowner: TComponent);
   begin
     inherited Create(aowner);
     fElements := TglvgGroup.Create();
-    //FNumElements:=0;
   end;
 
-(*  destructor TglvgGuiControl.Destroy;
-  var
-    i: integer;
-  begin
-    if FElements <> nil then
-    begin
-      For i:=FNumElements-1 downto 0 do
-      begin
-        FElements[i].Free;
-      end;
-    end;
-
-    SetLength(FElements,0);
-    inherited Destroy;
-  end;
-
-
-  procedure TglvgGuiControl.AddElement(AElement: TglvgObject);
-  begin
-    FNumElements:=FNumElements+1;
-    SetLength(FElements,FNumElements);
-    FElements[FNumElements-1] := AElement;
-  end;
-   *)
   procedure TglvgGuiControl.Render;
   var
     i: integer;
   begin
     glpushmatrix();
       gltranslatef(Fx,Fy,0);
-      //glscalef(5,5,1); //DEBUG scaling...
       for i:=0 to self.Elements.Count-1 do
       begin
         self.Elements.Element[i].Render;
@@ -151,11 +133,33 @@ uses dglopengl;
     glpopmatrix();
   end;
 
+  procedure TglvgGuiControl.MouseOver;
+  begin
+    //self.FMouseOver:=true;
+  end;
+
+  procedure TglvgGuiControl.MouseIn;
+  begin
+    self.FMouseOver:=true;
+  end;
+
+  procedure TglvgGuiControl.MouseOut;
+  begin
+   self.FMouseOver:=false;
+  end;
+
+  procedure TglvgGuiControl.Click;
+  begin
+    //handle mouseclick
+    if Assigned(FOnClick) then
+      FOnClick();
+    self.FMouseOver:=false; //trigger mouse over again aftter click event
+  end;
+
   procedure TglvgGuiControl.HandleMouseEvent(mousex: integer; mousey: integer; leftclick: boolean);
   var i: integer;
+
   begin
-
-
      if (MouseX > self.X) AND (MouseX < self.X + self.Width) then
         if (MouseY > self.Y) AND (MouseY < self.Y + self.Height) then
            begin
@@ -167,57 +171,28 @@ uses dglopengl;
              //next handle itself
              if self.Elements.Count >=1 then
                 begin
-                  //this should be in tbutton
-                  TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#0000C0');
-                  TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#00C0C0');
-                  self.FMouseOver:=true;
+                  if self.FMouseOver then self.MouseOver else self.MouseIn;
                   if leftclick then
                   begin
-                    //handle mouseclick
-                    TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#0000C0');
-                    TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
-                    if Assigned(FOnClick) then FOnClick(mousex,mousey);
+                    self.Click;
                   end;
                 end;
            end else begin
              if self.Elements.Count >=1 then
              begin
-               TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#00C0C0');
-               TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
-               self.FMouseOver:=false;
+               self.MouseOut;
              end;
            end;
-
-     if self.Elements.Count >=1 then
-       TglvgRect(self.Elements.Element[0]).Init;
   end;
 
-  procedure TglvgGuiControl.RenderMouseOver;
-  begin
-  end;
-
-  procedure TglvgGuiControl.RenderClicked;
-  begin
-  end;
-
-  procedure TglvgGuiControl.GetState;
-  begin
-  end;
-
-(*  function  TglvgGuiControl.GetElement(Index: Integer): TglvgObject;
-  begin
-    result := fElements[Index];
-  end;
-
-  procedure TglvgGuiControl.SetElement(Index: Integer; Value: TglvgObject);
-  begin
-    fElements[Index] := Value;
-  end;  *)
+  //TglvgGuiWindow
 
   constructor TglvgGuiWindow.Create(aowner:TComponent);
   begin
     inherited Create(aowner);
   end;
+
+  //TglvgGuiButton
 
   constructor TglvgGuiButton.Create(aowner:TComponent);
   begin
@@ -225,9 +200,16 @@ uses dglopengl;
     fDrawText := tglvgText.Create;
   end;
 
+  destructor TglvgGuiButton.Destroy;
+  begin
+    fDrawText.Free;
+    inherited Destroy;
+  end;
+
   procedure TglvgGuiButton.Init;
   begin
     self.Elements.AddElement(TglvgRect.Create);
+
     TglvgRect(self.Elements.Element[0]).X := 0;
     TglvgRect(self.Elements.Element[0]).Y := 0;
 
@@ -236,8 +218,6 @@ uses dglopengl;
 
     TglvgRect(self.Elements.Element[0]).Rx := 15;
     TglvgRect(self.Elements.Element[0]).Ry := 15;
-
-
 
     TglvgRect(self.Elements.Element[0]).Style.NumGradColors:=2;
     TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#00C0C0');
@@ -248,7 +228,7 @@ uses dglopengl;
 
     TglvgRect(self.Elements.Element[0]).Init;
 
-    //hl1
+    //HighLight 1
     self.Elements.AddElement(TglvgRect.Create);
     TglvgRect(self.Elements.Element[1]).X := 2.5;
     TglvgRect(self.Elements.Element[1]).Y := 2.5;
@@ -268,10 +248,10 @@ uses dglopengl;
     TglvgRect(self.Elements.Element[1]).Style.GradColor[1].a:=0.0;
     TglvgRect(self.Elements.Element[1]).Style.FillType := glvgLinearGradient;
     TglvgRect(self.Elements.Element[1]).Style.LineType := glvgNone;
+
     TglvgRect(self.Elements.Element[1]).Init;
 
-    //hl2
-
+    //HighLight 2
     self.Elements.AddElement(TglvgRect.Create);
     TglvgRect(self.Elements.Element[2]).X := 2.5;
     TglvgRect(self.Elements.Element[2]).Y := 30 - 2.5 - 20;
@@ -293,15 +273,55 @@ uses dglopengl;
     TglvgRect(self.Elements.Element[2]).Style.GradColor[1].x:=29;
     TglvgRect(self.Elements.Element[2]).Style.GradColor[1].a:=1.0;
 
-
     TglvgRect(self.Elements.Element[2]).Style.FillType := glvgLinearGradient;
     TglvgRect(self.Elements.Element[2]).Style.LineType := glvgNone;
 
     TglvgRect(self.Elements.Element[2]).Init;
 
-    self.Elements.AddElement(FDrawText);
+    //text
+    fDrawText.X:=self.X+10;
+    fDrawText.Y:=self.Y+7;
+    fDrawText.Font.Size:=12;
+    fDrawText.Text:='Dummy';
+    fDrawText.Style.Color.SetColor(1,1,1,1);
+    fDrawText.Style.FillType:=glvgsolid;
+    fDrawText.Style.LineType:=glvgnone;
+    fDrawText.Init;
+    //self.Elements.AddElement(FDrawText); //Does not render it when set this way
   end;
 
+  procedure TglvgGuiButton.MouseIn;
+  begin
+    TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#0000C0');
+    TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#00C0C0');
+    TglvgRect(self.Elements.Element[0]).Init;
+    inherited MouseIn;
+  end;
+
+  procedure TglvgGuiButton.MouseOut;
+  begin
+   TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#00C0C0');
+   TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
+   TglvgRect(self.Elements.Element[0]).Init;
+   inherited MouseOut;
+  end;
+
+  procedure TglvgGuiButton.Click;
+  begin
+    //handle mouseclick
+    TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#0000C0');
+    TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
+    TglvgRect(self.Elements.Element[0]).Init;
+    inherited Click;
+  end;
+
+  procedure TglvgGuiButton.Render;
+  begin
+    inherited Render;
+    self.Caption.Render;
+  end;
+
+  //TglvgGuiGrid
   procedure TglvgGuiGrid.SetCell(x: Integer; y: Integer; value: string);
   begin
     FCells[x,y] := value;
