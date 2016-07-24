@@ -19,6 +19,7 @@ type
   TMyApplication = class(TglvgGuiWindow)
     public
       button1: TglvgGuiButton;
+      connector1: TglvgGuiConnector;
       constructor Create();
       procedure OnClick();
   end;
@@ -41,6 +42,8 @@ var
   //my application
   myapp: TMyApplication;
 
+  click: boolean;
+
 constructor TMyApplication.Create();
 begin
   inherited Create(nil);
@@ -57,6 +60,15 @@ begin
   button1.Height:=25;
   button1.Init;
   button1.OnClick:=myapp.onclick;
+
+
+  connector1 := TglvgGuiConnector.Create(self);
+  connector1.Name:='connector1';
+  connector1.X:=300;
+  connector1.Y:=300;
+  connector1.Init;
+
+
 end;
 
 procedure TMyApplication.OnClick();
@@ -198,7 +210,8 @@ end;
 procedure HandleEvents;
 var
   event: TSDL_Event;
-  mouseX,mouseY: integer;
+  mouseX,mouseY,mouseMoveX,mouseMoveY: integer;
+
 begin
   while SDL_PollEvent(@event) > 0 do
   begin
@@ -221,14 +234,13 @@ begin
 
       SDL_MOUSEMOTION:
         begin
-          //mouseX := event.motion.xrel; //relative
-          //mouseY := event.motion.yrel;
+          mouseMoveX := event.motion.xrel; //relative
+          mouseMoveY := event.motion.yrel;
           mouseX := event.motion.x; //absolute
           mouseY := event.motion.y;
-          text1.Text:='mouseX '+inttostr(mouseX)+' mouseY '+inttostr(mouseY);
-
+          text1.Text:='mouseX '+inttostr(mouseMoveX)+' mouseY '+inttostr(mouseMoveY);
           //test for handing a button
-          myapp.HandleMouseEvent(mousex, mousey, false);
+          myapp.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, click);
           //TODO: should be in glvggui windows class that passes mouse coords on the right object hierarchical
         end;
 
@@ -236,7 +248,16 @@ begin
         begin
           if( event.button.button = SDL_BUTTON_LEFT ) then
             begin
-              myapp.HandleMouseEvent(event.button.x, event.button.y, true);
+              click:=true;
+              myapp.HandleMouseEvent(event.button.x, event.button.y,0,0, true);
+            end;
+        end;
+      SDL_MOUSEBUTTONUP:
+        begin
+          if( event.button.button = SDL_BUTTON_LEFT ) then
+            begin
+              click:=false;
+              myapp.HandleMouseEvent(event.button.x, event.button.y,0,0, false);
             end;
         end;
 		
@@ -321,11 +342,10 @@ begin
   node2.Render;
   text1.Render;
   myapp.button1.Render;
+  myapp.connector1.Render;
 
   glFlush(); //for opengl to do its thing
 end;
-
-
 
 begin
 
@@ -371,6 +391,7 @@ begin
 
   //main-loop
   running := true;
+  click := false;
   while running do
     begin
       //Event-Handling

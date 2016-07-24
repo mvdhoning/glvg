@@ -31,7 +31,7 @@ interface
   {$MODE Delphi}
 {$ENDIF}
 
-uses glvg, types, classes;
+uses glvg, types, classes,sysutils;
 
 type
 //Experimental idea for making a vector gui ... (or group control)
@@ -47,18 +47,21 @@ private
   FWidth: single;
   FHeight: single;
   fonClick : TonClickEvent;
+  fDraggAble : boolean;
+  fIsDragged : boolean;
 
 public
   Constructor Create(aowner:TComponent); override;
 
   procedure Render; virtual;
 
+  procedure MouseDrag; virtual;
   procedure MouseOver; virtual;
   procedure MouseIn; virtual;
   procedure MouseOut; virtual;
   procedure Click; virtual;
 
-  procedure HandleMouseEvent(mousex: integer; mousey: integer; leftclick: boolean);
+  procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean);
   property Elements: TglvgGroup read fElements write fElements;
 
 published
@@ -67,12 +70,20 @@ published
   property Width: single read FWidth write FWidth;
   property Height: single read FHeight write FHeight;
   property OnClick: TonClickEvent read fonClick write fonClick;
-
+  property DraggAble: boolean read fDraggAble write fDraggAble;
 end;
 
 TglvgGuiWindow = class ( TglvgGuiControl )
 public
   Constructor Create(aowner:Tcomponent); override;
+end;
+
+TglvgGuiConnector = class ( TglvgGuiControl )
+public
+  Constructor Create(aowner:Tcomponent); override;
+  procedure Init;
+  procedure MouseIn; override;
+  procedure MouseOut; override;
 end;
 
 TglvgGuiButton = class ( TglvgGuiControl )
@@ -118,6 +129,7 @@ uses dglopengl;
   begin
     inherited Create(aowner);
     fElements := TglvgGroup.Create();
+    fIsDragged := false;
   end;
 
   procedure TglvgGuiControl.Render;
@@ -129,13 +141,17 @@ uses dglopengl;
       for i:=0 to self.Elements.Count-1 do
       begin
         self.Elements.Element[i].Render;
+        //self.Elements.Element[i].Polygon.RenderBoundingBox();
       end;
     glpopmatrix();
   end;
 
   procedure TglvgGuiControl.MouseOver;
   begin
-    //self.FMouseOver:=true;
+  end;
+
+  procedure TglvgGuiControl.MouseDrag;
+  begin
   end;
 
   procedure TglvgGuiControl.MouseIn;
@@ -156,17 +172,33 @@ uses dglopengl;
     self.FMouseOver:=false; //trigger mouse over again aftter click event
   end;
 
-  procedure TglvgGuiControl.HandleMouseEvent(mousex: integer; mousey: integer; leftclick: boolean);
-  var i: integer;
-
+  procedure TglvgGuiControl.HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean);
+  var
+    i: integer;
+    minX,minY,maxX,maxY: single;
   begin
-     if (MouseX > self.X) AND (MouseX < self.X + self.Width) then
-        if (MouseY > self.Y) AND (MouseY < self.Y + self.Height) then
+    if fIsDragged and not leftclick then fIsDragged := false;
+
+    minX := self.X;
+    maxX := self.X + self.Width;
+    minY := self.Y;
+    maxY := self.Y + self.Height;
+
+    if (fIsDragged) then
+      begin
+        //be less accurate while dragging
+        minX := self.X-100;
+        maxX := self.X + self.Width+100;
+        minY := self.Y-100;
+        maxY := self.Y + self.Height+100;
+      end;
+
+     if ( (MouseX > minX) AND (MouseX < maxX) and (MouseY > minY) and (MouseY < maxY) ) then
            begin
              //pass on event to child controls
              for i := 0 to self.ComponentCount-1 do
              begin
-               TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,leftclick);
+               TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick);
              end;
              //next handle itself
              if self.Elements.Count >=1 then
@@ -174,11 +206,20 @@ uses dglopengl;
                   if self.FMouseOver then self.MouseOver else self.MouseIn;
                   if leftclick then
                   begin
-                    self.Click;
+                    if not fdraggable then
+                      self.Click
+                    else
+                      begin
+                        //move control
+                        fIsDragged:=true;
+                        self.X:=self.X+mouseMoveX;
+                        self.Y:=self.Y+mouseMoveY;
+                        self.MouseDrag;
+                      end;
                   end;
                 end;
            end else begin
-             if self.Elements.Count >=1 then
+             if (self.Elements.Count >=1) and self.FMouseOver then
              begin
                self.MouseOut;
              end;
@@ -190,6 +231,42 @@ uses dglopengl;
   constructor TglvgGuiWindow.Create(aowner:TComponent);
   begin
     inherited Create(aowner);
+  end;
+
+   //TglvgGuiConnector
+
+  constructor TglvgGuiConnector.Create(aowner:TComponent);
+  begin
+    inherited Create(aowner);
+    self.fDraggAble:=true;
+  end;
+
+  procedure TglvgGuiConnector.Init;
+  begin
+    self.Elements.AddElement(TglvgCircle.Create());
+    TglvgCircle(self.Elements.Element[0]).Radius:=5;
+    TglvgCircle(self.Elements.Element[0]).X:=5;
+    TglvgCircle(self.Elements.Element[0]).Y:=5;
+    self.Width:=10;
+    self.Height:=10;
+    TglvgCircle(self.Elements.Element[0]).Style.Color.SetColor(0,0,0,1);
+    TglvgCircle(self.Elements.Element[0]).Style.LineColor.SetColor(1,1,1,1);
+    TglvgCircle(self.Elements.Element[0]).Style.FillType:=glvgsolid;
+    TglvgCircle(self.Elements.Element[0]).Init;
+  end;
+
+  procedure TglvgGuiConnector.MouseIn;
+  begin
+    TglvgCircle(self.Elements.Element[0]).Style.Color.SetColor(1,1,1,1);
+    TglvgCircle(self.Elements.Element[0]).Init;
+    inherited MouseIn;
+  end;
+
+  procedure TglvgGuiConnector.MouseOut;
+  begin
+   TglvgCircle(self.Elements.Element[0]).Style.Color.SetColor(0,0,0,1);
+   TglvgCircle(self.Elements.Element[0]).Init;
+   inherited MouseOut;
   end;
 
   //TglvgGuiButton
@@ -313,6 +390,9 @@ uses dglopengl;
     TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
     TglvgRect(self.Elements.Element[0]).Init;
     inherited Click;
+    //TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#00C0C0');
+    //TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
+    //TglvgRect(self.Elements.Element[0]).Init;
   end;
 
   procedure TglvgGuiButton.Render;

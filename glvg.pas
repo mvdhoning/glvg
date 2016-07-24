@@ -2332,10 +2332,12 @@ begin
   glpopmatrix();
 
   glTranslatef((FCharWidth[ord(AValue)]*FSCALE), 0, 0);
+
   if AValue = ' ' then
   begin
-    gltranslatef(20,0,0);
+    gltranslatef(fsize/2,0,0); //TODO: properly detemine width of space character
   end;
+
 
   end;
 
