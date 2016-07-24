@@ -22,6 +22,7 @@ type
       connector1: TglvgGuiConnector;
       constructor Create();
       procedure OnClick();
+      procedure OnDrag(x: single; y: single);
   end;
 
 var
@@ -66,6 +67,7 @@ begin
   connector1.Name:='connector1';
   connector1.X:=300;
   connector1.Y:=300;
+  connector1.OnDrag:=myapp.ondrag;
   connector1.Init;
 
 
@@ -74,6 +76,20 @@ end;
 procedure TMyApplication.OnClick();
 begin
   writeln('Click!');
+end;
+
+procedure TMyApplication.OnDrag(x: single; y:single);
+var
+  linepath: string;
+begin
+  linepath:='M ';
+  linepath:=linepath+floattostr(circ1.X)+','+floattostr(circ1.Y)+' ';
+  linepath:=linepath+'C '+floattostr(circ1.X+(abs(circ1.X-X)/2))+','+floattostr(circ1.Y)+' ';
+  linepath:=linepath+floattostr(circ1.X+(abs(circ1.X-X)/2))+','+floattostr(Y)+' ';
+  linepath:=linepath+floattostr(X)+','+floattostr(Y);
+
+  line1.Path := linepath;
+
 end;
 
 procedure InitializeVariables;
@@ -156,6 +172,7 @@ begin
 
   //Connect node1 with node2 with a polygon line
   line1 := TPolygon.Create();
+  line1.Style.FillType:=glvgNone;
   line1.Style.LineWidth := 1.0;
   line1.Style.LineColor.SetColor(1,1,1,1);
 
@@ -240,7 +257,7 @@ begin
           mouseY := event.motion.y;
           text1.Text:='mouseX '+inttostr(mouseMoveX)+' mouseY '+inttostr(mouseMoveY);
           //test for handing a button
-          myapp.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, click);
+          myapp.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, false, click);
           //TODO: should be in glvggui windows class that passes mouse coords on the right object hierarchical
         end;
 
@@ -249,7 +266,7 @@ begin
           if( event.button.button = SDL_BUTTON_LEFT ) then
             begin
               click:=true;
-              myapp.HandleMouseEvent(event.button.x, event.button.y,0,0, true);
+              myapp.HandleMouseEvent(event.button.x, event.button.y,0,0, true, false);
             end;
         end;
       SDL_MOUSEBUTTONUP:
@@ -257,7 +274,7 @@ begin
           if( event.button.button = SDL_BUTTON_LEFT ) then
             begin
               click:=false;
-              myapp.HandleMouseEvent(event.button.x, event.button.y,0,0, false);
+              myapp.HandleMouseEvent(event.button.x, event.button.y,0,0, false, false);
             end;
         end;
 		

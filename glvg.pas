@@ -786,6 +786,12 @@ var
   FirstPoint: TPoint;
 
 begin
+
+  //clean up eventual old path
+  self.FCount:=0;
+  setLength(self.FPoints,0);
+
+  //begin parsing the new path
   paramcount := 0;
   CurCommand := '-';
 
@@ -1820,6 +1826,10 @@ end;
     FcPath.Text := AValue;
     if FcPath.Text <> '' then
     begin
+      //clean up current content
+      self.FCount:=0;
+      setlength(self.FPoints,0);
+      //determine new content
       FcPath.Parse;
       for i := 0 to FcPath.Count-1 do
       begin

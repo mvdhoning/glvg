@@ -37,6 +37,7 @@ type
 //Experimental idea for making a vector gui ... (or group control)
 
 TOnClickEvent = procedure() of Object;
+TOnDragEvent = procedure(x: single; y: single) of Object;
 
 TglvgGuiControl = class(TComponent)
 private
@@ -47,6 +48,7 @@ private
   FWidth: single;
   FHeight: single;
   fonClick : TonClickEvent;
+  fonDrag : TonDragEvent;
   fDraggAble : boolean;
   fIsDragged : boolean;
 
@@ -61,7 +63,7 @@ public
   procedure MouseOut; virtual;
   procedure Click; virtual;
 
-  procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean);
+  procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean);
   property Elements: TglvgGroup read fElements write fElements;
 
 published
@@ -70,6 +72,7 @@ published
   property Width: single read FWidth write FWidth;
   property Height: single read FHeight write FHeight;
   property OnClick: TonClickEvent read fonClick write fonClick;
+  property OnDrag: TonDragEvent read fonDrag write fonDrag;
   property DraggAble: boolean read fDraggAble write fDraggAble;
 end;
 
@@ -152,6 +155,9 @@ uses dglopengl;
 
   procedure TglvgGuiControl.MouseDrag;
   begin
+    //handle mousedrag
+    if Assigned(FOnDrag) then
+      FOnDrag(self.x,self.y);
   end;
 
   procedure TglvgGuiControl.MouseIn;
@@ -172,12 +178,15 @@ uses dglopengl;
     self.FMouseOver:=false; //trigger mouse over again aftter click event
   end;
 
-  procedure TglvgGuiControl.HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean);
+  procedure TglvgGuiControl.HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean);
   var
     i: integer;
     minX,minY,maxX,maxY: single;
   begin
-    if fIsDragged and not leftclick then fIsDragged := false;
+    if fIsDragged and not dragclick then
+      begin
+        fIsDragged := false;
+      end;
 
     minX := self.X;
     maxX := self.X + self.Width;
@@ -198,24 +207,26 @@ uses dglopengl;
              //pass on event to child controls
              for i := 0 to self.ComponentCount-1 do
              begin
-               TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick);
+               TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick,dragclick);
              end;
              //next handle itself
              if self.Elements.Count >=1 then
                 begin
+
                   if self.FMouseOver then self.MouseOver else self.MouseIn;
+
                   if leftclick then
                   begin
-                    if not fdraggable then
-                      self.Click
-                    else
-                      begin
-                        //move control
-                        fIsDragged:=true;
-                        self.X:=self.X+mouseMoveX;
-                        self.Y:=self.Y+mouseMoveY;
-                        self.MouseDrag;
-                      end;
+                      self.Click;
+                  end;
+
+                  if dragclick and fdraggable then
+                  begin
+                    //move control
+                    fIsDragged:=true;
+                    self.X:=self.X+mouseMoveX;
+                    self.Y:=self.Y+mouseMoveY;
+                    self.MouseDrag;
                   end;
                 end;
            end else begin
