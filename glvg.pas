@@ -318,6 +318,7 @@ private
 public
 //perform an absolute moveto operation to the first coordinate pair in the list of points
 //for each subsequent coordinate pair, perform an absolute lineto operation to that coordinate pair
+  procedure Render; override;
 end;
 
 TglvgPolygon = class(TglvgObject) //TODO: implement or use TPolygon directly?
@@ -497,6 +498,12 @@ end;
 function TglvgObject.GetStyle(): TStyle;
 begin
   result := self.FPolyShape.Style;
+end;
+
+//TglvgPolyLine
+procedure TglvgPolyline.Render();
+begin
+  self.Polygon.RenderPath();
 end;
 
 //TglvgRect

@@ -9,7 +9,7 @@ program opengl_onewindow;
 {$APPTYPE CONSOLE}
 
 uses
-  dglOpenGL, sysutils, SDL2, glvg, glvggui;
+  dglOpenGL, sysutils, SDL2, glvg, glvggui,classes;
 
 const
   screenwidth: integer = 640;
@@ -20,7 +20,9 @@ type
     public
       button1: TglvgGuiButton;
       connector1: TglvgGuiConnector;
-      constructor Create();
+      line1: TglvgGuiConnection;
+      node1: TglvgGuiNode;
+      constructor Create(aowner: TComponent); override;
       procedure OnClick();
       procedure OnDrag(x: single; y: single);
   end;
@@ -34,7 +36,8 @@ var
   time_passed: glfloat;
   framecount: integer;
   //glvg
-  line1: TPolygon;
+  //line1: TPolygon;
+
   node1,node2: TglvgRect;
   circ1,circ2: TglvgCircle;
   text1: TglvgText;
@@ -60,16 +63,29 @@ begin
   button1.Width:=200;
   button1.Height:=25;
   button1.Init;
-  button1.OnClick:=myapp.onclick;
+  button1.OnClick:=self.onclick;
 
 
   connector1 := TglvgGuiConnector.Create(self);
   connector1.Name:='connector1';
   connector1.X:=300;
   connector1.Y:=300;
-  connector1.OnDrag:=myapp.ondrag;
+  connector1.OnDrag:=self.ondrag;
   connector1.Init;
 
+  node1 := TglvgGuiNode.Create(self);
+  node1.X:=50;
+  node1.Y:=250;
+  node1.Width:=50+10;
+  node1.Height:=50;
+  node1.Init;
+
+  line1 := TglvgGuiConnection.Create(self);
+  line1.X:=circ1.X;
+  line1.Y:=circ1.Y;
+  line1.ToX:=circ2.X;
+  line1.ToY:=circ2.Y;
+  line1.Init;
 
 end;
 
@@ -82,14 +98,18 @@ procedure TMyApplication.OnDrag(x: single; y:single);
 var
   linepath: string;
 begin
+  (*x:=x+5; //adjust for the fact that tglvgcircle is centered around x,y
+  y:=y+5;
   linepath:='M ';
   linepath:=linepath+floattostr(circ1.X)+','+floattostr(circ1.Y)+' ';
   linepath:=linepath+'C '+floattostr(circ1.X+(abs(circ1.X-X)/2))+','+floattostr(circ1.Y)+' ';
   linepath:=linepath+floattostr(circ1.X+(abs(circ1.X-X)/2))+','+floattostr(Y)+' ';
   linepath:=linepath+floattostr(X)+','+floattostr(Y);
 
-  line1.Path := linepath;
-
+  line1.Path := linepath;*)
+  self.line1.ToX:=X;
+  self.line1.ToY:=Y;
+  self.line1.Init;
 end;
 
 procedure InitializeVariables;
@@ -171,6 +191,7 @@ begin
   circ2.Init;
 
   //Connect node1 with node2 with a polygon line
+  (*
   line1 := TPolygon.Create();
   line1.Style.FillType:=glvgNone;
   line1.Style.LineWidth := 1.0;
@@ -186,6 +207,7 @@ begin
 
   writeln('M 100,75 C 150,75 150,125 200,125');
   writeln(linepath);
+  *)
 
   text1 := TglvgText.Create();
   text1.Font.LoadFromFile('font.txt');
@@ -199,7 +221,7 @@ begin
   text1.Init;
 
   //glvggui
-  myapp := TMyApplication.Create();
+  myapp := TMyApplication.Create(nil);
 
   for i:=0 to myapp.ComponentCount-1 do
   begin
@@ -349,11 +371,13 @@ begin
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   glEnable (GL_POLYGON_SMOOTH);
-  line1.RenderPath;
+  //line1.RenderPath;
+  myapp.line1.Render;
   glDisable (GL_POLYGON_SMOOTH);
 
-  circ1.Render;
-  node1.Render;
+  //circ1.Render;
+  //node1.Render;
+  myapp.node1.Render;
 
   circ2.Render;
   node2.Render;
@@ -427,7 +451,7 @@ begin
   circ2.Free;
   node1.Free;
   node2.Free;
-  line1.Free;
+  myapp.line1.Free;
   text1.Free;
   myapp.button1.Free;
   myapp.Free;

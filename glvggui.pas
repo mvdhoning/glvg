@@ -89,6 +89,31 @@ public
   procedure MouseOut; override;
 end;
 
+TglvgGuiConnection = class ( TglvgGuiControl )
+private
+  fToX: single;
+  fToY: single;
+public
+  Constructor Create(aowner:Tcomponent); override;
+  procedure Init;
+  procedure MouseIn; override;
+  procedure MouseOut; override;
+published
+  property ToX: single read fToX write fTox;
+  property ToY: single read fToY write fToY;
+end;
+
+TglvgGuiNode = class ( TglvgGuiControl )
+private
+  fBackGround: TglvgGuiWindow;
+  fFrom: TglvgGuiConnector;
+  fTo: TglvgGuiConnector;
+public
+  Constructor Create(aowner:Tcomponent); override;
+  procedure Init;
+  procedure Render; override;
+end;
+
 TglvgGuiButton = class ( TglvgGuiControl )
 private
   fdrawtext : TglvgText;
@@ -185,6 +210,7 @@ uses dglopengl;
   begin
     if fIsDragged and not dragclick then
       begin
+        //writeln('end drag');
         fIsDragged := false;
       end;
 
@@ -233,6 +259,10 @@ uses dglopengl;
              if (self.Elements.Count >=1) and self.FMouseOver then
              begin
                self.MouseOut;
+               for i := 0 to self.ComponentCount-1 do
+               begin
+                 TglvgGuiControl(self.Components[i]).MouseOut; //send it again to prevent hanging hovered child components
+               end;
              end;
            end;
   end;
@@ -244,17 +274,114 @@ uses dglopengl;
     inherited Create(aowner);
   end;
 
-   //TglvgGuiConnector
+  //TglvgGuiNode
+
+  constructor TglvgGuiNode.Create(aowner:TComponent);
+  begin
+    inherited create(aowner);
+    self.fBackGround := tglvgGuiWindow.Create(self);
+    self.fFrom := TglvgGuiConnector.Create(self);
+    self.fTo := TglvgGuiConnector.Create(self);
+  end;
+
+  procedure TglvgGuiNode.Init;
+  begin
+    self.fFrom.X:=self.X;
+    self.fFrom.Y:=self.Y-5+self.Height/2;
+    self.fFrom.DraggAble:=false;
+    self.fFrom.Init;
+
+    self.fTo.X:=self.X-10+self.Width;
+    self.fTo.Y:=self.y-5+self.Height/2;
+    self.fTo.DraggAble:=false;
+    self.fTo.Init;
+
+    self.fBackGround.DraggAble:=true;
+    self.fBackGround.Elements.AddElement(TglvgRect.Create);
+
+    TglvgRect(self.fBackGround.Elements.Element[0]).X:=self.x+5;
+    TglvgRect(self.fBackGround.Elements.Element[0]).Y:=self.y;
+    TglvgRect(self.fBackGround.Elements.Element[0]).Width:=self.width-10;
+    TglvgRect(self.fBackGround.Elements.Element[0]).Height:=self.height;
+    TglvgRect(self.fBackGround.Elements.Element[0]).Style.Color.SetColor(0,0,1,1);
+    TglvgRect(self.fBackGround.Elements.Element[0]).Style.FillType:=glvgsolid;
+    TglvgRect(self.fBackGround.Elements.Element[0]).Init;
+
+
+    self.Elements.AddElement(TglvgRect.Create);
+    TglvgRect(self.Elements.Element[0]).X:=0;
+    TglvgRect(self.Elements.Element[0]).Y:=0;
+    TglvgRect(self.Elements.Element[0]).Width:=self.width;
+    TglvgRect(self.Elements.Element[0]).Height:=self.height;
+    TglvgRect(self.Elements.Element[0]).Style.Color.SetColor(1,0,0,1);
+    TglvgRect(self.Elements.Element[0]).Style.FillType:=glvgnone;
+    TglvgRect(self.Elements.Element[0]).Style.LineType:=glvgnone;
+    TglvgRect(self.Elements.Element[0]).Init;
+
+
+  end;
+
+  procedure TglvgGuiNode.Render;
+  begin
+
+    inherited Render;
+    self.fTo.Render;
+    self.fFrom.Render;
+    self.fBackGround.Render;
+
+  end;
+
+  //TglvgGuiConnection
+  constructor TglvgGuiConnection.Create(aowner:TComponent);
+  begin
+    inherited Create(aowner);
+
+    self.Elements.AddElement(TglvgPolyLine.Create());
+
+    TglvgPolyLine(self.Elements.Element[0]).Polygon.Style.FillType:=glvgNone;
+    TglvgPolyLine(self.Elements.Element[0]).Polygon.Style.LineWidth := 1.0;
+    TglvgPolyLine(self.Elements.Element[0]).Polygon.Style.LineColor.SetColor(1,1,1,1);
+
+  end;
+
+  procedure TglvgGuiConnection.Init;
+  var
+    linepath: string;
+  begin
+    self.Width:=self.fToX-self.fX+5;
+    self.Height:=self.fToY-self.fY+5;
+    linepath:='M ';
+    linepath:=linepath+floattostr(0)+','+floattostr(0)+' ';
+    linepath:=linepath+'C '+floattostr(0+(abs(0-self.Width)/2))+','+floattostr(0)+' ';
+    linepath:=linepath+floattostr(0+(abs(0-self.Width)/2))+','+floattostr(self.Height)+' ';
+    linepath:=linepath+floattostr(self.Width)+','+floattostr(self.Height);
+    TglvgPolyLine(self.Elements.Element[0]).Polygon.Path := linepath;
+    TglvgPolyLine(self.Elements.Element[0]).Polygon.Style.LineColor.SetColor(1,0,0,1);
+  end;
+
+  procedure TglvgGuiConnection.MouseIn;
+  begin
+    TglvgPolyLine(self.Elements.Element[0]).Polygon.Style.LineColor.SetColor(0,0,1,1);
+    inherited MouseIn;
+  end;
+
+  procedure TglvgGuiConnection.MouseOut;
+  begin
+   TglvgPolyLine(self.Elements.Element[0]).Polygon.Style.LineColor.SetColor(1,1,1,1);
+   inherited MouseOut;
+  end;
+
+  //TglvgGuiConnector
 
   constructor TglvgGuiConnector.Create(aowner:TComponent);
   begin
     inherited Create(aowner);
     self.fDraggAble:=true;
+    self.Elements.AddElement(TglvgCircle.Create());
   end;
 
   procedure TglvgGuiConnector.Init;
   begin
-    self.Elements.AddElement(TglvgCircle.Create());
     TglvgCircle(self.Elements.Element[0]).Radius:=5;
     TglvgCircle(self.Elements.Element[0]).X:=5;
     TglvgCircle(self.Elements.Element[0]).Y:=5;
