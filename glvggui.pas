@@ -36,6 +36,8 @@ uses glvg, types, classes,sysutils;
 type
 //Experimental idea for making a vector gui ... (or group control)
 
+TglvgGuiManager = class;
+
 TOnClickEvent = procedure() of Object;
 TOnDragEvent = procedure(x: single; y: single) of Object;
 
@@ -62,7 +64,7 @@ public
   procedure MouseIn; virtual;
   procedure MouseOut; virtual;
   procedure Click; virtual;
-
+  procedure Init; virtual;
   procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean);
   property Elements: TglvgGroup read fElements write fElements;
 
@@ -84,7 +86,7 @@ end;
 TglvgGuiConnector = class ( TglvgGuiControl )
 public
   Constructor Create(aowner:Tcomponent); override;
-  procedure Init;
+  procedure Init; override;
   procedure MouseIn; override;
   procedure MouseOut; override;
 end;
@@ -95,7 +97,7 @@ private
   fToY: single;
 public
   Constructor Create(aowner:Tcomponent); override;
-  procedure Init;
+  procedure Init; override;
   procedure MouseIn; override;
   procedure MouseOut; override;
 published
@@ -110,7 +112,7 @@ private
   fTo: TglvgGuiConnector;
 public
   Constructor Create(aowner:Tcomponent); override;
-  procedure Init;
+  procedure Init; override;
   procedure Render; override;
 end;
 
@@ -120,7 +122,7 @@ private
 public
   Constructor Create(aowner:Tcomponent); override;
   Destructor Destroy; override;
-  procedure Init;
+  procedure Init; override;
   procedure MouseIn; override;
   procedure MouseOut; override;
   procedure Click; override;
@@ -147,6 +149,19 @@ public
  property ColCount: integer read FColCount write SetColCount;
 end;
 
+TglvgGuiManager = class(TComponent)
+private
+ fdraggedcontrol: TglvgGuiControl;
+ fmouseclicked: boolean;
+public
+ procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean);
+published
+ property DraggedControl: TglvgGuiControl read fdraggedcontrol write fdraggedcontrol;
+end;
+
+var
+  GuiManager: TglvgGuiManager;
+
 implementation
 
 uses dglopengl;
@@ -155,6 +170,8 @@ uses dglopengl;
 
   constructor TglvgGuiControl.Create(aowner: TComponent);
   begin
+    if aowner= nil then
+      aowner:=GuiManager;
     inherited Create(aowner);
     fElements := TglvgGroup.Create();
     fIsDragged := false;
@@ -172,6 +189,13 @@ uses dglopengl;
         //self.Elements.Element[i].Polygon.RenderBoundingBox();
       end;
     glpopmatrix();
+
+    //render childeren controls
+    for i:=0 to self.ComponentCount-1 do
+    begin
+      TglvgGuiControl(self.components[i]).Render;
+    end;
+
   end;
 
   procedure TglvgGuiControl.MouseOver;
@@ -203,6 +227,10 @@ uses dglopengl;
     self.FMouseOver:=false; //trigger mouse over again aftter click event
   end;
 
+  procedure TglvgGuiControl.Init;
+  begin
+  end;
+
   procedure TglvgGuiControl.HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean);
   var
     i: integer;
@@ -212,6 +240,7 @@ uses dglopengl;
       begin
         //writeln('end drag');
         fIsDragged := false;
+        GuiManager.DraggedControl:=nil;
       end;
 
     minX := self.X;
@@ -231,6 +260,7 @@ uses dglopengl;
      if ( (MouseX > minX) AND (MouseX < maxX) and (MouseY > minY) and (MouseY < maxY) ) then
            begin
              //pass on event to child controls
+             //if not fisdragged then
              for i := 0 to self.ComponentCount-1 do
              begin
                TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick,dragclick);
@@ -249,10 +279,18 @@ uses dglopengl;
                   if dragclick and fdraggable then
                   begin
                     //move control
-                    fIsDragged:=true;
-                    self.X:=self.X+mouseMoveX;
-                    self.Y:=self.Y+mouseMoveY;
-                    self.MouseDrag;
+                    if GuiManager.DraggedControl=nil then
+                    begin
+                      fIsDragged:=true;
+                      GuiManager.DraggedControl:=self;
+                    end;
+                    if GuiManager.DraggedControl.Name=self.Name then
+                    begin
+                      self.X:=self.X+mouseMoveX;
+                      self.Y:=self.Y+mouseMoveY;
+                      self.MouseDrag;
+                      self.Init; //auto call init of object for proper redraw
+                    end;
                   end;
                 end;
            end else begin
@@ -286,6 +324,9 @@ uses dglopengl;
 
   procedure TglvgGuiNode.Init;
   begin
+
+    self.DraggAble:=true;
+
     self.fFrom.X:=self.X;
     self.fFrom.Y:=self.Y-5+self.Height/2;
     self.fFrom.DraggAble:=false;
@@ -296,7 +337,7 @@ uses dglopengl;
     self.fTo.DraggAble:=false;
     self.fTo.Init;
 
-    self.fBackGround.DraggAble:=true;
+    self.fBackGround.DraggAble:=false;
     self.fBackGround.Elements.AddElement(TglvgRect.Create);
 
     TglvgRect(self.fBackGround.Elements.Element[0]).X:=self.x+5;
@@ -305,6 +346,7 @@ uses dglopengl;
     TglvgRect(self.fBackGround.Elements.Element[0]).Height:=self.height;
     TglvgRect(self.fBackGround.Elements.Element[0]).Style.Color.SetColor(0,0,1,1);
     TglvgRect(self.fBackGround.Elements.Element[0]).Style.FillType:=glvgsolid;
+
     TglvgRect(self.fBackGround.Elements.Element[0]).Init;
 
 
@@ -318,6 +360,7 @@ uses dglopengl;
     TglvgRect(self.Elements.Element[0]).Style.LineType:=glvgnone;
     TglvgRect(self.Elements.Element[0]).Init;
 
+    inherited init;
 
   end;
 
@@ -413,6 +456,7 @@ uses dglopengl;
   begin
     inherited Create(aowner);
     fDrawText := tglvgText.Create;
+    self.Elements.AddElement(TglvgRect.Create);
   end;
 
   destructor TglvgGuiButton.Destroy;
@@ -423,7 +467,7 @@ uses dglopengl;
 
   procedure TglvgGuiButton.Init;
   begin
-    self.Elements.AddElement(TglvgRect.Create);
+
 
     TglvgRect(self.Elements.Element[0]).X := 0;
     TglvgRect(self.Elements.Element[0]).Y := 0;
@@ -501,7 +545,7 @@ uses dglopengl;
     fDrawText.Style.Color.SetColor(1,1,1,1);
     fDrawText.Style.FillType:=glvgsolid;
     fDrawText.Style.LineType:=glvgnone;
-    fDrawText.Init;
+    //fDrawText.Init;
     //self.Elements.AddElement(FDrawText); //Does not render it when set this way
   end;
 
@@ -568,5 +612,23 @@ uses dglopengl;
     for I := 0 to frowcount - 1 do
       setlength(FCells[I], Value);
   end;
+
+  //TglvgGuiManager
+
+  procedure TglvgGuiManager.HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean);
+  var
+    i: integer;
+  begin
+    for i:=0 to self.ComponentCount-1 do
+    begin
+      TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick,dragclick);
+    end;
+  end;
+
+initialization
+  GuiManager := TglvgGuiManager.Create(nil);
+
+finalization
+  GuiManager.Free;
 
 end.

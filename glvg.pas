@@ -503,7 +503,9 @@ end;
 //TglvgPolyLine
 procedure TglvgPolyline.Render();
 begin
+  glEnable (GL_POLYGON_SMOOTH);
   self.Polygon.RenderPath();
+  glDisable (GL_POLYGON_SMOOTH);
 end;
 
 //TglvgRect
@@ -2414,6 +2416,7 @@ begin
     end;
   end;
 
+  fs.Free;
 end;
 
 //TglvgGroup

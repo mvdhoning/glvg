@@ -23,6 +23,7 @@ type
       line1: TglvgGuiConnection;
       node1: TglvgGuiNode;
       constructor Create(aowner: TComponent); override;
+      destructor Destroy(); override;
       procedure OnClick();
       procedure OnDrag(x: single; y: single);
   end;
@@ -35,18 +36,18 @@ var
   last_time,current_time, currentfps: integer;
   time_passed: glfloat;
   framecount: integer;
-  //glvg
-  //line1: TPolygon;
 
-  node1,node2: TglvgRect;
-  circ1,circ2: TglvgCircle;
+  //glvg
+  node2: TglvgRect;
+  circ2: TglvgCircle;
   text1: TglvgText;
+
   //glvggui
 
   //my application
   myapp: TMyApplication;
 
-  click: boolean;
+  click: boolean; //should be moved to TglvgGuiManager
 
 constructor TMyApplication.Create();
 begin
@@ -81,12 +82,21 @@ begin
   node1.Init;
 
   line1 := TglvgGuiConnection.Create(self);
-  line1.X:=circ1.X;
-  line1.Y:=circ1.Y;
+  line1.X:=50; //circ1.X;
+  line1.Y:=50; //circ1.Y;
   line1.ToX:=circ2.X;
   line1.ToY:=circ2.Y;
   line1.Init;
 
+end;
+
+destructor TMyApplication.Destroy;
+begin
+  line1.Free;
+  node1.Free;
+  connector1.Free;
+  button1.Free;
+  inherited Destroy();
 end;
 
 procedure TMyApplication.OnClick();
@@ -98,15 +108,6 @@ procedure TMyApplication.OnDrag(x: single; y:single);
 var
   linepath: string;
 begin
-  (*x:=x+5; //adjust for the fact that tglvgcircle is centered around x,y
-  y:=y+5;
-  linepath:='M ';
-  linepath:=linepath+floattostr(circ1.X)+','+floattostr(circ1.Y)+' ';
-  linepath:=linepath+'C '+floattostr(circ1.X+(abs(circ1.X-X)/2))+','+floattostr(circ1.Y)+' ';
-  linepath:=linepath+floattostr(circ1.X+(abs(circ1.X-X)/2))+','+floattostr(Y)+' ';
-  linepath:=linepath+floattostr(X)+','+floattostr(Y);
-
-  line1.Path := linepath;*)
   self.line1.ToX:=X;
   self.line1.ToY:=Y;
   self.line1.Init;
@@ -131,7 +132,7 @@ begin
   if SDL_Init(SDL_INIT_VIDEO) = 0 then
     Result := true;
 
-  SDL_SetRelativeMouseMode(SDL_TRUE);
+  SDL_SetRelativeMouseMode(SDL_FALSE); //show the mouse cursor
 end;
 
 procedure InitializeOpenGL;
@@ -154,24 +155,6 @@ begin
 
   //glvg
 
-  //Node1
-  node1 := TglvgRect.Create;
-  node1.X:= 50.0;
-  node1.Y:= 50.0;
-  node1.Width:= 50.0;
-  node1.Height:= 50.0;
-  node1.Style.Color.SetColor(0,0,1,1);
-  node1.Style.FillType:=glvgsolid;
-  node1.Init;
-  circ1 := TglvgCircle.Create();
-  circ1.Radius:=5;
-  circ1.X:=node1.X+node1.Width;
-  circ1.Y:=node1.Y+(node1.Height/2);
-  circ1.Style.Color.SetColor(0,0,0,1);
-  circ1.Style.LineColor.SetColor(1,1,1,1);
-  circ1.Style.FillType:=glvgsolid;
-  circ1.Init;
-
   //Node2
   node2 := TglvgRect.Create;
   node2.X:= 200.0;
@@ -181,6 +164,7 @@ begin
   node2.Style.Color.SetColor(0,1,0,1);
   node2.Style.FillType:=glvgsolid;
   node2.Init;
+
   circ2 := TglvgCircle.Create();
   circ2.Radius:=5;
   circ2.X:=node2.X;
@@ -189,25 +173,6 @@ begin
   circ2.Style.LineColor.SetColor(1,1,1,1);
   circ2.Style.FillType:=glvgsolid;
   circ2.Init;
-
-  //Connect node1 with node2 with a polygon line
-  (*
-  line1 := TPolygon.Create();
-  line1.Style.FillType:=glvgNone;
-  line1.Style.LineWidth := 1.0;
-  line1.Style.LineColor.SetColor(1,1,1,1);
-
-  linepath:='M ';
-  linepath:=linepath+floattostr(circ1.X)+','+floattostr(circ1.Y)+' ';
-  linepath:=linepath+'C '+floattostr(circ1.X+(abs(circ1.X-circ2.X)/2))+','+floattostr(circ1.Y)+' ';
-  linepath:=linepath+floattostr(circ1.X+(abs(circ1.X-circ2.X)/2))+','+floattostr(circ2.Y)+' ';
-  linepath:=linepath+floattostr(circ2.X)+','+floattostr(circ2.Y);
-
-  line1.Path := linepath;
-
-  writeln('M 100,75 C 150,75 150,125 200,125');
-  writeln(linepath);
-  *)
 
   text1 := TglvgText.Create();
   text1.Font.LoadFromFile('font.txt');
@@ -278,8 +243,7 @@ begin
           mouseX := event.motion.x; //absolute
           mouseY := event.motion.y;
           text1.Text:='mouseX '+inttostr(mouseMoveX)+' mouseY '+inttostr(mouseMoveY);
-          //test for handing a button
-          myapp.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, false, click);
+          GuiManager.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, false, click);
           //TODO: should be in glvggui windows class that passes mouse coords on the right object hierarchical
         end;
 
@@ -288,7 +252,7 @@ begin
           if( event.button.button = SDL_BUTTON_LEFT ) then
             begin
               click:=true;
-              myapp.HandleMouseEvent(event.button.x, event.button.y,0,0, true, false);
+              GuiManager.HandleMouseEvent(event.button.x, event.button.y,0,0, true, false);
             end;
         end;
       SDL_MOUSEBUTTONUP:
@@ -296,7 +260,7 @@ begin
           if( event.button.button = SDL_BUTTON_LEFT ) then
             begin
               click:=false;
-              myapp.HandleMouseEvent(event.button.x, event.button.y,0,0, false, false);
+              GuiManager.HandleMouseEvent(event.button.x, event.button.y,0,0, false, false);
             end;
         end;
 		
@@ -370,20 +334,12 @@ begin
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glEnable (GL_POLYGON_SMOOTH);
-  //line1.RenderPath;
-  myapp.line1.Render;
-  glDisable (GL_POLYGON_SMOOTH);
-
-  //circ1.Render;
-  //node1.Render;
-  myapp.node1.Render;
+  myapp.Render;
 
   circ2.Render;
   node2.Render;
   text1.Render;
-  myapp.button1.Render;
-  myapp.connector1.Render;
+
 
   glFlush(); //for opengl to do its thing
 end;
@@ -428,8 +384,6 @@ begin
 
   SDL_GL_SetSwapInterval(0); //no vsync
 
-  SDL_SetRelativeMouseMode(SDL_FALSE); //show the mouse cursor
-
   //main-loop
   running := true;
   click := false;
@@ -447,14 +401,11 @@ begin
 
   finally
 
-  circ1.Free;
-  circ2.Free;
-  node1.Free;
-  node2.Free;
-  myapp.line1.Free;
-  text1.Free;
-  myapp.button1.Free;
   myapp.Free;
+
+  circ2.Free;
+  node2.Free;
+  text1.Free;
 
   SDL_GL_DeleteContext(context);
   SDL_DestroyWindow(window);
