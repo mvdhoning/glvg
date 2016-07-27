@@ -243,7 +243,7 @@ begin
           mouseX := event.motion.x; //absolute
           mouseY := event.motion.y;
           text1.Text:='mouseX '+inttostr(mouseMoveX)+' mouseY '+inttostr(mouseMoveY);
-          GuiManager.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, false, click);
+          GuiManager.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, false, click, false);
           //TODO: should be in glvggui windows class that passes mouse coords on the right object hierarchical
         end;
 
@@ -252,7 +252,7 @@ begin
           if( event.button.button = SDL_BUTTON_LEFT ) then
             begin
               click:=true;
-              GuiManager.HandleMouseEvent(event.button.x, event.button.y,0,0, true, false);
+              GuiManager.HandleMouseEvent(event.button.x, event.button.y,0,0, true, false, false);
             end;
         end;
       SDL_MOUSEBUTTONUP:
@@ -260,7 +260,7 @@ begin
           if( event.button.button = SDL_BUTTON_LEFT ) then
             begin
               click:=false;
-              GuiManager.HandleMouseEvent(event.button.x, event.button.y,0,0, false, false);
+              GuiManager.HandleMouseEvent(event.button.x, event.button.y,0,0, false, false, true);
             end;
         end;
 		

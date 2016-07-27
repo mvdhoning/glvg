@@ -31,7 +31,7 @@ interface
   {$MODE Delphi}
 {$ENDIF}
 
-uses glvg, types, classes,sysutils;
+uses glvg, types, classes,sysutils,crt;
 
 type
 //Experimental idea for making a vector gui ... (or group control)
@@ -40,6 +40,8 @@ TglvgGuiManager = class;
 
 TOnClickEvent = procedure() of Object;
 TOnDragEvent = procedure(x: single; y: single) of Object;
+TOnDropEvent = procedure(x: single; y: single; Source: TObject) of Object;
+TonDragOverEvent = procedure(x: single; y: single; Source: Tobject; var Accept: boolean) of Object;
 
 TglvgGuiControl = class(TComponent)
 private
@@ -51,9 +53,11 @@ private
   FHeight: single;
   fonClick : TonClickEvent;
   fonDrag : TonDragEvent;
+  fonDrop : TonDropEvent;
+  fOnDragOver: TonDragOverEvent;
   fDraggAble : boolean;
   fIsDragged : boolean;
-
+  fAccept: boolean;
 public
   Constructor Create(aowner:TComponent); override;
 
@@ -65,7 +69,7 @@ public
   procedure MouseOut; virtual;
   procedure Click; virtual;
   procedure Init; virtual;
-  procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean);
+  procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean; aleftup: boolean);
   property Elements: TglvgGroup read fElements write fElements;
 
 published
@@ -114,6 +118,8 @@ public
   Constructor Create(aowner:Tcomponent); override;
   procedure Init; override;
   procedure Render; override;
+  procedure OnDragOver(x: single; y: single; source: Tobject; var Accept: boolean);
+  procedure OnDrop(x: single; y: single; source: Tobject);
 end;
 
 TglvgGuiButton = class ( TglvgGuiControl )
@@ -153,10 +159,12 @@ TglvgGuiManager = class(TComponent)
 private
  fdraggedcontrol: TglvgGuiControl;
  fmouseclicked: boolean;
+ fleftup : boolean;
 public
- procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean);
+ procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean; leftup: boolean);
 published
  property DraggedControl: TglvgGuiControl read fdraggedcontrol write fdraggedcontrol;
+ property LeftMouseUp: boolean read fleftup write fleftup;
 end;
 
 var
@@ -175,6 +183,7 @@ uses dglopengl;
     inherited Create(aowner);
     fElements := TglvgGroup.Create();
     fIsDragged := false;
+    fAccept:=true;
   end;
 
   procedure TglvgGuiControl.Render;
@@ -231,17 +240,11 @@ uses dglopengl;
   begin
   end;
 
-  procedure TglvgGuiControl.HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean);
+  procedure TglvgGuiControl.HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean; aleftup: boolean);
   var
     i: integer;
     minX,minY,maxX,maxY: single;
   begin
-    if fIsDragged and not dragclick then
-      begin
-        //writeln('end drag');
-        fIsDragged := false;
-        GuiManager.DraggedControl:=nil;
-      end;
 
     minX := self.X;
     maxX := self.X + self.Width;
@@ -259,12 +262,14 @@ uses dglopengl;
 
      if ( (MouseX > minX) AND (MouseX < maxX) and (MouseY > minY) and (MouseY < maxY) ) then
            begin
+
              //pass on event to child controls
              //if not fisdragged then
              for i := 0 to self.ComponentCount-1 do
              begin
-               TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick,dragclick);
+               TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick,dragclick,aleftup);
              end;
+
              //next handle itself
              if self.Elements.Count >=1 then
                 begin
@@ -274,6 +279,39 @@ uses dglopengl;
                   if leftclick then
                   begin
                       self.Click;
+                  end;
+
+                  //detect dragover
+                  if (dragclick and (GuiManager.DraggedControl<>nil) ) then
+                  begin
+                    if GuiManager.DraggedControl.Name<>self.Name then
+                    if Assigned(self.fondragover) then
+                    begin
+                      fondragover(mousex,mousey,GuiManager.DraggedControl, self.faccept);
+                    end;
+                  end;
+
+                  if GuiManager.LeftMouseUp then
+                  begin
+                    //detect drop (left mouse up with accept true after over)
+                    if (self.faccept and (GuiManager.DraggedControl<>nil) ) then
+                    begin
+                      if GuiManager.DraggedControl.Name<>self.Name then
+                      begin
+                        if Assigned(self.fonDrop) then
+                          fondrop(mousex,mousey,GuiManager.DraggedControl);
+                        GuiManager.LeftMouseUp:=false;
+                        GuiManager.DraggedControl.fIsDragged:=false;
+                        GuiManager.DraggedControl:=nil;
+
+                        fisdragged:=false;
+                      end;
+                    end
+                    else
+                    begin
+                      //TODO: handle left mouse up event
+                      GuiManager.LeftMouseUp:=false;
+                    end;
                   end;
 
                   if dragclick and fdraggable then
@@ -303,6 +341,16 @@ uses dglopengl;
                end;
              end;
            end;
+
+      if fIsDragged and not dragclick and not GuiManager.LeftMouseUp then
+      begin
+        writeln('end drag');
+        fIsDragged := false;
+        GuiManager.DraggedControl:=nil;
+      end;
+
+
+
   end;
 
   //TglvgGuiWindow
@@ -317,25 +365,42 @@ uses dglopengl;
   constructor TglvgGuiNode.Create(aowner:TComponent);
   begin
     inherited create(aowner);
+    self.Name:='Node';
     self.fBackGround := tglvgGuiWindow.Create(self);
     self.fFrom := TglvgGuiConnector.Create(self);
     self.fTo := TglvgGuiConnector.Create(self);
   end;
 
+  procedure TglvgGuiNode.OnDragOver(x: single; y: single; source: tobject; var accept: boolean);
+  begin
+    Accept := (Source is TglvgGuiConnector);
+  end;
+
+  procedure TglvgGuiNode.OnDrop(x: single; y: single; source: tobject);
+  begin
+    if (Source is TglvgGuiConnector) then
+    begin
+      writeln('Dropped');
+    end;
+  end;
+
   procedure TglvgGuiNode.Init;
   begin
-
     self.DraggAble:=true;
 
     self.fFrom.X:=self.X;
     self.fFrom.Y:=self.Y-5+self.Height/2;
     self.fFrom.DraggAble:=false;
+    self.fFrom.fOnDragOver:=OnDragOver;
+    self.fFrom.fonDrop:=OnDrop;
     self.fFrom.Init;
+    self.fFrom.Name:='From';
 
     self.fTo.X:=self.X-10+self.Width;
     self.fTo.Y:=self.y-5+self.Height/2;
     self.fTo.DraggAble:=false;
     self.fTo.Init;
+    self.fTo.Name:='To';
 
     self.fBackGround.DraggAble:=false;
     self.fBackGround.Elements.AddElement(TglvgRect.Create);
@@ -615,13 +680,14 @@ uses dglopengl;
 
   //TglvgGuiManager
 
-  procedure TglvgGuiManager.HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean);
+  procedure TglvgGuiManager.HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean; leftup: boolean);
   var
     i: integer;
   begin
+    if leftup then fleftup := true;
     for i:=0 to self.ComponentCount-1 do
     begin
-      TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick,dragclick);
+      TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick,dragclick,fleftup);
     end;
   end;
 
