@@ -42,6 +42,7 @@ TOnClickEvent = procedure() of Object;
 TOnDragEvent = procedure(x: single; y: single) of Object;
 TOnDropEvent = procedure(x: single; y: single; Source: TObject) of Object;
 TonDragOverEvent = procedure(x: single; y: single; Source: Tobject; var Accept: boolean) of Object;
+TOnConnectEvent = procedure(Sender: TComponent; Source: TObject) of Object;
 
 TglvgGuiControl = class(TComponent)
 private
@@ -114,12 +115,14 @@ private
   fBackGround: TglvgGuiWindow;
   fFrom: TglvgGuiConnector;
   fTo: TglvgGuiConnector;
+  fOnConnect: TOnConnectEvent;
 public
   Constructor Create(aowner:Tcomponent); override;
   procedure Init; override;
   procedure Render; override;
   procedure OnDragOver(x: single; y: single; source: Tobject; var Accept: boolean);
   procedure OnDrop(x: single; y: single; source: Tobject);
+  property  OnConnect: TOnConnectEvent read fOnConnect write fOnConnect;
 end;
 
 TglvgGuiButton = class ( TglvgGuiControl )
@@ -183,7 +186,7 @@ uses dglopengl;
     inherited Create(aowner);
     fElements := TglvgGroup.Create();
     fIsDragged := false;
-    fAccept:=true;
+    fAccept:=false;
   end;
 
   procedure TglvgGuiControl.Render;
@@ -246,6 +249,12 @@ uses dglopengl;
     minX,minY,maxX,maxY: single;
   begin
 
+    if fIsDragged and not dragclick and not GuiManager.LeftMouseUp then
+    begin
+      fIsDragged := false;
+      GuiManager.DraggedControl:=nil;
+    end;
+
     minX := self.X;
     maxX := self.X + self.Width;
     minY := self.Y;
@@ -291,27 +300,29 @@ uses dglopengl;
                     end;
                   end;
 
-                  if GuiManager.LeftMouseUp then
+                  if GuiManager.LeftMouseUp and (GuiManager.DraggedControl<>nil) then
                   begin
                     //detect drop (left mouse up with accept true after over)
-                    if (self.faccept and (GuiManager.DraggedControl<>nil) ) then
+                    if (self.faccept) then
                     begin
                       if GuiManager.DraggedControl.Name<>self.Name then
                       begin
                         if Assigned(self.fonDrop) then
-                          fondrop(mousex,mousey,GuiManager.DraggedControl);
+                          begin
+                            self.fondrop(mousex,mousey,GuiManager.DraggedControl);
+                          end;
                         GuiManager.LeftMouseUp:=false;
                         GuiManager.DraggedControl.fIsDragged:=false;
                         GuiManager.DraggedControl:=nil;
-
-                        fisdragged:=false;
+                        self.fisdragged:=false;
                       end;
-                    end
-                    else
-                    begin
-                      //TODO: handle left mouse up event
-                      GuiManager.LeftMouseUp:=false;
                     end;
+                  end;
+
+                  if GuiManager.LeftMouseUp and (guimanager.DraggedControl=nil) then
+                  begin
+                    //TODO: handle left mouse up event
+                    GuiManager.LeftMouseUp:=false;
                   end;
 
                   if dragclick and fdraggable then
@@ -322,6 +333,7 @@ uses dglopengl;
                       fIsDragged:=true;
                       GuiManager.DraggedControl:=self;
                     end;
+
                     if GuiManager.DraggedControl.Name=self.Name then
                     begin
                       self.X:=self.X+mouseMoveX;
@@ -329,7 +341,9 @@ uses dglopengl;
                       self.MouseDrag;
                       self.Init; //auto call init of object for proper redraw
                     end;
+
                   end;
+                  //GuiManager.LeftMouseUp:=false;
                 end;
            end else begin
              if (self.Elements.Count >=1) and self.FMouseOver then
@@ -341,15 +355,6 @@ uses dglopengl;
                end;
              end;
            end;
-
-      if fIsDragged and not dragclick and not GuiManager.LeftMouseUp then
-      begin
-        writeln('end drag');
-        fIsDragged := false;
-        GuiManager.DraggedControl:=nil;
-      end;
-
-
 
   end;
 
@@ -371,7 +376,7 @@ uses dglopengl;
     self.fTo := TglvgGuiConnector.Create(self);
   end;
 
-  procedure TglvgGuiNode.OnDragOver(x: single; y: single; source: tobject; var accept: boolean);
+  procedure TglvgGuiNode.OnDragOver(x: single; y: single; source: tobject; var Accept: boolean);
   begin
     Accept := (Source is TglvgGuiConnector);
   end;
@@ -380,7 +385,8 @@ uses dglopengl;
   begin
     if (Source is TglvgGuiConnector) then
     begin
-      writeln('Dropped');
+      if assigned(self.OnConnect) then
+        self.OnConnect(self,source);
     end;
   end;
 
@@ -689,6 +695,7 @@ uses dglopengl;
     begin
       TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick,dragclick,fleftup);
     end;
+    GuiManager.LeftMouseUp:=false;
   end;
 
 initialization

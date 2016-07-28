@@ -22,10 +22,12 @@ type
       connector1: TglvgGuiConnector;
       line1: TglvgGuiConnection;
       node1: TglvgGuiNode;
+      node2: TglvgGuiNode;
       constructor Create(aowner: TComponent); override;
       destructor Destroy(); override;
       procedure OnClick();
       procedure OnDrag(x: single; y: single);
+      procedure OnConnect(Sender: TComponent; Source: TObject);
   end;
 
 var
@@ -75,11 +77,22 @@ begin
   connector1.Init;
 
   node1 := TglvgGuiNode.Create(self);
+  node1.Name:='Node1';
   node1.X:=50;
   node1.Y:=250;
   node1.Width:=50+10;
   node1.Height:=50;
   node1.Init;
+  node1.OnConnect:=self.onConnect;
+
+  node2 := TglvgGuiNode.Create(self);
+  node2.Name:='Node2';
+  node2.X:=150;
+  node2.Y:=150;
+  node2.Width:=50+10;
+  node2.Height:=50;
+  node2.Init;
+  node2.OnConnect:=self.onConnect;
 
   line1 := TglvgGuiConnection.Create(self);
   line1.X:=50; //circ1.X;
@@ -97,6 +110,11 @@ begin
   connector1.Free;
   button1.Free;
   inherited Destroy();
+end;
+
+procedure TMyApplication.OnConnect(Sender: TComponent; Source: TObject);
+begin
+  writeln('Connection from '+TComponent(Source).Name+ ' to '+Sender.Name);
 end;
 
 procedure TMyApplication.OnClick();
