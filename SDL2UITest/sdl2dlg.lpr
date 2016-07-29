@@ -23,6 +23,7 @@ type
       line1: TglvgGuiConnection;
       node1: TglvgGuiNode;
       node2: TglvgGuiNode;
+      edit1: TglvgGuiEdit;
       constructor Create(aowner: TComponent); override;
       destructor Destroy(); override;
       procedure OnClick();
@@ -44,12 +45,16 @@ var
   circ2: TglvgCircle;
   text1: TglvgText;
 
-  //glvggui
-
   //my application
   myapp: TMyApplication;
 
-  click: boolean; //should be moved to TglvgGuiManager
+  click: boolean; //TODO: move to guimanager
+
+  //text input
+  text: string;
+  composition: string;
+  cursor: integer;
+  selection_len: integer;
 
 constructor TMyApplication.Create();
 begin
@@ -101,6 +106,15 @@ begin
   line1.ToY:=circ2.Y;
   line1.Init;
 
+  edit1 := TglvgGuiEdit.Create(self);
+  edit1.Name:='edit1';
+  edit1.X:=10;
+  edit1.Y:=300;
+  edit1.Width:=200;
+  edit1.Height:=30;
+  edit1.Init;
+  edit1.Caption.Text:='Edit me';
+
 end;
 
 destructor TMyApplication.Destroy;
@@ -119,7 +133,7 @@ end;
 
 procedure TMyApplication.OnClick();
 begin
-  writeln('Click!');
+  writeln('Click! edit1:'+self.edit1.Caption.Text);
 end;
 
 procedure TMyApplication.OnDrag(x: single; y:single);
@@ -213,6 +227,7 @@ begin
 
   //Add a font and some text on the buton
   myapp.button1.Caption.Font.LoadFromFile('font.txt');
+  myapp.edit1.Caption.Font.LoadFromFile('font.txt');
   myapp.button1.Caption.Text:='This is an test button.';
 end;
 
@@ -233,7 +248,7 @@ procedure HandleEvents;
 var
   event: TSDL_Event;
   mouseX,mouseY,mouseMoveX,mouseMoveY: integer;
-
+  keymod: boolean;
 begin
   while SDL_PollEvent(@event) > 0 do
   begin
@@ -241,15 +256,74 @@ begin
       SDL_QUITEV: //this only works with one window
         //stop main-loop
         running := false;
-      
-	  SDL_KEYDOWN:
+
+      //text input events
+
+      //TODO: handle focus of tekstinput control and do SDL_StartTextInput() there
+      //TODO: pass on raw events to gui manager and handle logic there or in tekstinput control
+
+      //Special key input
+      SDL_KEYDOWN:
         begin
-        if (event.key.keysym.scancode = SDL_SCANCODE_ESCAPE) then
+
+          keymod:=(SDL_GetModState and KMOD_CTRL )>0;
+          if keymod then writeln('ctrl');
+          //exit application on escape key pressed
+          if (event.key.keysym.scancode = SDL_SCANCODE_ESCAPE) then
           begin
             running := false;
           end;
+          (*
+          //Handle backspace
+          if( (event.key.keysym.sym = SDLK_BACKSPACE) and (length(text) > 0) ) then
+          begin
+            //lop off character
+            SetLength(text, Length(text) - 1);
+            writeln(text);
+          end
+          //Handle copy
+          else if( (event.key.keysym.sym = SDLK_c) and (keymod) ) then
+          begin
+            writeln('copy');
+            SDL_SetClipboardText( pchar(text) );
+          end
+          //Handle paste
+          else if( (event.key.keysym.sym = SDLK_v) and (keymod ) ) then
+          begin
+            text := SDL_GetClipboardText();
+            writeln(text);
+          end;
+          *)
+          GuiManager.HandleKeyDown(event.key.keysym.sym, SDL_GetModState() );
         end;
 
+      SDL_TEXTINPUT:
+        begin
+          //Add new text onto the end of our text
+          (*
+          writeln('textinput');
+          writeln(event.text.text);
+          writeln(text);
+          text:=text+event.text.text;
+          writeln(text);
+          *)
+          GuiManager.HandleTextInputEvent(event.text.text);
+        end;
+
+      SDL_TEXTEDITING:
+        begin
+          writeln('textediting');
+          (*
+            Update the composition text.
+            Update the cursor position.
+            Update the selection length (if any).
+          *)
+          composition := event.edit.text;
+          cursor := event.edit.start;
+          selection_len := event.edit.length;
+       end;
+
+      //end tekst input events
       SDL_KEYUP:
         begin
         end;
@@ -405,6 +479,7 @@ begin
   //main-loop
   running := true;
   click := false;
+  text := '';
   while running do
     begin
       //Event-Handling

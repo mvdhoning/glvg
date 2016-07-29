@@ -59,6 +59,7 @@ private
   fDraggAble : boolean;
   fIsDragged : boolean;
   fAccept: boolean;
+  //fHasFocus: boolean;
 public
   Constructor Create(aowner:TComponent); override;
 
@@ -71,6 +72,8 @@ public
   procedure Click; virtual;
   procedure Init; virtual;
   procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean; aleftup: boolean);
+  procedure HandleTextInputEvent(atext: string); virtual; abstract;
+  procedure HandleKeyDown(keycode: longint; keymode: Word); virtual; abstract;
   property Elements: TglvgGroup read fElements write fElements;
 
 published
@@ -140,6 +143,23 @@ published
   property Caption: TglvgText read Fdrawtext write Fdrawtext;
 end;
 
+TglvgGuiEdit = class ( TglvgGuiControl )
+private
+  fdrawtext : TglvgText;
+public
+  Constructor Create(aowner:Tcomponent); override;
+  Destructor Destroy; override;
+  procedure Init; override;
+  procedure HandleTextInputEvent(atext: string); override;
+  procedure HandleKeyDown(keycode: longint; keymode: Word); override;
+  procedure MouseIn; override;
+  procedure MouseOut; override;
+  procedure Click; override;
+  procedure Render; override;
+published
+  property Caption: TglvgText read Fdrawtext write Fdrawtext;
+end;
+
 TglvgGuiGridDrawState = set of (gdSelected, gdFocused, gdFixed);
 
 TglvgGuiGrid = class ( TglvgGuiControl )
@@ -161,12 +181,16 @@ end;
 TglvgGuiManager = class(TComponent)
 private
  fdraggedcontrol: TglvgGuiControl;
+ ffocuscontrol: TglvgGuiControl;
  fmouseclicked: boolean;
  fleftup : boolean;
 public
  procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean; leftup: boolean);
+ procedure HandleTextInputEvent(atext: string);
+ procedure HandleKeyDown(keycode: longint; keymode: Word);
 published
  property DraggedControl: TglvgGuiControl read fdraggedcontrol write fdraggedcontrol;
+ property FocusControl: TglvgGuiControl read ffocuscontrol write ffocuscontrol;
  property LeftMouseUp: boolean read fleftup write fleftup;
 end;
 
@@ -198,7 +222,7 @@ uses dglopengl;
       for i:=0 to self.Elements.Count-1 do
       begin
         self.Elements.Element[i].Render;
-        //self.Elements.Element[i].Polygon.RenderBoundingBox();
+        self.Elements.Element[i].Polygon.RenderBoundingBox();
       end;
     glpopmatrix();
 
@@ -654,6 +678,101 @@ uses dglopengl;
     self.Caption.Render;
   end;
 
+  //TglvgGuiEdit
+
+  constructor TglvgGuiEdit.Create(aowner:TComponent);
+  begin
+    inherited Create(aowner);
+    fDrawText := tglvgText.Create;
+    self.Elements.AddElement(TglvgRect.Create);
+  end;
+
+  destructor TglvgGuiEdit.Destroy;
+  begin
+    fDrawText.Free;
+    inherited Destroy;
+  end;
+
+  procedure TglvgGuiEdit.Init;
+  begin
+    TglvgRect(self.Elements.Element[0]).X:=0;
+    TglvgRect(self.Elements.Element[0]).Y:=0;
+    TglvgRect(self.Elements.Element[0]).Width:=self.width;
+    TglvgRect(self.Elements.Element[0]).Height:=self.height;
+    TglvgRect(self.Elements.Element[0]).Style.Color.SetColor(0,0,1,1);
+    TglvgRect(self.Elements.Element[0]).Style.FillType:=glvgsolid;
+
+    TglvgRect(self.Elements.Element[0]).Init;
+
+    //text
+    fDrawText.X:=self.X+10;
+    fDrawText.Y:=self.Y+7;
+    fDrawText.Font.Size:=12;
+    fDrawText.Text:='Dummy';
+    fDrawText.Style.Color.SetColor(1,1,1,1);
+    fDrawText.Style.FillType:=glvgsolid;
+    fDrawText.Style.LineType:=glvgnone;
+  end;
+
+  procedure TglvgGuiEdit.HandleTextInputEvent(atext: string);
+  begin
+    self.fdrawtext.text:=self.fdrawtext.text+atext;
+  end;
+
+  procedure TglvgGuiEdit.HandleKeyDown(keycode: longint; keymode: Word);
+  var
+    newtext: string;
+    keymod: boolean;
+  begin
+    keymod:=(keymode and ($0040 or $0080) )>0; //detect ctrl key
+
+    //handle backspace
+    if (keycode = longint(#8)) and (length(self.fdrawtext.Text)>0) then
+    begin
+      newtext:=self.fdrawtext.Text;
+      setlength(newtext,length(newtext)-1);
+      self.fdrawtext.Text:=newtext;
+    end
+    //Handle copy
+    else if( (keycode = longint('c')) and (keymod) ) then
+    begin
+      //SDL_SetClipboardText( pchar(self.fdrawtext.Text) );
+    end
+    //Handle paste
+    else if( (keycode = longint('v')) and (keymod ) ) then
+    begin
+      //self.fdrawtext.Text := SDL_GetClipboardText();
+    end;
+
+
+  end;
+
+  procedure TglvgGuiEdit.MouseIn;
+  begin
+    //TglvgRect(self.Elements.Element[0]).Style.Color.SetColor(1,0,0,1);
+    inherited MouseIn;
+  end;
+
+  procedure TglvgGuiEdit.MouseOut;
+  begin
+    //TglvgRect(self.Elements.Element[0]).Style.Color.SetColor(0,0,1,1);
+   inherited MouseOut;
+  end;
+
+  procedure TglvgGuiEdit.Click;
+  begin
+    //handle mouseclick
+    TglvgRect(self.Elements.Element[0]).Style.Color.SetColor(0,1,0,1);
+    GuiManager.FocusControl:=self; //give control focus so it can recieve tekst input from keyboard
+    inherited Click;
+  end;
+
+  procedure TglvgGuiEdit.Render;
+  begin
+    inherited Render;
+    self.Caption.Render;
+  end;
+
   //TglvgGuiGrid
   procedure TglvgGuiGrid.SetCell(x: Integer; y: Integer; value: string);
   begin
@@ -696,6 +815,22 @@ uses dglopengl;
       TglvgGuiControl(self.Components[i]).HandleMouseEvent(mousex,mousey,mousemovex,mousemovey,leftclick,dragclick,fleftup);
     end;
     GuiManager.LeftMouseUp:=false;
+  end;
+
+  procedure TglvgGuiManager.HandleTextInputEvent(atext: string);
+  begin
+    if ffocuscontrol<>nil then
+    begin
+      TglvgGuiControl(ffocuscontrol).HandleTextInputEvent(atext);
+    end;
+  end;
+
+  procedure TglvgGuiManager.HandleKeyDown(keycode: longint; keymode: Word);
+  begin
+    if ffocuscontrol<>nil then
+    begin
+      TglvgGuiControl(ffocuscontrol).HandleKeyDown(keycode,keymode);
+    end;
   end;
 
 initialization
