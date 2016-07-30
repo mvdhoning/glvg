@@ -24,6 +24,7 @@ type
       node1: TglvgGuiNode;
       node2: TglvgGuiNode;
       edit1: TglvgGuiEdit;
+      edit2: TglvgGuiEdit;
       constructor Create(aowner: TComponent); override;
       destructor Destroy(); override;
       procedure OnClick();
@@ -114,6 +115,15 @@ begin
   edit1.Height:=30;
   edit1.Init;
   edit1.Caption.Text:='Edit me';
+
+  edit2 := TglvgGuiEdit.Create(self);
+  edit2.Name:='edit2';
+  edit2.X:=10;
+  edit2.Y:=350;
+  edit2.Width:=200;
+  edit2.Height:=30;
+  edit2.Init;
+  edit2.Caption.Text:='Edit me too';
 
 end;
 
@@ -228,6 +238,7 @@ begin
   //Add a font and some text on the buton
   myapp.button1.Caption.Font.LoadFromFile('font.txt');
   myapp.edit1.Caption.Font.LoadFromFile('font.txt');
+  myapp.edit2.Caption.Font.LoadFromFile('font.txt');
   myapp.button1.Caption.Text:='This is an test button.';
 end;
 

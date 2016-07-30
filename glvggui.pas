@@ -146,6 +146,9 @@ end;
 TglvgGuiEdit = class ( TglvgGuiControl )
 private
   fdrawtext : TglvgText;
+  fcursor: TglvgRect;
+  fstarttime: qword;
+  fon: integer;
 public
   Constructor Create(aowner:Tcomponent); override;
   Destructor Destroy; override;
@@ -222,7 +225,7 @@ uses dglopengl;
       for i:=0 to self.Elements.Count-1 do
       begin
         self.Elements.Element[i].Render;
-        self.Elements.Element[i].Polygon.RenderBoundingBox();
+        //self.Elements.Element[i].Polygon.RenderBoundingBox();
       end;
     glpopmatrix();
 
@@ -684,6 +687,7 @@ uses dglopengl;
   begin
     inherited Create(aowner);
     fDrawText := tglvgText.Create;
+    fCursor := tglvgRect.Create;
     self.Elements.AddElement(TglvgRect.Create);
   end;
 
@@ -695,6 +699,14 @@ uses dglopengl;
 
   procedure TglvgGuiEdit.Init;
   begin
+    self.fcursor.X:=self.x;
+    self.fcursor.Y:=self.y;
+    self.fcursor.Height:=self.Height;
+    self.fcursor.Width:=1;
+    self.fcursor.Style.LineColor.SetColor(1,1,0,1);
+    self.fcursor.Style.FillType:=glvgNone;
+    self.fcursor.Init;
+
     TglvgRect(self.Elements.Element[0]).X:=0;
     TglvgRect(self.Elements.Element[0]).Y:=0;
     TglvgRect(self.Elements.Element[0]).Width:=self.width;
@@ -712,6 +724,8 @@ uses dglopengl;
     fDrawText.Style.Color.SetColor(1,1,1,1);
     fDrawText.Style.FillType:=glvgsolid;
     fDrawText.Style.LineType:=glvgnone;
+
+    fstarttime:=getTickCount64;
   end;
 
   procedure TglvgGuiEdit.HandleTextInputEvent(atext: string);
@@ -749,13 +763,13 @@ uses dglopengl;
 
   procedure TglvgGuiEdit.MouseIn;
   begin
-    //TglvgRect(self.Elements.Element[0]).Style.Color.SetColor(1,0,0,1);
+    TglvgRect(self.Elements.Element[0]).Style.Color.SetColor(1,0,0,1);
     inherited MouseIn;
   end;
 
   procedure TglvgGuiEdit.MouseOut;
   begin
-    //TglvgRect(self.Elements.Element[0]).Style.Color.SetColor(0,0,1,1);
+    TglvgRect(self.Elements.Element[0]).Style.Color.SetColor(0,0,1,1);
    inherited MouseOut;
   end;
 
@@ -768,9 +782,23 @@ uses dglopengl;
   end;
 
   procedure TglvgGuiEdit.Render;
+  var
+    endtime: qword;
   begin
+    endtime:=getTickCount64-fstarttime;
+    if endtime>=300 then
+    begin
+      fstarttime:=getTickCount64;
+      self.fcursor.Style.LineColor.SetColor(1,1,0,fon);
+      if fon=0 then fon:=1 else fon:=0;
+    end;
+
     inherited Render;
     self.Caption.Render;
+    self.fcursor.X:=self.X+self.Caption.Font.GetStringWidth(self.Caption.Text)+10;
+    self.fcursor.Init;
+    if (GuiManager.ffocuscontrol<>nil) and (GuiManager.ffocuscontrol.Name=self.Name) then
+     self.fcursor.Render;
   end;
 
   //TglvgGuiGrid

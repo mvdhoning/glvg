@@ -249,6 +249,7 @@ TPolygonFont = class
         procedure LoadFromFile(AValue: string);
         procedure RenderChar(AValue: char);
         procedure RenderString(AValue: string);
+        function GetStringWidth(AValue: string): Single;
         property Name: string read FName write FName;
         property Scale: single read FScale write FScale;
         property Size: single read FSize write SetSize;
@@ -2370,6 +2371,20 @@ begin
     RenderChar(AValue[i]);
   end;
   glpopmatrix();
+end;
+
+function TPolygonFont.GetStringWidth(AValue: string): Single;
+var
+  i: integer;
+begin
+  result:=0;
+  for i:=1 to length(AValue) do
+  begin
+    if avalue[i]=' ' then
+      result:=result+fsize/2
+    else
+      result:=result+FCharWidth[ord(AValue[i])]*FSCALE;
+  end;
 end;
 
 procedure TPolygonFont.LoadFromFile(AValue: string);
