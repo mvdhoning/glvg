@@ -794,11 +794,25 @@ uses dglopengl;
     end;
 
     inherited Render;
+    //text
+    if self.Caption.Font.GetStringWidth(self.Caption.Text)>self.Width-10 then
+    begin
+      self.Caption.X:=self.X+(self.Width-self.Caption.Font.GetStringWidth(self.Caption.Text));
+      self.Caption.Init;
+      self.fcursor.x:=self.X+self.Width;
+    end
+    else
+    begin
+      self.Caption.x:=self.X+10;
+      self.fcursor.X:=self.X+self.Caption.Font.GetStringWidth(self.Caption.Text)+10;
+    end;
+
     self.Caption.Render;
-    self.fcursor.X:=self.X+self.Caption.Font.GetStringWidth(self.Caption.Text)+10;
+    //cursor
     self.fcursor.Init;
     if (GuiManager.ffocuscontrol<>nil) and (GuiManager.ffocuscontrol.Name=self.Name) then
-     self.fcursor.Render;
+        self.fcursor.Render;
+
   end;
 
   //TglvgGuiGrid
