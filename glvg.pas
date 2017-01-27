@@ -1115,6 +1115,7 @@ begin
     PrevCommand:=CurCommand;
     curtoken := MyParser.NextToken;
   end;
+  MyParser.Free;
 end;
 
 //TColor
