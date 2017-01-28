@@ -71,14 +71,11 @@ protected
   procedure tessBegin(which: GLenum);
   procedure tessEnd();
   procedure tessVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
-  //function GetPathText: string;
-  //procedure SetPathText(AValue: string);
   function GetOrigin: TPolygonPoint;
   procedure SetOrigin(AValue: TPolygonPoint);
 public
   constructor Create();
   destructor Destroy(); override;
-
   procedure Add(X: single; Y: single); overload;
   procedure Add(X: single; Y: single; Z: single); overload;
   procedure Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single); overload;
@@ -90,15 +87,10 @@ public
   procedure RenderExtruded();
   procedure CalculateBoundBox();
   procedure CleanUp();
-//  procedure ApplyGradFill();
-//  procedure ApplyAlphaGradFill();
-//  procedure ApplyTextureFill();
   property Id: integer read Fid write Fid;
-  //property Path: string read GetPathText write SetPathText;
   property Points[I: integer]: TPolygonPoint read GetPoint write SetPoint;
   property Count: integer read GetCount;
   property ExtrudeDepth: single read FExtrudeDepth write FExtrudeDepth;
-  //property Style: TStyle read FStyle write FStyle;
   property Color: TPolygonPoint read FColor write FColor;
   property BoundBoxMaxPoint: TPolygonPoint read FBoundBoxMaxPoint write FBoundBoxMaxPoint;
   property BoundBoxMinPoint: TPolygonPoint read FBoundBoxMinPoint write FBoundBoxMinPoint;
@@ -108,69 +100,47 @@ end;
 implementation
 
 type
-     TGLArrayd7 = array[0..6] of GLDouble;
-     PGLArrayd7 = ^TGLArrayd7;
-     TGLArrayvertex4 = array[0..3] of PGLArrayd7;
-     PGLArrayvertex4 = ^TGLArrayvertex4;
-     PGLArrayf4 = ^TGLArrayf4;
+  TGLArrayd7 = array[0..6] of GLDouble;
+  PGLArrayd7 = ^TGLArrayd7;
+  TGLArrayvertex4 = array[0..3] of PGLArrayd7;
+  PGLArrayvertex4 = ^TGLArrayvertex4;
+  PGLArrayf4 = ^TGLArrayf4;
 
 threadvar
-     PolygonClass: TPolygon;
+  PolygonClass: TPolygon;
 
 //TPolygon
 
-
-  procedure TPolygon.SetOrigin(AValue: TPolygonPoint);
-  begin
-    FOrigin := AValue;
-  end;
-
-  function TPolygon.GetOrigin:TPolygonPoint;
-  begin
-    result := FOrigin;
-  end;
-
-  procedure TPolygon.RenderPath;
-  var
-    loop: integer;
-  begin
-    (*
-if FStyle.LineType <> glvgNone then
+procedure TPolygon.SetOrigin(AValue: TPolygonPoint);
 begin
-    glcolor4f(FStyle.LineColor.R,FStyle.LineColor.G,FStyle.LineColor.B, FStyle.LineColor.A);
-    glLineWidth(FStyle.LineWidth);
-
-    //Draw Path
-    glBegin(GL_LINES);
-    for loop:=0 to fcpath.Count-1 do
-    begin
-      glVertex2f(fcpath.Points[loop].x, fcpath.Points[loop].y);
-    end;
-    glEnd();
-  end;
-
-  end;
-*)
+  FOrigin := AValue;
 end;
 
+function TPolygon.GetOrigin:TPolygonPoint;
+begin
+  result := FOrigin;
+end;
 
+procedure TPolygon.RenderPath;
+begin
+  //TODO: reimplement rendering of path
+end;
 
 procedure TPolygon.tessBegin(which: GLenum);
 begin
-//    glBegin(which);
+  //glBegin(which);
 end;
 
 procedure TPolygon.tessEnd();
 begin
-//    glEnd();
+  //glEnd();
 end;
 
 procedure TPolygon.tessVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
 begin
-//    glcolor4f(r,g,b,a);
-//    glVertex3f(x,y,z);
+  //glcolor4f(r,g,b,a);
+  //glVertex3f(x,y,z);
 end;
-
 
 procedure TPolygon.AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
 begin
@@ -190,12 +160,10 @@ end;
 constructor TPolygon.Create();
 begin
   Inherited Create();
-
   FCount := 0;
   FVertexCount := 0;
   FTesselated := false;
   FExtrudeDepth := 0.0;
-
 end;
 
 destructor TPolygon.Destroy();
@@ -284,6 +252,7 @@ begin
     FBoundBoxMaxPoint.x := FPoints[0].x;
     FBoundBoxMaxPoint.y := FPoints[0].y;
   end;
+
   //TODO: optimize (see TMesh);
   for loop:=0 to FCount-1  do
   begin
@@ -311,81 +280,11 @@ begin
   thirdpoint.y := (FBoundBoxMinPoint.y+FBoundBoxMaxPoint.y)/2;
 
   //Then you calculate the three distances between cp and p1,p2,p3 using the Pythagorean theorem.
-
-  dx := thirdpoint.x;// - FBoundBoxMinPoint.x;
-  dy := thirdpoint.y;// - FBoundBoxMinPoint.y;
+  dx := thirdpoint.x;
+  dy := thirdpoint.y;
   FBoundBoxRadius := sqrt(dx*dx) + sqrt(dy*dy) /2;
 
-
 end;
-
-(*
-procedure TPolygon.ApplyGradFill();
-var
-  loop: integer;
-  CurColor: TPolygonPoint;
-begin
-  for loop:=0 to FCount-1 do
-  begin
-    CurColor:=FStyle.CalcGradColor(FPoints[loop].x, FPoints[loop].y, FStyle.GradColor[0].GetColorPoint, FStyle.GradColor[1].GetColorPoint, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngle);
-    FPoints[loop].r := CurColor.r;
-    FPoints[loop].g := CurColor.g;
-    FPoints[loop].b := CurColor.b;
-  end;
-
-  for loop:=0 to FVertexCount-1 do
-  begin
-
-    CurColor:=FStyle.CalcGradColor(FVertex[loop].x, FVertex[loop].y, FStyle.GradColor[0].GetColorPoint, FStyle.GradColor[1].GetColorPoint, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngle);
-    FVertex[loop].r := CurColor.r;
-    FVertex[loop].g := CurColor.g;
-    FVertex[loop].b := CurColor.b;
-  end;
-
-end;
-
-procedure TPolygon.ApplyAlphaGradFill();
-var
-  loop: integer;
-begin
-  for loop:=0 to FCount-1 do
-  begin
-    FPoints[loop].a := FStyle.CalcGradAlpha(FPoints[loop].x, FPoints[loop].y, FStyle.GradColor[0].a, FStyle.GradColor[1].a, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngleAlpha);
-  end;
-
-  for loop:=0 to FVertexCount-1 do
-  begin
-    FVertex[loop].a := FStyle.CalcGradAlpha(FVertex[loop].x, FVertex[loop].y, FStyle.GradColor[0].a, FStyle.GradColor[1].a, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngleAlpha);
-  end;
-
-end;
-
-procedure TPolygon.ApplyTextureFill();
-var
-  range: TPolygonPoint;
-  offset: TPolygonPoint;
-  loop: integer;
-begin
-  //caclulate st coords
-  range.x := (fstyle.FTexture.Width{FBoundBoxMinPoint.x - FBoundBoxMaxPoint.x});// * -1;
-  range.y := (fstyle.FTexture.Height{FBoundBoxMinPoint.y - FBoundBoxMaxPoint.y});// * -1;
-  offset.x := 0 + FBoundBoxMinPoint.x;
-  offset.y := 0 + FBoundBoxMinPoint.y;
-
-  for loop:=0 to FCount-1 do
-  begin
-    FPoints[loop].s := ((FPoints[loop].x - offset.x) / range.x);
-    FPoints[loop].t := ((FPoints[loop].y - offset.y) / range.y);
-  end;
-
-  for loop:=0 to FVertexCount-1 do
-  begin
-    FVertex[loop].s := ((FVertex[loop].x - offset.x) / range.x);
-    FVertex[loop].t := ((FVertex[loop].y - offset.y) / range.y);
-  end;
-
-end;
-*)
 
 procedure TPolygon.CleanUp();
 begin
@@ -399,8 +298,6 @@ Procedure TPolygon.Render();
 var
   loop: integer;
 begin
-
-
   //draw shape
   glbegin(GL_TRIANGLES);
   for loop:=0 to FVertexCount-1 do
@@ -408,14 +305,9 @@ begin
     glvertex3f(FVertex[loop].X,FVertex[loop].Y,FVertex[loop].Z);
   end;
   glend;
-
-
-
 end;
 
 procedure TPolygon.RenderBoundingBox;
-var
-  loop: integer;
 begin
   glcolor4f(0,1,0,1);
   glLineWidth(1.0);
@@ -437,8 +329,6 @@ end;
 procedure TPolygon.Extrude();
 var
   loop: integer;
-//  newindex: integer;
-//  outlineloop: integer;
 begin
   if FTesselated = false then Tesselate;
 
@@ -464,7 +354,7 @@ Procedure TPolygon.RenderExtruded();
 var
   loop: integer;
 begin
-//  if FTesselated = false then Tesselate;
+  //if FTesselated = false then Tesselate;
 
   glbegin(GL_TRIANGLES);
   for loop:=0 to F3DVertexCount-1 do
@@ -494,7 +384,7 @@ end;
 
 procedure iTessEdgeCB(flag: GLboolean; lpContext: pointer); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
 begin
-      //just do nothing to force GL_TRIANGLES !!!
+  //just do nothing to force GL_TRIANGLES !!!
 end;
 
 procedure iTessVertexCB(data: PGLArrayd7); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
@@ -504,8 +394,7 @@ begin
 end;
 
 
-procedure iTessCombineCB(newVertex : PGLArrayd7; neighborVertex : Pointer;
-                      neighborWeight : Pointer; var outData : Pointer); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
+procedure iTessCombineCB(newVertex : PGLArrayd7; neighborVertex : Pointer; neighborWeight : Pointer; var outData : Pointer); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
 var
   vertex: PGLArrayd7;
   loop: integer;
