@@ -27,25 +27,10 @@ unit glvg;
 
 interface
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-  {$modeswitch nestedprocvars}
-{$ENDIF}
-
-uses DGLOpenGL, glBitmap, classes;
+uses DGLOpenGL, glBitmap, glPolygon, classes;
 
 type
-TPoint = packed record
-  x: single;
-  y: single;
-  z: single;
-  r: single;
-  g: single;
-  b: single;
-  a: single;
-  s: single; //u texture coord
-  t: single; //v texture coord
-end;
+
 
 //TODO: implement basic svg shapes using paths.
 //http://www.w3.org/TR/SVG11/paths.html
@@ -55,20 +40,20 @@ private
   fid: integer;
   FCommandText: ansistring;
   FCount: integer;
-  FPoints: array of TPoint;
+  FPoints: array of TPolygonPoint;
   FSplinePrecision: integer;
-  procedure NewStroke( AFrom, ATo: TPoint );
-  function EqualPoints( APoint1, APoint2: TPoint ): boolean;
-  procedure DrawCSpline( AFrom, ATo, AFromControlPoint, AToControlPoint: TPoint );
-  procedure DrawQSpline( AFrom, ATo, AControlPoint: TPoint );
-  procedure AddPoint(AValue: TPoint);
-  procedure SetPoint(I: integer; AValue: TPoint);
-  function GetPoint(I: integer): TPoint;
+  procedure NewStroke( AFrom, ATo: TPolygonPoint );
+  function EqualPoints( APoint1, APoint2: TPolygonPoint ): boolean;
+  procedure DrawCSpline( AFrom, ATo, AFromControlPoint, AToControlPoint: TPolygonPoint );
+  procedure DrawQSpline( AFrom, ATo, AControlPoint: TPolygonPoint );
+  procedure AddPoint(AValue: TPolygonPoint);
+  procedure SeTPolygonPoint(I: integer; AValue: TPolygonPoint);
+  function GeTPolygonPoint(I: integer): TPolygonPoint;
 public
   constructor Create();
   destructor Destroy(); override;
   procedure Parse();
-  property Points[I: integer]: TPoint read GetPoint write SetPoint;
+  property Points[I: integer]: TPolygonPoint read GeTPolygonPoint write SeTPolygonPoint;
   property Text: ansistring read fcommandtext write fcommandtext;
   property Count: integer read FCount;
 end;
@@ -88,7 +73,7 @@ public
   constructor Create;
   procedure SetColor(aR: single; aG: single; aB: single;aA: single); overload;
   procedure SetColor(AName: string); overload;
-  function  GetColorPoint: TPoint;
+  function  GetColorPoint: TPolygonPoint;
   property x: single read fx write fx;
   property y: single read fy write fy;
   property z: single read fz write fz;
@@ -120,11 +105,11 @@ private
   FTexture: TglBitmap2D;
   FTextureId: GLuInt;
   FTextureAngle: single;
-  procedure DrawBox(x: single; y: single; colorfrom: tcolor; colorto: tcolor);// aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
+  procedure DrawBox(x: single; y: single; colorfrom: tcolor; colorto: tcolor);// aboundboxminpoint: TPolygonPoint; aboundboxmaxpoint: TPolygonPoint);
   procedure DrawCircle(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
   procedure DrawRing(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
-  procedure DrawFill(radius: single; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
-//  procedure DrawAlphaFill(radius: single; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
+  procedure DrawFill(radius: single; aboundboxminpoint: TPolygonPoint; aboundboxmaxpoint: TPolygonPoint);
+//  procedure DrawAlphaFill(radius: single; aboundboxminpoint: TPolygonPoint; aboundboxmaxpoint: TPolygonPoint);
   procedure SetGradColor(Index: integer; AValue: TColor);
   function GetGradColor(Index: integer): TColor;
   procedure SetNumGradColors(AValue: integer);
@@ -152,72 +137,29 @@ public
   property TextureId: GluInt read FTextureId;
   property TextureFileName: string read FTextureFileName write FTextureFileName;
   function TrigGLTriangle(value: single): single;
-  function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
+  function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPolygonPoint; gradendcolor: TPolygonPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPolygonPoint;
   function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
   procedure Init(); //Loads and sets texture;
 end;
 
-TPolygon = class
-private
-  fId: integer;
-  FcPath: TPath;            //Outline
-  FPoints: array of TPoint; //polygon point
-  FVertex: array of TPoint; //triangulated data
-  FExtrudeDepth: single;
-  F3DVertex: array of TPoint; //3d extruded mesh
-  F3DVertexCount: integer;
-
-  FStyle: TStyle;
-
-  FCount: integer;
-  FVertexCount: integer;
-  FTesselated: boolean;
-
-  FBoundBoxMinPoint: TPoint;
-  FBoundBoxMaxPoint: TPoint;
-  FBoundBoxRadius: Single;
-
-  Origin: Tpoint;
-
-  procedure SetPoint(I: integer; Value: TPoint);
-  procedure AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
-  function GetPoint(I: integer): TPoint;
-  function GetCount(): integer;
-  procedure tessBegin(which: GLenum);
-  procedure tessEnd();
-  procedure tessVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
-  function GetPathText: string;
-  procedure SetPathText(AValue: string);
-public
-  constructor Create();
-  destructor Destroy(); override;
-
-  procedure Add(X: single; Y: single); overload;
-  procedure Add(X: single; Y: single; Z: single); overload;
-  procedure Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single); overload;
-  procedure Render();
-  procedure RenderPath();
-  procedure RenderBoundingBox();
-  procedure Tesselate();
-  procedure Extrude();
-  procedure RenderExtruded();
-  procedure CalculateBoundBox();
-//  procedure ApplyGradFill();
-//  procedure ApplyAlphaGradFill();
-//  procedure ApplyTextureFill();
-  property Id: integer read Fid write Fid;
-  property Path: string read GetPathText write SetPathText;
-  property Points[I: integer]: TPoint read GetPoint write SetPoint;
-  property Count: integer read GetCount;
-  property ExtrudeDepth: single read FExtrudeDepth write FExtrudeDepth;
-  property Style: TStyle read FStyle write FStyle;
+TPolygonShape = class(TPolygon)
+  private
+    FcPath: TPath;            //Outline
+    FStyle: TStyle;
+    function GetPathText: string;
+    procedure SetPathText(AValue: string);
+  public
+    constructor Create();
+    Destructor Destroy(); override;
+    procedure Render();
+    procedure RenderPath();
+    property Path: string read GetPathText write SetPathText;
+    property Style: TStyle read FStyle write FStyle;
 end;
-
-
 
 TglvgObject = class
   private
-    FPolyShape: TPolygon;
+    FPolyShape: TPolygonShape;
     FName: string;
     procedure SetStyle(AValue: TStyle);
     function GetStyle(): TStyle;
@@ -231,7 +173,7 @@ TglvgObject = class
     //property LineWidth: single read GetLineWidth write SetLineWidth;
     property Style: TStyle read GetStyle write SetStyle;
     //property Style: TStyle read GetStyle write SetStyle;
-    property Polygon: TPolygon read FPolyshape write FPolyshape;
+    property Polygon: TPolygonShape read FPolyshape write FPolyshape;
 end;
 
 TPolygonFont = class
@@ -315,7 +257,7 @@ end;
 
 TglvgPolyLine = class(TglvgObject) //TODO: implement or use TPolygon directly?
 private
-  points: array of TPoint;
+  points: array of TPolygonPoint;
 public
 //perform an absolute moveto operation to the first coordinate pair in the list of points
 //for each subsequent coordinate pair, perform an absolute lineto operation to that coordinate pair
@@ -324,7 +266,7 @@ end;
 
 TglvgPolygon = class(TglvgObject) //TODO: implement or use TPolygon directly?
 private
-  points: array of TPoint;
+  points: array of TPolygonPoint;
 public
 //perform an absolute moveto operation to the first coordinate pair in the list of points
 //for each subsequent coordinate pair, perform an absolute lineto operation to that coordinate pair
@@ -378,7 +320,7 @@ protected
   FWidth: single;
   FHeight: single;
 public
-  procedure TileRender(bbmin: TPoint; bbmax: TPoint);
+  procedure TileRender(bbmin: TPolygonPoint; bbmax: TPolygonPoint);
   property Width: single read FWidth write FWidth;
   property Height: single read FHeight write FHeight;
 end;
@@ -387,18 +329,7 @@ implementation
 
 uses math, sysutils;
 
-type
-     TGLArrayd7 = array[0..6] of GLDouble;
-     PGLArrayd7 = ^TGLArrayd7;
-     TGLArrayvertex4 = array[0..3] of PGLArrayd7;
-     PGLArrayvertex4 = ^TGLArrayvertex4;
-     PGLArrayf4 = ^TGLArrayf4;
-
-threadvar
-  PolygonClass: TPolygon;
-
-
-procedure TestRenderBoundingBox(AMin: TPoint; AMax: TPoint);
+procedure TestRenderBoundingBox(AMin: TPolygonPoint; AMax: TPolygonPoint);
 var
   loop: integer;
 begin
@@ -440,11 +371,113 @@ begin
   glend;
 end;
 
+//TPolygonShape
+constructor TPolygonShape.Create();
+begin
+  inherited Create();
+  FcPath := TPath.Create;
+  FcPath.Text:='';
+  FStyle := TStyle.Create;
+end;
+
+destructor TPolygonShape.Destroy();
+begin
+  FcPath.Free;
+  FStyle.Free;
+  inherited Destroy();
+end;
+
+procedure TPolygonShape.RenderPath();
+var
+  loop: integer;
+begin
+  if FStyle.LineType <> glvgNone then
+  begin
+    glcolor4f(FStyle.LineColor.R,FStyle.LineColor.G,FStyle.LineColor.B, FStyle.LineColor.A);
+    glLineWidth(FStyle.LineWidth);
+
+    //Draw Path
+    glBegin(GL_LINES);
+    for loop:=0 to fcpath.Count-1 do
+    begin
+      glVertex2f(fcpath.Points[loop].x, fcpath.Points[loop].y);
+    end;
+    glEnd();
+  end;
+
+end;
+
+procedure TPolygonShape.Render();
+begin
+
+  if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
+  begin
+    if FTesselated = false then Tesselate;
+    //prepare draw shape
+    //turning off writing to the color buffer and depth buffer so we only
+    //write to stencil buffer
+    glColorMask(FALSE, FALSE, FALSE, FALSE);
+
+    //enable stencil buffer
+    glEnable(GL_STENCIL_TEST);
+
+    //write a one to the stencil buffer everywhere we are about to draw
+    glStencilFunc(GL_ALWAYS, fid, fid);
+
+    //this is to always pass a one to the stencil buffer where we draw
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+    Inherited Render();
+
+    //until stencil test is diabled, only write to areas where the
+    //stencil buffer has a one. This fills the shape
+    glStencilFunc(GL_EQUAL, fid, fid);
+
+    // don't modify the contents of the stencil buffer
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+    //draw colors again
+    glColorMask(TRUE,TRUE, TRUE, TRUE);
+
+    //draw fill
+    fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
+
+    //'default' rendering again
+    glColorMask(TRUE,TRUE, TRUE, TRUE);
+    glDisable(GL_STENCIL_TEST);
+  end;
+
+end;
+
+function TPolygonShape.GetPathText: string;
+begin
+  result := FcPath.Text;
+end;
+
+procedure TPolygonShape.SetPathText(AValue: string);
+var
+  i: integer;
+begin
+  FcPath.Text := AValue;
+  if FcPath.Text <> '' then
+  begin
+    //clean up current content
+    self.FCount:=0;
+    setlength(self.FPoints,0);
+    //determine new content
+    FcPath.Parse;
+    for i := 0 to FcPath.Count-1 do
+    begin
+      self.Add(FcPath.Points[i].x, FcPath.Points[i].y);
+    end;
+  end;
+end;
+
 //TglvgObject
 constructor TglvgObject.Create();
 begin
   inherited create();
-  FPolyShape:= TPolygon.Create;
+  FPolyShape:= TPolygonShape.Create;
 end;
 
 destructor TglvgObject.Destroy;
@@ -461,12 +494,12 @@ begin
   begin
 
     if FPolyShape.Style.FGradColors[0].x = -1.0 then
-    FPolyShape.Style.FGradColors[0].x := FPolyShape.FBoundBoxMinPoint.x;
+    FPolyShape.Style.FGradColors[0].x := FPolyShape.BoundBoxMinPoint.x;
     //if FPolyShape.Style.FGradColors[0].y = -1.0 then
     //FPolyShape.Style.FGradColors[0].y := FPolyShape.FBoundBoxMinPoint.y;
 
     if FPolyShape.Style.FGradColors[1].x = -1.0 then
-    FPolyShape.Style.FGradColors[1].x := FPolyShape.FBoundBoxMaxPoint.x;
+    FPolyShape.Style.FGradColors[1].x := FPolyShape.BoundBoxMaxPoint.x;
     //    if FPolyShape.Style.FGradColors[1].y = -1.0 then
     //FPolyShape.Style.FGradColors[1].y := FPolyShape.FBoundBoxMaxPoint.y;
 
@@ -478,10 +511,7 @@ begin
   //Ok Clean Up for a high speed gain ...
   FPolyShape.FcPath.Free;
   FPolyShape.FcPath := TPath.Create;
-  FPolyShape.FCount:= 0;
-  FPolyShape.FVertexCount := 0;
-  SetLength(FPolyShape.FPoints,0);
-  SetLength(FPolyShape.FVertex,0);
+  FpolyShape.CleanUp();
 end;
 
 procedure TglvgObject.Render;
@@ -565,8 +595,11 @@ begin
 
   end;
 
-    FPolyShape.Origin.x := Fx;
-    FPolyShape.Origin.y := Fy;
+  with FPolyShape.Origin do
+    begin
+     x := Fx;
+     y := Fy;
+    end;
 
     inherited init;
 end;
@@ -686,22 +719,22 @@ end;
 
 //http://www.w3.org/TR/2008/WD-SVGMobile12-20080915/paths.html#PathData
 
-procedure TPath.NewStroke( AFrom, ATo: TPoint );
+procedure TPath.NewStroke( AFrom, ATo: TPolygonPoint );
 begin
   AddPoint(AFrom);
   AddPoint(ATo);
 end;
 
-function TPath.EqualPoints( APoint1, APoint2: TPoint ): boolean;
+function TPath.EqualPoints( APoint1, APoint2: TPolygonPoint ): boolean;
 begin
   Result := (APoint1.X = APoint2.X) and (APoint1.Y = APoint2.Y);
 end;
 
 //cubic bezier line ( (1-i)^3*pa+3*i(1-i)^2*pb+3*i^2*(1-i)*pc+i^3*pd  )
-procedure TPath.DrawCSpline( AFrom, ATo, AFromControlPoint, AToControlPoint: TPoint );
+procedure TPath.DrawCSpline( AFrom, ATo, AFromControlPoint, AToControlPoint: TPolygonPoint );
 var
   di, i : Double;
-  p1, p2: TPoint;
+  p1, p2: TPolygonPoint;
 begin
     di := 1.0 / FSplinePrecision;
     i := di;
@@ -726,9 +759,9 @@ begin
 end;
 
 //quadratic bezier line ( (1-i)^2*pa+2*i(1-i)*pb+i^2*pc )
-procedure TPath.DrawQSpline( AFrom, ATo, AControlPoint: TPoint );
+procedure TPath.DrawQSpline( AFrom, ATo, AControlPoint: TPolygonPoint );
   var di, i: double;
-      p1,p2: TPoint;
+      p1,p2: TPolygonPoint;
   begin
     di := 1.0 / FSplinePrecision;
     i := di;
@@ -750,7 +783,7 @@ procedure TPath.DrawQSpline( AFrom, ATo, AControlPoint: TPoint );
 end;
 
 
-procedure TPath.AddPoint(AValue: TPoint);
+procedure TPath.AddPoint(AValue: TPolygonPoint);
 begin
   FCount := FCount + 1;
   SetLength(FPoints, FCount);
@@ -759,12 +792,12 @@ begin
   FPoints[FCount-1].Z := AValue.Z;
 end;
 
-procedure TPath.SetPoint(I: integer; AValue: TPoint);
+procedure TPath.SeTPolygonPoint(I: integer; AValue: TPolygonPoint);
 begin
   FPoints[I] := AValue;
 end;
 
-function TPath.GetPoint(I: integer): TPoint;
+function TPath.GeTPolygonPoint(I: integer): TPolygonPoint;
 begin
   result := FPoints[I];
 end;
@@ -789,11 +822,11 @@ var
   CurCommand: char;
   PrevCommand: char;
   Params: array[0..7] of single;
-  ParamsPoint: array[0..2] of TPoint;
+  ParamsPoint: array[0..2] of TPolygonPoint;
   ParamCount: byte;
-  CurPoint: TPoint;
-  PrevControlPoint: TPoint;
-  FirstPoint: TPoint;
+  CurPoint: TPolygonPoint;
+  PrevControlPoint: TPolygonPoint;
+  FirsTPolygonPoint: TPolygonPoint;
 
 begin
 
@@ -873,7 +906,7 @@ begin
           ParamsPoint[0].y:=params[1];
           paramcount := 0;
           CurPoint := ParamsPoint[0];
-          FirstPoint := CurPoint;
+          FirsTPolygonPoint := CurPoint;
         end;
       End;
       'm':
@@ -884,7 +917,7 @@ begin
           ParamsPoint[0].y:=CurPoint.y + params[1];
           paramcount := 0;
           CurPoint := ParamsPoint[0];
-          FirstPoint := CurPoint;
+          FirsTPolygonPoint := CurPoint;
         end;
       End;
       // Line To (L l H h V v)
@@ -958,14 +991,14 @@ begin
       'Z':
       Begin
         //line back to the first point
-        NewStroke( CurPoint, FirstPoint);
-        FirstPoint:=CurPoint; //optional?
+        NewStroke( CurPoint, FirsTPolygonPoint);
+        FirsTPolygonPoint:=CurPoint; //optional?
       End;
       'z':
       Begin
         //line back to the first point
-        NewStroke( CurPoint, FirstPoint);
-        FirstPoint:=CurPoint; //optional?
+        NewStroke( CurPoint, FirsTPolygonPoint);
+        FirsTPolygonPoint:=CurPoint; //optional?
       End;
       // Quadratic Bezier (Q q T t)
       'Q':
@@ -1261,7 +1294,7 @@ begin
 
 end;
 
-function TStyle.CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPoint; gradendcolor: TPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPoint;
+function TStyle.CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPolygonPoint; gradendcolor: TPolygonPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPolygonPoint;
 var
   HeightDistance: single;
   WidthDistance: single;
@@ -1329,10 +1362,10 @@ begin
   ftextureid := ftexture.ID;
 end;
 
-procedure TStyle.DrawBox(x: Single; y: Single; colorfrom: TColor; colorto: TColor);//; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
+procedure TStyle.DrawBox(x: Single; y: Single; colorfrom: TColor; colorto: TColor);//; aboundboxminpoint: TPolygonPoint; aboundboxmaxpoint: TPolygonPoint);
 var
-  range: TPoint;
-  offset: TPoint;
+  range: TPolygonPoint;
+  offset: TPolygonPoint;
   loop: integer;
   fx,fy,tx,ty,ts,tt,fs,ft: single;
 
@@ -1459,7 +1492,7 @@ Begin
     glPopMatrix;
 End;
 
-Function RotatePoint(pPoint: TPOINT; pOrigin: TPOINT; Degrees: Single): TPOINT;
+Function RotatePoint(pPoint: TPolygonPoint; pOrigin: TPolygonPoint; Degrees: Single): TPolygonPoint;
 var
   cosAng : single;
   sinAng : single;
@@ -1476,19 +1509,19 @@ begin
   RotatePoint.Y := (x * sinAng) + (y * cosAng) + porigin.Y;
 End;
 
-procedure TStyle.DrawFill(radius: single; aboundboxminpoint: tpoint; aboundboxmaxpoint: tpoint);
+procedure TStyle.DrawFill(radius: single; aboundboxminpoint: TPolygonPoint; aboundboxmaxpoint: TPolygonPoint);
 var
   i:integer;
   addcolor: TColor;
-  cp,cp2,cpcol: tpoint;
-  mpmin,mpmax: tpoint;
-  rotpoint: tpoint;
-  curpoint: tpoint;
-  temp: tpoint;
-  curpoint2: tpoint;
-  temp2: tpoint;
+  cp,cp2,cpcol: TPolygonPoint;
+  mpmin,mpmax: TPolygonPoint;
+  roTPolygonPoint: TPolygonPoint;
+  curpoint: TPolygonPoint;
+  temp: TPolygonPoint;
+  curpoint2: TPolygonPoint;
+  temp2: TPolygonPoint;
   colorfrom, colorto: tcolor;
-  difpoint: tpoint;
+  difpoint: TPolygonPoint;
 
 begin
 
@@ -1561,7 +1594,7 @@ begin
 //      glVertex3f(cp.x,cp.y,0);
 //    glEnd;
 
-    rotpoint:=cp;
+    roTPolygonPoint:=cp;
 
     mpmin.x:=0;
     mpmin.y:=0;
@@ -1585,25 +1618,25 @@ begin
     //cpcol.y := 0;
 
 
-    rotpoint.x:=0+(aboundboxminpoint.x+cp.x);
-    rotpoint.y:=0+(aboundboxminpoint.y+cp.y);
+    roTPolygonPoint.x:=0+(aboundboxminpoint.x+cp.x);
+    roTPolygonPoint.y:=0+(aboundboxminpoint.y+cp.y);
 
     temp.x:=ABoundBoxMinPoint.x;
     temp.y:=ABoundBoxMinPoint.y;
-    mpmin:=RotatePoint(temp, rotpoint, FGradColorAngle);
+    mpmin:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle);
 
     temp.x:=ABoundBoxMaxPoint.x;
     temp.y:=ABoundBoxMaxPoint.y;
-    mpmax:=RotatePoint(temp, rotpoint, FGradColorAngle);
+    mpmax:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle);
 
     temp.x:=cp.x;
     temp.y:=cp.y;
-    cp2:=RotatePoint(temp, rotpoint, FGradColorAngle);
+    cp2:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle);
 
     temp.x:=FGradColors[0].x;
     temp.y:=FGradColors[0].y;
-    curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
-    curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+    curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
+    curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
 
     //TestRenderBoundingBox(mpmin,mpmax);
 
@@ -1631,8 +1664,8 @@ begin
 
     temp.x:=FGradColors[0].x;
     temp.y:=ABoundBoxMaxPoint.y;//FGradColors[0].y;
-    curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
-    curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+    curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
+    curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
 
     difpoint.x:=curpoint.x - temp.x;
 
@@ -1656,8 +1689,8 @@ begin
 
       temp.x:=FGradColors[0].x;
       temp.y:=ABoundBoxMinPoint.y;//FGradColors[0].y;
-      curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
-      curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+      curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
+      curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
 
       //adjust only the 'first' x cooord (only a cosmetic fix)
       //colorfrom.x:=temp.x;//curpoint.x;
@@ -1670,8 +1703,8 @@ begin
 
       temp.x:=FGradColors[1].x;
       temp.y:=ABoundBoxMaxPoint.y;//FGradColors[1].y;
-      curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
-      curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+      curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
+      curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
 
       //colorto.x:=temp.x;//curpoint.x;
       colorto.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;//curpoint.x;
@@ -1683,8 +1716,8 @@ begin
 
       temp.x:=FGradColors[0].x;
       temp.y:=FGradColors[0].y;
-      curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
-      curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+      curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
+      curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
 
       // TestColorRenderBoundingBox(colorfrom,colorto);
       DrawBox(curpoint.x, curpoint.y, colorfrom, colorto);
@@ -1698,8 +1731,8 @@ begin
 
         temp.x:=FGradColors[i-1].x;
         temp.y:=ABoundBoxMinPoint.y;
-        curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
-        curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+        curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
+        curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
 
         //colorfrom.x:=temp.x;//curpoint.x;
         colorfrom.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;//curpoint.x;
@@ -1711,8 +1744,8 @@ begin
 
         temp.x:=FGradColors[i].x;
         temp.y:=ABoundBoxMaxPoint.y;//FGradColors[i].y;
-        curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
-        curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+        curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
+        curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
 
         //colorto.x:=temp.x;//curpoint.x;
         colorto.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;//curpoint.x;
@@ -1724,8 +1757,8 @@ begin
 
         temp.x:=FGradColors[i-1].x;
         temp.y:=FGradColors[i-1].y;
-        curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
-        curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+        curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
+        curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
         DrawBox(curpoint.x, curpoint.y, colorfrom, colorto);
       end;
     end;
@@ -1742,8 +1775,8 @@ begin
 
     temp.x:=FGradColors[fNumGradColors-1].x;
     temp.y:=ABoundBoxMinPoint.y;//FGradColors[fNumGradColors-1].y;
-    curpoint.x:=RotatePoint(temp, rotpoint, FGradColorAngle).x;
-    curpoint.y:=RotatePoint(temp, rotpoint, FGradColorAngle).y;
+    curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
+    curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
 
 //    colorfrom.x:=temp.x;//curpoint.x;
     colorfrom.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;//curpoint.x;
@@ -1824,508 +1857,7 @@ begin
   result := self.FGradColors[Index];
 end;
 
-//TPolygon
 
-  function TPolygon.GetPathText: string;
-  begin
-    result := FcPath.Text;
-  end;
-
-  procedure TPolygon.SetPathText(AValue: string);
-  var
-    i: integer;
-  begin
-    FcPath.Text := AValue;
-    if FcPath.Text <> '' then
-    begin
-      //clean up current content
-      self.FCount:=0;
-      setlength(self.FPoints,0);
-      //determine new content
-      FcPath.Parse;
-      for i := 0 to FcPath.Count-1 do
-      begin
-        self.Add(FcPath.Points[i].x, FcPath.Points[i].y);
-      end;
-    end;
-  end;
-
-  procedure TPolygon.RenderPath;
-  var
-    loop: integer;
-  begin
-if FStyle.LineType <> glvgNone then
-begin
-    glcolor4f(FStyle.LineColor.R,FStyle.LineColor.G,FStyle.LineColor.B, FStyle.LineColor.A);
-    glLineWidth(FStyle.LineWidth);
-
-    //Draw Path
-    glBegin(GL_LINES);
-    for loop:=0 to fcpath.Count-1 do
-    begin
-      glVertex2f(fcpath.Points[loop].x, fcpath.Points[loop].y);
-    end;
-    glEnd();
-  end;
-end;
-
-
-
-procedure TPolygon.tessBegin(which: GLenum);
-begin
-//    glBegin(which);
-end;
-
-procedure TPolygon.tessEnd();
-begin
-//    glEnd();
-end;
-
-procedure TPolygon.tessVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
-begin
-//    glcolor4f(r,g,b,a);
-//    glVertex3f(x,y,z);
-end;
-
-
-procedure TPolygon.AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
-begin
-  FVertexCount := FVertexCount + 1;
-  SetLength(FVertex, FVertexCount);
-
-  FVertex[FVertexCount-1].R := R;
-  FVertex[FVertexCount-1].G := G;
-  FVertex[FVertexCount-1].B := B;
-  FVertex[FVertexCount-1].A := A;
-
-  FVertex[FVertexCount-1].X := X;
-  FVertex[FVertexCount-1].Y := Y;
-  FVertex[FVertexCount-1].Z := Z;
-end;
-
-constructor TPolygon.Create();
-begin
-  Inherited Create();
-
-  FcPath := TPath.Create;
-  FcPath.Text:='';
-  FCount := 0;
-  FVertexCount := 0;
-  FTesselated := false;
-
-  FStyle := TStyle.Create;
-
-  FExtrudeDepth := 0.0;
-
-
-
-end;
-
-destructor TPolygon.Destroy();
-begin
-  FcPath.Free;
-  FStyle.Free;
-  FTesselated := false;
-  FCount := 0;
-  FVertexCount := 0;
-  SetLength(FPoints, FCount);
-  SetLength(FVertex, FVertexCount);
-  inherited Destroy;
-end;
-
-procedure TPolygon.SetPoint(I: integer; Value: TPoint);
-begin
-  FTesselated := false; //check first on changed values
-  FPoints[I] := Value;
-end;
-
-function TPolygon.GetPoint(I: integer): TPoint;
-begin
-  result := FPoints[I];
-end;
-
-function TPolygon.GetCount(): integer;
-begin
-  result := FCount;
-end;
-
-procedure TPolygon.Add(X: single; Y: single);
-var
-  CurColor: TPoint;
-begin
-  FTesselated := false;
-  FCount := FCount + 1;
-  SetLength(FPoints, FCount);
-  FPoints[FCount-1].X := X;
-  FPoints[FCount-1].Y := Y;
-  FPoints[FCount-1].Z := 0.0;
-
-  CurColor:=FStyle.Color.GetColorPoint;
-
-  FPoints[FCount-1].R := CurColor.R;
-  FPoints[FCount-1].G := CurColor.G;
-  FPoints[FCount-1].B := CurColor.B;
-  FPoints[FCount-1].A := CurColor.A;
-end;
-
-procedure TPolygon.Add(X: single; Y: single; Z: single);
-begin
-  FTesselated := false;
-  FCount := FCount + 1;
-  SetLength(FPoints, FCount);
-  FPoints[FCount-1].X := X;
-  FPoints[FCount-1].Y := Y;
-  FPoints[FCount-1].Z := Z;
-  FPoints[FCount-1].R := FStyle.Color.R;
-  FPoints[FCount-1].G := FStyle.Color.G;
-  FPoints[FCount-1].B := FStyle.Color.B;
-  FPoints[FCount-1].A := FStyle.Color.A;
-end;
-
-procedure TPolygon.Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single);
-begin
-  FTesselated := false;
-  FCount := FCount + 1;
-  SetLength(FPoints, FCount);
-  FPoints[FCount-1].X := X;
-  FPoints[FCount-1].Y := Y;
-  FPoints[FCount-1].Z := Z;
-  FPoints[FCount-1].R := R;
-  FPoints[FCount-1].G := G;
-  FPoints[FCount-1].B := B;
-  FPoints[FCount-1].A := A;
-end;
-
-Procedure TPolygon.CalculateBoundBox();
-var
-  loop: integer;
-  thirdpoint: TPoint;
-  dx,dy: single;
-begin
-  if FCount>0 then
-  begin
-    FBoundBoxMinPoint.x := FPoints[0].x;
-    FBoundBoxMinPoint.y := FPoints[0].y;
-    FBoundBoxMaxPoint.x := FPoints[0].x;
-    FBoundBoxMaxPoint.y := FPoints[0].y;
-  end;
-  //TODO: optimize (see TMesh);
-  for loop:=0 to FCount-1  do
-  begin
-    if (FPoints[loop].x < FBoundBoxMinPoint.x) then
-    begin
-      FBoundBoxMinPoint.x := FPoints[loop].x;
-    end;
-    if (FPoints[loop].y < FBoundBoxMinPoint.y) then
-    begin
-      FBoundBoxMinPoint.y := FPoints[loop].y;
-    end;
-
-    if (FPoints[loop].x > FBoundBoxMaxPoint.x) then
-    begin
-      FBoundBoxMaxPoint.x := FPoints[loop].x;
-    end;
-    if (FPoints[loop].y > FBoundBoxMaxPoint.y) then
-    begin
-      FBoundBoxMaxPoint.y := FPoints[loop].y;
-    end;
-  end;
-
-  //calculate radius
-  thirdpoint.x := (FBoundBoxMinPoint.x+FBoundBoxMaxPoint.x)/2;
-  thirdpoint.y := (FBoundBoxMinPoint.y+FBoundBoxMaxPoint.y)/2;
-
-  //Then you calculate the three distances between cp and p1,p2,p3 using the Pythagorean theorem.
-
-  dx := thirdpoint.x;// - FBoundBoxMinPoint.x;
-  dy := thirdpoint.y;// - FBoundBoxMinPoint.y;
-  FBoundBoxRadius := sqrt(dx*dx) + sqrt(dy*dy) /2;
-
-
-end;
-
-(*
-procedure TPolygon.ApplyGradFill();
-var
-  loop: integer;
-  CurColor: TPoint;
-begin
-  for loop:=0 to FCount-1 do
-  begin
-    CurColor:=FStyle.CalcGradColor(FPoints[loop].x, FPoints[loop].y, FStyle.GradColor[0].GetColorPoint, FStyle.GradColor[1].GetColorPoint, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngle);
-    FPoints[loop].r := CurColor.r;
-    FPoints[loop].g := CurColor.g;
-    FPoints[loop].b := CurColor.b;
-  end;
-
-  for loop:=0 to FVertexCount-1 do
-  begin
-
-    CurColor:=FStyle.CalcGradColor(FVertex[loop].x, FVertex[loop].y, FStyle.GradColor[0].GetColorPoint, FStyle.GradColor[1].GetColorPoint, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngle);
-    FVertex[loop].r := CurColor.r;
-    FVertex[loop].g := CurColor.g;
-    FVertex[loop].b := CurColor.b;
-  end;
-
-end;
-
-procedure TPolygon.ApplyAlphaGradFill();
-var
-  loop: integer;
-begin
-  for loop:=0 to FCount-1 do
-  begin
-    FPoints[loop].a := FStyle.CalcGradAlpha(FPoints[loop].x, FPoints[loop].y, FStyle.GradColor[0].a, FStyle.GradColor[1].a, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngleAlpha);
-  end;
-
-  for loop:=0 to FVertexCount-1 do
-  begin
-    FVertex[loop].a := FStyle.CalcGradAlpha(FVertex[loop].x, FVertex[loop].y, FStyle.GradColor[0].a, FStyle.GradColor[1].a, FStyle.GradColor[0].x, FStyle.GradColor[0].y, FStyle.GradColor[1].x, FStyle.GradColor[1].y, FStyle.GradColorAngleAlpha);
-  end;
-
-end;
-
-procedure TPolygon.ApplyTextureFill();
-var
-  range: TPoint;
-  offset: TPoint;
-  loop: integer;
-begin
-  //caclulate st coords
-  range.x := (fstyle.FTexture.Width{FBoundBoxMinPoint.x - FBoundBoxMaxPoint.x});// * -1;
-  range.y := (fstyle.FTexture.Height{FBoundBoxMinPoint.y - FBoundBoxMaxPoint.y});// * -1;
-  offset.x := 0 + FBoundBoxMinPoint.x;
-  offset.y := 0 + FBoundBoxMinPoint.y;
-
-  for loop:=0 to FCount-1 do
-  begin
-    FPoints[loop].s := ((FPoints[loop].x - offset.x) / range.x);
-    FPoints[loop].t := ((FPoints[loop].y - offset.y) / range.y);
-  end;
-
-  for loop:=0 to FVertexCount-1 do
-  begin
-    FVertex[loop].s := ((FVertex[loop].x - offset.x) / range.x);
-    FVertex[loop].t := ((FVertex[loop].y - offset.y) / range.y);
-  end;
-
-end;
-*)
-
-Procedure TPolygon.Render();
-var
-  loop: integer;
-begin
-if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
-begin
-  if FTesselated = false then Tesselate;
-  //prepare draw shape
-  //turning off writing to the color buffer and depth buffer so we only
-  //write to stencil buffer
-  glColorMask(FALSE, FALSE, FALSE, FALSE);
-
-  //enable stencil buffer
-  glEnable(GL_STENCIL_TEST);
-
-  //write a one to the stencil buffer everywhere we are about to draw
-  glStencilFunc(GL_ALWAYS, fid, fid);
-
-  //this is to always pass a one to the stencil buffer where we draw
-  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-
-  //draw shape
-  glbegin(GL_TRIANGLES);
-  for loop:=0 to FVertexCount-1 do
-  begin
-    glvertex3f(FVertex[loop].X,FVertex[loop].Y,FVertex[loop].Z);
-  end;
-  glend;
-
-  //until stencil test is diabled, only write to areas where the
-  //stencil buffer has a one. This fills the shape
-  glStencilFunc(GL_EQUAL, fid, fid);
-
-  // don't modify the contents of the stencil buffer
-  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-  //draw colors again
-  glColorMask(TRUE,TRUE, TRUE, TRUE);
-
-  //draw fill
-  fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
-
-  //'default' rendering again
-  glColorMask(TRUE,TRUE, TRUE, TRUE);
-  glDisable(GL_STENCIL_TEST);
-
-end;
-
-end;
-
-procedure TPolygon.RenderBoundingBox;
-var
-  loop: integer;
-begin
-  glcolor4f(0,1,0,1);
-  glLineWidth(1.0);
-  glbegin(GL_LINES);
-    glvertex3f(FBoundBoxMinPoint.X,FBoundBoxMinPoint.Y,0);
-    glvertex3f(FBoundBoxMinPoint.X,FBoundBoxMaxPoint.Y,0);
-
-    glvertex3f(FBoundBoxMinPoint.X,FBoundBoxMaxPoint.Y,0);
-    glvertex3f(FBoundBoxMaxPoint.X,FBoundBoxMaxPoint.Y,0);
-
-    glvertex3f(FBoundBoxMaxPoint.X,FBoundBoxMaxPoint.Y,0);
-    glvertex3f(FBoundBoxMaxPoint.X,FBoundBoxMinPoint.Y,0);
-
-    glvertex3f(FBoundBoxMaxPoint.X,FBoundBoxMinPoint.Y,0);
-    glvertex3f(FBoundBoxMinPoint.X,FBoundBoxMinPoint.Y,0);
-  glend;
-end;
-
-procedure TPolygon.Extrude();
-var
-  loop: integer;
-//  newindex: integer;
-//  outlineloop: integer;
-begin
-  if FTesselated = false then Tesselate;
-
-  F3DVertexCount := FVertexCount*2;
-
-  //copy front faces
-  setlength(F3DVertex, F3DVertexCount);
-  for loop:=0 to FVertexCount-1 do
-  begin
-    F3DVertex[loop]:=FVertex[loop];
-  end;
-
-  //copy back faces
-  for loop:=0 to FVertexCount-1 do
-  begin
-    F3DVertex[loop+(FVertexCount)]:=FVertex[FVertexCount-loop-1];
-    F3DVertex[loop+(FVertexCount)].Z:=F3DVertex[loop+(FVertexCount)].Z-FExtrudeDepth;
-  end;
-
-end;
-
-Procedure TPolygon.RenderExtruded();
-var
-  loop: integer;
-begin
-//  if FTesselated = false then Tesselate;
-
-  glbegin(GL_TRIANGLES);
-  for loop:=0 to F3DVertexCount-1 do
-  begin
-    glcolor3f(F3DVertex[loop].R,F3DVertex[loop].G,F3DVertex[loop].B);
-    glvertex3f(F3DVertex[loop].X,F3DVertex[loop].Y,F3DVertex[loop].Z);
-  end;
-  glend;
-end;
-
-procedure TPolygon.Tesselate();
-var
-  loop: integer;
-  tess: pointer;
-  test: TGLArrayd3;
-  pol: PGLArrayd7;
-
-procedure iTessBeginCB(which: GLenum); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
-begin
-  PolygonClass.tessBegin(which);
-end;
-
-procedure iTessEndCB(); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
-begin
-  //PolygonClass.tessEnd();
-end;
-
-procedure iTessEdgeCB(flag: GLboolean; lpContext: pointer); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
-begin
-      //just do nothing to force GL_TRIANGLES !!!
-end;
-
-procedure iTessVertexCB(data: PGLArrayd7); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
-begin
-  //PolygonClass.tessVertex(data[0], data[1], data[2], data[3], data[4], data[5],0);
-  PolygonClass.AddVertex(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
-end;
-
-
-procedure iTessCombineCB(newVertex : PGLArrayd7; neighborVertex : Pointer;
-                      neighborWeight : Pointer; var outData : Pointer); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
-var
-  vertex: PGLArrayd7;
-  loop: integer;
-  colorloop: integer;
-begin
-  new(vertex);
-
-  vertex[0] := newVertex^[0];
-  vertex[1] := newVertex^[1];
-  vertex[2] := newVertex^[2];
-
-  for colorloop := 3 to 6 do
-  begin
-    vertex[colorloop] := 0.0;
-    for loop:=0 to 3 do
-    begin
-      if PGLArrayf4(neighborWeight)^[loop] <> 0 then
-      begin
-        vertex[colorloop] := vertex[colorloop] +
-             PGLArrayf4(neighborWeight)^[loop] *
-             PGLArrayvertex4(neighborVertex)^[loop][colorloop]
-      end;
-    end;
-  end;
-
-  // return output data (vertex coords and others)
-  outData:= vertex;
-end;
-
-begin
-  PolygonClass := Self;
-
-  tess := gluNewTess();
-
-  gluTessCallback(tess, GLU_TESS_BEGIN, @iTessBeginCB );
-  gluTessCallback(tess, GLU_TESS_END, @iTessEndCB);
-  gluTessCallback(tess, GLU_TESS_VERTEX, @iTessVertexCB);
-  gluTessCallback(tess, GLU_TESS_COMBINE, @iTessCombineCB);  //does not work for font?
-  gluTessCallback(tess, GLU_TESS_EDGE_FLAG_DATA, @iTessEdgeCB); //force triangles and cleanup
-
-  gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_NONZERO );
-
-  gluTessBeginPolygon(tess, nil);                   // with NULL data
-  gluTessBeginContour(tess);
-
-  for loop := 0 to FCount-1 do
-  begin
-      new(pol);
-      pol[3]:=FPoints[loop].R; //color
-      pol[4]:=FPoints[loop].G;
-      pol[5]:=FPoints[loop].B;
-      pol[6]:=FPoints[loop].A;
-
-      pol[0]:=FPoints[loop].X;
-      pol[1]:=FPoints[loop].Y;
-      pol[2]:=0;
-
-      test[0] := pol[0];
-      test[1] := pol[1];
-      test[2] := pol[2];
-      gluTessVertex(tess, test, pol);
-  end;
-
-  gluTessEndContour(tess);
-  gluTessEndPolygon(tess);
-  gluDeleteTess(tess);        // delete after tessellation
-
-  PolygonClass := nil;
-  FTesselated := true;
-
-end;
 
 //TPolygonFont
 
@@ -2413,11 +1945,11 @@ begin
     begin
       FCharGlyph[loop].FPolyShape.Path := fs.Values[inttostr(loop)];
       FCharGlyph[loop].FPolyShape.CalculateBoundBox();
-      FCharWidth[loop] := Round(FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.x);
+      FCharWidth[loop] := Round(FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.x);
 
       //determine highest character size.
-      if FFontHeight < FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.y then
-        FFontHeight := FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.y;
+      if FFontHeight < FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y then
+        FFontHeight := FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y;
 
       FCharGlyph[loop].FPolyShape.Id:=loop;
       FCharGlyph[loop].Init;
@@ -2428,7 +1960,8 @@ begin
   begin
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) or ( (loop >= ord('0')) and (loop <= ord('9')) )then
     begin
-      FCharGlyph[loop].FPolyShape.FBoundBoxMaxPoint.y:=FFontHeight;
+      with FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint do
+        y:=FFontHeight;
       FCharGlyph[loop].Init;
     end;
   end;
@@ -2488,7 +2021,7 @@ begin
   end;
 end;
 
-procedure TglvgPattern.TileRender(bbmin: TPoint; bbmax: TPoint);
+procedure TglvgPattern.TileRender(bbmin: TPolygonPoint; bbmax: TPolygonPoint);
 var
   xpos,ypos: single;
 begin
