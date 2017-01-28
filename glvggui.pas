@@ -38,8 +38,8 @@ type
 
 TglvgGuiManager = class;
 
-TOnClickEvent = procedure() of Object;
-TOnDragEvent = procedure(x: single; y: single) of Object;
+TOnClickEvent = procedure(Sender:TObject) of Object;
+TOnDragEvent = procedure(Sender:TObject; x: single; y: single) of Object;
 TOnDropEvent = procedure(x: single; y: single; Source: TObject) of Object;
 TonDragOverEvent = procedure(x: single; y: single; Source: Tobject; var Accept: boolean) of Object;
 TOnConnectEvent = procedure(Sender: TComponent; Source: TObject) of Object;
@@ -92,11 +92,14 @@ public
 end;
 
 TglvgGuiConnector = class ( TglvgGuiControl )
+private
+  fToNode: TglvgGuiControl;
 public
   Constructor Create(aowner:Tcomponent); override;
   procedure Init; override;
   procedure MouseIn; override;
   procedure MouseOut; override;
+  property ToNode: TglvgGuiControl read fToNode write fToNode;
 end;
 
 TglvgGuiConnection = class ( TglvgGuiControl )
@@ -245,7 +248,7 @@ uses dglopengl;
   begin
     //handle mousedrag
     if Assigned(FOnDrag) then
-      FOnDrag(self.x,self.y);
+      FOnDrag(self, self.x,self.y);
   end;
 
   procedure TglvgGuiControl.MouseIn;
@@ -262,7 +265,7 @@ uses dglopengl;
   begin
     //handle mouseclick
     if Assigned(FOnClick) then
-      FOnClick();
+      FOnClick(self);
     self.FMouseOver:=false; //trigger mouse over again aftter click event
   end;
 

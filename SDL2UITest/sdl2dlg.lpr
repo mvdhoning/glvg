@@ -27,8 +27,8 @@ type
       edit2: TglvgGuiEdit;
       constructor Create(aowner: TComponent); override;
       destructor Destroy(); override;
-      procedure OnClick();
-      procedure OnDrag(x: single; y: single);
+      procedure OnClick(Sender:TObject);
+      procedure OnDrag(Sender:TObject; x: single; y: single);
       procedure OnConnect(Sender: TComponent; Source: TObject);
   end;
 
@@ -90,6 +90,7 @@ begin
   node1.Height:=50;
   node1.Init;
   node1.OnConnect:=self.onConnect;
+  node1.OnDrag:=self.ondrag;
 
   node2 := TglvgGuiNode.Create(self);
   node2.Name:='Node2';
@@ -99,6 +100,7 @@ begin
   node2.Height:=50;
   node2.Init;
   node2.OnConnect:=self.onConnect;
+  node2.OnDrag:=self.ondrag;
 
   line1 := TglvgGuiConnection.Create(self);
   line1.X:=50; //circ1.X;
@@ -139,20 +141,40 @@ end;
 procedure TMyApplication.OnConnect(Sender: TComponent; Source: TObject);
 begin
   writeln('Connection from '+TComponent(Source).Name+ ' to '+Sender.Name);
+  (Source as TglvgGuiConnector).ToNode:=(Sender as TglvgGuiNode);
 end;
 
-procedure TMyApplication.OnClick();
+procedure TMyApplication.OnClick(Sender: TObject);
 begin
+  writeln((Sender as TglvgguiButton).Name); //Display the name of the button clicked
   writeln('Click! edit1:'+self.edit1.Caption.Text);
 end;
 
-procedure TMyApplication.OnDrag(x: single; y:single);
+procedure TMyApplication.OnDrag(Sender:TObject; x: single; y:single);
 var
   linepath: string;
 begin
-  self.line1.ToX:=X;
-  self.line1.ToY:=Y;
-  self.line1.Init;
+  writeln((Sender as TComponent).Name);
+
+  if Sender is TglvgGuiConnector then
+  begin
+    self.line1.ToX:=X;
+    self.line1.ToY:=Y;
+    self.line1.Init;
+    connector1.ToNode := nil;
+  end;
+
+  if Sender is TglvgGuiNode then
+  begin
+    if connector1.ToNode <> nil then
+    begin
+      connector1.X:=X;
+      connector1.Y:=Y-5+connector1.ToNode.Height/2;
+      self.line1.ToX:=connector1.ToNode.X;//-10+connector1.Width;
+      self.line1.ToY:=connector1.ToNode.Y-5+connector1.ToNode.Height/2;
+      self.line1.Init;
+    end;
+  end;
 end;
 
 procedure InitializeVariables;
