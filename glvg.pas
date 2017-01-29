@@ -493,9 +493,9 @@ end;
 //TglvgPolyLine
 procedure TglvgPolyline.Render();
 begin
-  glEnable (GL_POLYGON_SMOOTH);
+  //glEnable (GL_POLYGON_SMOOTH);
   self.Polygon.RenderPath();
-  glDisable (GL_POLYGON_SMOOTH);
+  //glDisable (GL_POLYGON_SMOOTH);
 end;
 
 //TglvgRect
@@ -1828,8 +1828,8 @@ var
   i: integer;
 begin
 
-  glEnable( GL_POLYGON_SMOOTH );
-  glHint( GL_POLYGON_SMOOTH_HINT, GL_FASTEST );
+  //glEnable( GL_POLYGON_SMOOTH );
+  //glHint( GL_POLYGON_SMOOTH_HINT, GL_FASTEST );
 
   glpushmatrix();
   for i :=1 to length(AValue) do
@@ -1838,7 +1838,7 @@ begin
   end;
   glpopmatrix();
 
-  glDisable (GL_POLYGON_SMOOTH);
+  //glDisable (GL_POLYGON_SMOOTH);
 
 end;
 

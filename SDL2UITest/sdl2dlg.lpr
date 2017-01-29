@@ -156,7 +156,7 @@ end;
 
 procedure TMyApplication.OnDrag(Sender:TObject; x: single; y:single);
 begin
-  writeln((Sender as TComponent).Name);
+  //writeln((Sender as TComponent).Name);
 
   if Sender is TglvgGuiConnector then
   begin
@@ -401,6 +401,8 @@ procedure Render;
 begin
   framecount:=framecount+1;
 
+  glEnable(GL_MULTISAMPLE);
+
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT or GL_STENCIL_BUFFER_BIT);
 
   glMatrixMode (GL_PROJECTION); glLoadIdentity(); glOrtho (0, 640, 480, 0,-100,100);
@@ -444,6 +446,10 @@ begin
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2 ); //force opengl version
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1 ); //force opengl version
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1); //doublebuffer
+
+  //multisample aliasing
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
   //create the window,
   //caption - first parameter

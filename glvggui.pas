@@ -492,7 +492,7 @@ uses dglopengl;
     TglvgRect(self.fBackGround.Elements.Element[0]).Y:=0;
     TglvgRect(self.fBackGround.Elements.Element[0]).Width:=self.width-10;
     TglvgRect(self.fBackGround.Elements.Element[0]).Height:=self.height;
-    TglvgRect(self.fBackGround.Elements.Element[0]).Style.Color.SetColor(0,0,1,0.5);
+    TglvgRect(self.fBackGround.Elements.Element[0]).Style.Color.SetColor(0,0,1,1);
     TglvgRect(self.fBackGround.Elements.Element[0]).Style.FillType:=glvgsolid;
 
     TglvgRect(self.fBackGround.Elements.Element[0]).Init;
