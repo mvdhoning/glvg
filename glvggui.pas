@@ -59,6 +59,7 @@ private
   fDraggAble : boolean;
   fIsDragged : boolean;
   fAccept: boolean;
+  fParent: TglvgGuiControl;
   //fHasFocus: boolean;
 public
   Constructor Create(aowner:TComponent); override;
@@ -74,6 +75,8 @@ public
   procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean; aleftup: boolean);
   procedure HandleTextInputEvent(atext: string); virtual; abstract;
   procedure HandleKeyDown(keycode: longint; keymode: Word); virtual; abstract;
+  function GetAbsoluteX(): single;
+  function GetAbsoluteY(): single;
   property Elements: TglvgGroup read fElements write fElements;
 
 published
@@ -84,6 +87,7 @@ published
   property OnClick: TonClickEvent read fonClick write fonClick;
   property OnDrag: TonDragEvent read fonDrag write fonDrag;
   property DraggAble: boolean read fDraggAble write fDraggAble;
+  property Parent: TglvgGuiControl read fParent write fParent;
 end;
 
 TglvgGuiWindow = class ( TglvgGuiControl )
@@ -212,11 +216,28 @@ uses dglopengl;
   constructor TglvgGuiControl.Create(aowner: TComponent);
   begin
     if aowner= nil then
-      aowner:=GuiManager;
+      begin
+        aowner:=GuiManager;
+      end else
+      begin
+        fParent:=(aowner as TglvgGuiControl);
+      end;
     inherited Create(aowner);
     fElements := TglvgGroup.Create();
     fIsDragged := false;
     fAccept:=false;
+  end;
+
+  function TglvgGuiControl.GetAbsoluteX(): single;
+  begin
+    result := self.X;
+    if fparent<>nil then result := result + fparent.GetAbsoluteX();
+  end;
+
+  function TglvgGuiControl.GetAbsoluteY(): single;
+  begin
+    result := self.Y;
+    if fparent<>nil then result := result + fparent.GetAbsoluteY();
   end;
 
   procedure TglvgGuiControl.Render;
@@ -224,19 +245,26 @@ uses dglopengl;
     i: integer;
   begin
     glpushmatrix();
+
       gltranslatef(Fx,Fy,0);
+      //if fparent<>nil then  //draw dependent on parent
+      // gltranslatef(fparent.x,fparent.y,0);
+
       for i:=0 to self.Elements.Count-1 do
       begin
         self.Elements.Element[i].Render;
-        //self.Elements.Element[i].Polygon.RenderBoundingBox();
+        self.Elements.Element[i].Polygon.RenderBoundingBox();
       end;
-    glpopmatrix();
+
+
 
     //render childeren controls
     for i:=0 to self.ComponentCount-1 do
     begin
       TglvgGuiControl(self.components[i]).Render;
     end;
+    glpopmatrix();
+
 
   end;
 
@@ -277,7 +305,10 @@ uses dglopengl;
   var
     i: integer;
     minX,minY,maxX,maxY: single;
+    locX,locY: single;
   begin
+
+
 
     if fIsDragged and not dragclick and not GuiManager.LeftMouseUp then
     begin
@@ -285,18 +316,29 @@ uses dglopengl;
       GuiManager.DraggedControl:=nil;
     end;
 
-    minX := self.X;
-    maxX := self.X + self.Width;
-    minY := self.Y;
-    maxY := self.Y + self.Height;
+    //TODO: allow for local and global coords so nesting can work so self.x and self.y needs to be adjusted with parent
+    if fparent<>nil then
+    begin
+      locX:=self.GetAbsoluteX();
+      locY:=self.GetAbsoluteY();
+    end else
+    begin
+      locX:=self.x;
+      locY:=self.y;
+    end;
+
+    minX := locX;
+    maxX := locX + self.Width;
+    minY := locY;
+    maxY := locY + self.Height;
 
     if (fIsDragged) then
       begin
         //be less accurate while dragging
-        minX := self.X-100;
-        maxX := self.X + self.Width+100;
-        minY := self.Y-100;
-        maxY := self.Y + self.Height+100;
+        minX := locX-100;
+        maxX := locX + self.Width+100;
+        minY := locY-100;
+        maxY := locY + self.Height+100;
       end;
 
      if ( (MouseX > minX) AND (MouseX < maxX) and (MouseY > minY) and (MouseY < maxY) ) then
@@ -424,16 +466,16 @@ uses dglopengl;
   begin
     self.DraggAble:=true;
 
-    self.fFrom.X:=self.X;
-    self.fFrom.Y:=self.Y-5+self.Height/2;
+    self.fFrom.X:=0;
+    self.fFrom.Y:=-5+(self.Height/2);
     self.fFrom.DraggAble:=false;
     self.fFrom.fOnDragOver:=OnDragOver;
     self.fFrom.fonDrop:=OnDrop;
     self.fFrom.Init;
     self.fFrom.Name:='From';
 
-    self.fTo.X:=self.X-10+self.Width;
-    self.fTo.Y:=self.y-5+self.Height/2;
+    self.fTo.X:=-10+self.Width;
+    self.fTo.Y:=-5+self.Height/2;
     self.fTo.DraggAble:=false;
     self.fTo.Init;
     self.fTo.Name:='To';
@@ -441,8 +483,8 @@ uses dglopengl;
     self.fBackGround.DraggAble:=false;
     self.fBackGround.Elements.AddElement(TglvgRect.Create);
 
-    TglvgRect(self.fBackGround.Elements.Element[0]).X:=self.x+5;
-    TglvgRect(self.fBackGround.Elements.Element[0]).Y:=self.y;
+    TglvgRect(self.fBackGround.Elements.Element[0]).X:=+5;
+    TglvgRect(self.fBackGround.Elements.Element[0]).Y:=0;
     TglvgRect(self.fBackGround.Elements.Element[0]).Width:=self.width-10;
     TglvgRect(self.fBackGround.Elements.Element[0]).Height:=self.height;
     TglvgRect(self.fBackGround.Elements.Element[0]).Style.Color.SetColor(0,0,1,1);

@@ -60,10 +60,11 @@ var
 constructor TMyApplication.Create();
 begin
   inherited Create(nil);
-  self.X:=0;
+  self.X:=10;
   self.Y:=0;
   self.Width:=screenwidth;
   self.Height:=screenheight;
+
   button1 := TglvgguiButton.Create(self);
   button1.Name:='button1';
   button1.Caption.Text:='Test';
@@ -73,7 +74,6 @@ begin
   button1.Height:=25;
   button1.Init;
   button1.OnClick:=self.onclick;
-
 
   connector1 := TglvgGuiConnector.Create(self);
   connector1.Name:='connector1';
@@ -111,7 +111,7 @@ begin
 
   edit1 := TglvgGuiEdit.Create(self);
   edit1.Name:='edit1';
-  edit1.X:=10;
+  edit1.X:=0;
   edit1.Y:=300;
   edit1.Width:=200;
   edit1.Height:=30;
@@ -120,7 +120,7 @@ begin
 
   edit2 := TglvgGuiEdit.Create(self);
   edit2.Name:='edit2';
-  edit2.X:=10;
+  edit2.X:=0;
   edit2.Y:=350;
   edit2.Width:=200;
   edit2.Height:=30;
@@ -130,12 +130,25 @@ begin
 end;
 
 destructor TMyApplication.Destroy;
+var
+  i: integer;
 begin
+  //List all component names on window
+  for i:=0 to self.ComponentCount-1 do
+  begin
+    writeln(self.Components[i].Name);
+  end;
+
+  //Free Components
   line1.Free;
   node1.Free;
+  node2.Free;
+  edit1.Free;
+  edit2.Free;
   connector1.Free;
   button1.Free;
   inherited Destroy();
+
 end;
 
 procedure TMyApplication.OnConnect(Sender: TComponent; Source: TObject);
@@ -367,7 +380,7 @@ begin
           mouseMoveY := event.motion.yrel;
           mouseX := event.motion.x; //absolute
           mouseY := event.motion.y;
-          text1.Text:='mouseX '+inttostr(mouseMoveX)+' mouseY '+inttostr(mouseMoveY);
+          text1.Text:='mouseX '+inttostr(mouseX)+' mouseY '+inttostr(mouseY);
           GuiManager.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, false, click, false);
           //TODO: should be in glvggui windows class that passes mouse coords on the right object hierarchical
         end;
