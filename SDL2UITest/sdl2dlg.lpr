@@ -420,6 +420,7 @@ begin
 
 
   glFlush(); //for opengl to do its thing
+  //sleep(0);
 end;
 
 begin
@@ -460,7 +461,7 @@ begin
   //initialize resources
   InitializeOpenGLVariables;
 
-  SDL_GL_SetSwapInterval(0); //no vsync
+  //SDL_GL_SetSwapInterval(0); //no vsync
 
   //main-loop
   running := true;
