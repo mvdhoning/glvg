@@ -246,15 +246,17 @@ uses dglopengl;
   begin
     glpushmatrix();
 
-      gltranslatef(Fx,Fy,0);
+      gltranslatef(self.X,self.Y,0);
       //if fparent<>nil then  //draw dependent on parent
-      // gltranslatef(fparent.x,fparent.y,0);
+      //gltranslatef(fparent.x,fparent.y,0);
+
 
       for i:=0 to self.Elements.Count-1 do
       begin
         self.Elements.Element[i].Render;
-        self.Elements.Element[i].Polygon.RenderBoundingBox();
+        //self.Elements.Element[i].Polygon.RenderBoundingBox();
       end;
+
 
 
 
@@ -263,8 +265,8 @@ uses dglopengl;
     begin
       TglvgGuiControl(self.components[i]).Render;
     end;
-    glpopmatrix();
 
+    glpopmatrix();
 
   end;
 
@@ -443,9 +445,10 @@ uses dglopengl;
   begin
     inherited create(aowner);
     self.Name:='Node';
-    self.fBackGround := tglvgGuiWindow.Create(self);
+
     self.fFrom := TglvgGuiConnector.Create(self);
     self.fTo := TglvgGuiConnector.Create(self);
+    self.fBackGround := tglvgGuiWindow.Create(self);
   end;
 
   procedure TglvgGuiNode.OnDragOver(x: single; y: single; source: tobject; var Accept: boolean);
@@ -510,11 +513,16 @@ uses dglopengl;
   procedure TglvgGuiNode.Render;
   begin
 
+    //optional override render of gui element here or use default
     inherited Render;
+    (*
+    glpushmatrix();
+    gltranslatef(self.x,self.y,0);
     self.fTo.Render;
     self.fFrom.Render;
     self.fBackGround.Render;
-
+    glpopmatrix();
+    *)
   end;
 
   //TglvgGuiConnection

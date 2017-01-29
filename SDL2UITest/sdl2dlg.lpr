@@ -42,9 +42,9 @@ var
   framecount: integer;
 
   //glvg
-  node2: TglvgRect;
-  circ2: TglvgCircle;
-  text1: TglvgText;
+  //node2: TglvgRect;
+  //circ2: TglvgCircle;
+  text1: TglvgText; //debug text
 
   //my application
   myapp: TMyApplication;
@@ -60,8 +60,8 @@ var
 constructor TMyApplication.Create();
 begin
   inherited Create(nil);
-  self.X:=10;
-  self.Y:=0;
+  self.X:=50;
+  self.Y:=10;
   self.Width:=screenwidth;
   self.Height:=screenheight;
 
@@ -105,8 +105,8 @@ begin
   line1 := TglvgGuiConnection.Create(self);
   line1.X:=50; //circ1.X;
   line1.Y:=50; //circ1.Y;
-  line1.ToX:=circ2.X;
-  line1.ToY:=circ2.Y;
+  line1.ToX:=connector1.X;
+  line1.ToY:=connector1.Y;
   line1.Init;
 
   edit1 := TglvgGuiEdit.Create(self);
@@ -233,6 +233,7 @@ begin
   //glvg
 
   //Node2
+  (*
   node2 := TglvgRect.Create;
   node2.X:= 200.0;
   node2.Y:= 100.0;
@@ -242,14 +243,16 @@ begin
   node2.Style.FillType:=glvgsolid;
   node2.Init;
 
+
   circ2 := TglvgCircle.Create();
   circ2.Radius:=5;
-  circ2.X:=node2.X;
-  circ2.Y:=node2.Y+(node2.Height/2);
+  circ2.X:=200;//node2.X;
+  circ2.Y:=100;//node2.Y+(node2.Height/2);
   circ2.Style.Color.SetColor(0,0,0,1);
   circ2.Style.LineColor.SetColor(1,1,1,1);
   circ2.Style.FillType:=glvgsolid;
   circ2.Init;
+  *)
 
   text1 := TglvgText.Create();
   text1.Font.LoadFromFile('font.txt');
@@ -474,8 +477,8 @@ begin
 
   myapp.Render;
 
-  circ2.Render;
-  node2.Render;
+  //circ2.Render;
+  //node2.Render;
   text1.Render;
 
 
@@ -542,8 +545,8 @@ begin
 
   myapp.Free;
 
-  circ2.Free;
-  node2.Free;
+  //circ2.Free;
+  //node2.Free;
   text1.Free;
 
   SDL_GL_DeleteContext(context);
