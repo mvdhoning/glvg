@@ -42,20 +42,11 @@ var
   framecount: integer;
 
   //glvg
-  //node2: TglvgRect;
-  //circ2: TglvgCircle;
   text1: TglvgText; //debug text
 
-  //my application
+  //my gui (application)
   myapp: TMyApplication;
 
-  click: boolean; //TODO: move to guimanager
-
-  //text input
-  text: string;
-  composition: string;
-  cursor: integer;
-  selection_len: integer;
 
 constructor TMyApplication.Create();
 begin
@@ -103,8 +94,8 @@ begin
   node2.OnDrag:=self.ondrag;
 
   line1 := TglvgGuiConnection.Create(self);
-  line1.X:=50; //circ1.X;
-  line1.Y:=50; //circ1.Y;
+  line1.X:=50;
+  line1.Y:=50;
   line1.ToX:=connector1.X;
   line1.ToY:=connector1.Y;
   line1.Init;
@@ -164,8 +155,6 @@ begin
 end;
 
 procedure TMyApplication.OnDrag(Sender:TObject; x: single; y:single);
-var
-  linepath: string;
 begin
   writeln((Sender as TComponent).Name);
 
@@ -221,7 +210,6 @@ end;
 
 procedure InitializeOpenGLVariables;
 var
-  linepath: string;
   i:integer;
 begin
 
@@ -231,29 +219,6 @@ begin
   last_time:=current_time;
 
   //glvg
-
-  //Node2
-  (*
-  node2 := TglvgRect.Create;
-  node2.X:= 200.0;
-  node2.Y:= 100.0;
-  node2.Width:= 50.0;
-  node2.Height:= 50.0;
-  node2.Style.Color.SetColor(0,1,0,1);
-  node2.Style.FillType:=glvgsolid;
-  node2.Init;
-
-
-  circ2 := TglvgCircle.Create();
-  circ2.Radius:=5;
-  circ2.X:=200;//node2.X;
-  circ2.Y:=100;//node2.Y+(node2.Height/2);
-  circ2.Style.Color.SetColor(0,0,0,1);
-  circ2.Style.LineColor.SetColor(1,1,1,1);
-  circ2.Style.FillType:=glvgsolid;
-  circ2.Init;
-  *)
-
   text1 := TglvgText.Create();
   text1.Font.LoadFromFile('font.txt');
   text1.Font.Size:=12;
@@ -303,59 +268,29 @@ begin
   begin
     case event.type_ of
       SDL_QUITEV: //this only works with one window
-        //stop main-loop
-        running := false;
+        running := false; //stop main-loop
 
       //text input events
-
-      //TODO: handle focus of tekstinput control and do SDL_StartTextInput() there
-      //TODO: pass on raw events to gui manager and handle logic there or in tekstinput control
 
       //Special key input
       SDL_KEYDOWN:
         begin
 
+          //detect ctrl key
           keymod:=(SDL_GetModState and KMOD_CTRL )>0;
           if keymod then writeln('ctrl');
+
           //exit application on escape key pressed
           if (event.key.keysym.scancode = SDL_SCANCODE_ESCAPE) then
           begin
             running := false;
           end;
-          (*
-          //Handle backspace
-          if( (event.key.keysym.sym = SDLK_BACKSPACE) and (length(text) > 0) ) then
-          begin
-            //lop off character
-            SetLength(text, Length(text) - 1);
-            writeln(text);
-          end
-          //Handle copy
-          else if( (event.key.keysym.sym = SDLK_c) and (keymod) ) then
-          begin
-            writeln('copy');
-            SDL_SetClipboardText( pchar(text) );
-          end
-          //Handle paste
-          else if( (event.key.keysym.sym = SDLK_v) and (keymod ) ) then
-          begin
-            text := SDL_GetClipboardText();
-            writeln(text);
-          end;
-          *)
+
           GuiManager.HandleKeyDown(event.key.keysym.sym, SDL_GetModState() );
         end;
 
       SDL_TEXTINPUT:
         begin
-          //Add new text onto the end of our text
-          (*
-          writeln('textinput');
-          writeln(event.text.text);
-          writeln(text);
-          text:=text+event.text.text;
-          writeln(text);
-          *)
           GuiManager.HandleTextInputEvent(event.text.text);
         end;
 
@@ -366,10 +301,11 @@ begin
             Update the composition text.
             Update the cursor position.
             Update the selection length (if any).
-          *)
+
           composition := event.edit.text;
           cursor := event.edit.start;
           selection_len := event.edit.length;
+          *)
        end;
 
       //end tekst input events
@@ -384,23 +320,24 @@ begin
           mouseX := event.motion.x; //absolute
           mouseY := event.motion.y;
           text1.Text:='mouseX '+inttostr(mouseX)+' mouseY '+inttostr(mouseY);
-          GuiManager.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, false, click, false);
-          //TODO: should be in glvggui windows class that passes mouse coords on the right object hierarchical
+
+          GuiManager.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, false, GuiManager.LeftMouseClicked, false);
         end;
 
       SDL_MOUSEBUTTONDOWN:
         begin
           if( event.button.button = SDL_BUTTON_LEFT ) then
             begin
-              click:=true;
+              GuiManager.LeftMouseClicked:=true;
               GuiManager.HandleMouseEvent(event.button.x, event.button.y,0,0, true, false, false);
             end;
         end;
+
       SDL_MOUSEBUTTONUP:
         begin
           if( event.button.button = SDL_BUTTON_LEFT ) then
             begin
-              click:=false;
+              GuiManager.LeftMouseClicked:=false;
               GuiManager.HandleMouseEvent(event.button.x, event.button.y,0,0, false, false, true);
             end;
         end;
@@ -418,14 +355,14 @@ begin
 
   if(time_passed >0) then
   begin
-        //  calculate the number of frames per second
-        currentfps := round(framecount / time_passed);
+    //  calculate the number of frames per second
+    currentfps := round(framecount / time_passed);
 
-        //  Set time
-         last_time := current_time;
+    //  Set time
+    last_time := current_time;
 
-        //  Reset frame count
-        frameCount := 0;
+    //  Reset frame count
+    frameCount := 0;
   end;
 
   SDL_SetWindowTitle(window, pchar('OpenGL with SDL - '+inttostr(currentfps)+' fps'));
@@ -475,10 +412,10 @@ begin
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+  //display gui
   myapp.Render;
 
-  //circ2.Render;
-  //node2.Render;
+  //display debug texts
   text1.Render;
 
 
@@ -527,8 +464,8 @@ begin
 
   //main-loop
   running := true;
-  click := false;
-  text := '';
+  GuiManager.LeftMouseClicked := false;
+
   while running do
     begin
       //Event-Handling
@@ -543,10 +480,9 @@ begin
 
   finally
 
+  //free gui objects
   myapp.Free;
-
-  //circ2.Free;
-  //node2.Free;
+  //free debug text
   text1.Free;
 
   SDL_GL_DeleteContext(context);

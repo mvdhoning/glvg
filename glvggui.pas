@@ -202,6 +202,7 @@ published
  property DraggedControl: TglvgGuiControl read fdraggedcontrol write fdraggedcontrol;
  property FocusControl: TglvgGuiControl read ffocuscontrol write ffocuscontrol;
  property LeftMouseUp: boolean read fleftup write fleftup;
+ property LeftMouseClicked: boolean read fmouseclicked write fmouseclicked;
 end;
 
 var
