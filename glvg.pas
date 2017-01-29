@@ -1827,12 +1827,19 @@ procedure TPolygonFont.RenderString(AValue: string);
 var
   i: integer;
 begin
+
+  glEnable( GL_POLYGON_SMOOTH );
+  glHint( GL_POLYGON_SMOOTH_HINT, GL_FASTEST );
+
   glpushmatrix();
   for i :=1 to length(AValue) do
   begin
     RenderChar(AValue[i]);
   end;
   glpopmatrix();
+
+  glDisable (GL_POLYGON_SMOOTH);
+
 end;
 
 function TPolygonFont.GetStringWidth(AValue: string): Single;
