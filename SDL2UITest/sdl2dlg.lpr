@@ -320,6 +320,7 @@ begin
           mouseX := event.motion.x; //absolute
           mouseY := event.motion.y;
           text1.Text:='mouseX '+inttostr(mouseX)+' mouseY '+inttostr(mouseY);
+          if GuiManager.LeftMouseClicked then text1.Text:=text1.Text+' pressed!';
 
           GuiManager.HandleMouseEvent(mousex, mousey, mousemovex, mousemovey, false, GuiManager.LeftMouseClicked, false);
         end;
@@ -426,6 +427,8 @@ begin
 end;
 
 begin
+
+  DecimalSeparator := '.';
 
   InitializeVariables;
   try
