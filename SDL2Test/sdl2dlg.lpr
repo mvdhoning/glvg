@@ -24,7 +24,7 @@ var
   time_passed: glfloat;
   framecount: integer;
   //glvg
-  polystar: TPolygon;
+  polystar: TPolygonShape;
   polyrect,bg1: TglvgRect;
   polycirc: TglvgCircle;
   polytext: TglvgText;
@@ -120,7 +120,7 @@ begin
   bg1.Init;
 
   //PATHPOLYGON TEST
-  polystar := TPolygon.Create();
+  polystar := TPolygonShape.Create();
   polystar.Style.Color.SetColor(1,1,0,1);     //first set color etc
   polystar.Style.LineWidth := 1.0;
   polystar.Style.LineColor.SetColor(1,0,1,1);
