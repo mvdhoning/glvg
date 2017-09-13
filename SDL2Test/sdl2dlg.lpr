@@ -9,7 +9,7 @@ program opengl_onewindow;
 {$APPTYPE CONSOLE}
 
 uses
-  dglOpenGL, sysutils, SDL2, glvg, uglutest;
+  dglOpenGL, sysutils, SDL2, glvg, uglutest, earcut;
 
 const
   screenwidth: integer = 640;
@@ -24,7 +24,7 @@ var
   time_passed: glfloat;
   framecount: integer;
   //glvg
-  polystar: TPolygonShape;
+  polystar: TglvgPolygon; //TPolygonShape;
   polyrect,bg1: TglvgRect;
   polycirc: TglvgCircle;
   polytext: TglvgText;
@@ -120,21 +120,35 @@ begin
   bg1.Init;
 
   //PATHPOLYGON TEST
-  polystar := TPolygonShape.Create();
+  polystar := TglvgPolygon.Create();
   polystar.Style.Color.SetColor(1,1,0,1);     //first set color etc
   polystar.Style.LineWidth := 1.0;
   polystar.Style.LineColor.SetColor(1,0,1,1);
   polystar.Style.FillType:=glvgsolid;
 
-  mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
+  //mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   //mypath := 'M100,200 C100,100 400,100 400,200';
 
   //mypath := 'M365,563 L 183,-33 L 0,563 H 101 L 183, 296 L 270, 563 H365 Z';
-  //mypath := 'M35,1 H 18 V 564 H 355 V 420 H 125 V 144 H 248 V 211 H 156 V 355 H 355 V 1 Z';
+  mypath := 'M35,1 H 18 V 564 H 355 V 420 H 125 V 144 H 248 V 211 H 156 V 355 H 355 V 1 Z';
 
   //mypath := 'M150 0 L75 200 L225 200 Z'; //Simple Triangle
 
-  polystar.Path := mypath;
+  polystar.Polygon.Path := mypath;
+
+  //polystar.Style.GradColorAngle:=90;
+  //polystar.Style.NumGradColors := 2;
+  //polystar.Style.GradColor[0].a :=1.0;
+  //polystar.Style.GradColor[0].SetColor('#FF0000');
+  //polystar.Style.GradColor[0].x:=10;
+  //polystar.Style.GradColor[1].SetColor('#00FF00');
+  //polystar.Style.GradColor[1].x:=200;
+  //polystar.Style.FillType := glvgLinearGradient;
+
+  polystar.Polygon.Id:=6;
+  polystar.Init;
+
+
 
   //next shape
   polyrect := TglvgRect.Create;
@@ -145,7 +159,9 @@ begin
   polyrect.Rx:=20.0;
   polyrect.Ry:=20.0; //Optional
   polyrect.Style.Color.SetColor(1,1,0,0.6);
-
+  writeln('Rectangle');
+  polyrect.Init;
+  polyrect.Polygon.Tesselate();
 
   polyrect.Style.GradColorAngle:=90;
   //polyrect.Style.GradColorAngleAlpha:=0;
@@ -170,6 +186,7 @@ begin
   polycirc.Style.FillType:=glvgsolid;
   polyrect.Style.LineType := glvgSolid;
   polycirc.Init;
+
 
   //vector font
   polytext := TglvgText.Create;
@@ -202,7 +219,7 @@ begin
   polytext.Style.FillType := glvgSolid; //glvgLinearGradient;
   polytext.Style.LineType := glvgNone; //glvgSolid;
 
-  polytext.Font.Size := 12; //12pt
+  polytext.Font.Size := 32; //12; //12pt
   polytext.Font.LoadFromFile('font.txt');
   //polytext.Font.Scale := 0.05; //TODO: Should be related to font-size?
   polytext.Text := 'Hello World!';
@@ -332,14 +349,14 @@ begin
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  bg1.Render;
+  //bg1.Render;
 
   //polygon render
-  //polystar.Render;
-  polystar.RenderPath;
+  polystar.Render;
+  //polystar.RenderPath;
 
   polyrect.Render;
-  polycirc.Render;
+  polycirc.Render; //renders a square fill?
 
   //render text with vector font
   //AntiAlias

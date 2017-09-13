@@ -27,6 +27,10 @@ unit glPolygon;
 
 interface
 
+//Choose either EARCUT or GLUTESS
+{$DEFINE EARCUT}
+//{$DEFINE GLUTESS}
+
 {$IFDEF FPC}
   {$MODE Delphi}
   {$modeswitch nestedprocvars}
@@ -68,9 +72,11 @@ protected
   procedure AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
   function GetPoint(I: integer): TPolygonPoint;
   function GetCount(): integer;
+  {$IFDEF GLUTESS}
   procedure tessBegin(which: GLenum);
   procedure tessEnd();
   procedure tessVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
+  {$ENDIF}
   function GetOrigin: TPolygonPoint;
   procedure SetOrigin(AValue: TPolygonPoint);
 public
@@ -98,7 +104,11 @@ public
 end;
 
 implementation
+{$IFDEF EARCUT}
+uses earcut;
+{$ENDIF}
 
+{$IFDEF GLUTESS}
 type
   TGLArrayd7 = array[0..6] of GLDouble;
   PGLArrayd7 = ^TGLArrayd7;
@@ -108,6 +118,7 @@ type
 
 threadvar
   PolygonClass: TPolygon;
+{$ENDIF}
 
 //TPolygon
 
@@ -126,6 +137,7 @@ begin
   //TODO: reimplement rendering of path
 end;
 
+{$IFDEF GLUTESS}
 procedure TPolygon.tessBegin(which: GLenum);
 begin
   //glBegin(which);
@@ -141,6 +153,7 @@ begin
   //glcolor4f(r,g,b,a);
   //glVertex3f(x,y,z);
 end;
+{$ENDIF}
 
 procedure TPolygon.AddVertex(x: single; y: single; z: single; r: single; g: single; b: single; a:single);
 begin
@@ -368,6 +381,7 @@ end;
 procedure TPolygon.Tesselate();
 var
   loop: integer;
+{$IFDEF GLUTESS}
   tess: pointer;
   test: TGLArrayd3;
   pol: PGLArrayd7;
@@ -423,8 +437,49 @@ begin
   // return output data (vertex coords and others)
   outData:= vertex;
 end;
+{$ENDIF}
+
+{$IFDEF EARCUT}
+var
+   triangles : TTriangles;
+   polygons: TMyPolygon;
+   i: integer;
+{$ENDIF}
 
 begin
+
+  {$IFDEF EARCUT}
+  if fpoints<>nil then
+  begin
+   triangles:= nil;
+   SetLength(polygons, 1);
+
+   i:=1;
+   polygons[0] := FPoints[high(FPoints)];
+   for loop := high(FPoints)-1 downto 0 do
+   begin
+     if not((polygons[i-1].x = FPoints[loop].x) and (polygons[i-1].y = FPoints[loop].y)) then
+     begin
+       SetLength(polygons, length(polygons)+1);
+       polygons[i] := FPoints[loop];
+       i:=i+1;
+     end;
+   end;
+
+   FTesselated := Triangulate(polygons,triangles);
+
+   for loop:=0 to high(triangles)-1 do
+   begin
+     AddVertex(triangles[loop][0].x, triangles[loop][0].y, triangles[loop][0].z, triangles[loop][0].r, triangles[loop][0].g, triangles[loop][0].b, triangles[loop][0].a);
+     AddVertex(triangles[loop][1].x, triangles[loop][1].y, triangles[loop][1].z, triangles[loop][1].r, triangles[loop][1].g, triangles[loop][1].b, triangles[loop][1].a);
+     AddVertex(triangles[loop][2].x, triangles[loop][2].y, triangles[loop][2].z, triangles[loop][2].r, triangles[loop][2].g, triangles[loop][2].b, triangles[loop][2].a);
+   end;
+
+   FTesselated:=true;
+  end;
+  {$ENDIF}
+
+  {$IFDEF GLUTESS}
   PolygonClass := Self;
 
   tess := gluNewTess();
@@ -464,6 +519,7 @@ begin
 
   PolygonClass := nil;
   FTesselated := true;
+  {$ENDIF}
 
 end;
 

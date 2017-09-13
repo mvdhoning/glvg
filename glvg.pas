@@ -371,6 +371,7 @@ begin
 
   if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
   begin
+    if fid=0 then fid := random(100); //quick hack to make stencil work
     if FTesselated = false then Tesselate;
     //prepare draw shape
     //turning off writing to the color buffer and depth buffer so we only
@@ -522,9 +523,15 @@ begin
       //simple rectangle with no rounded corners.
       FPolyShape.Path :=
       'M '+FloatToStr(Fx)+' '+FloatToStr(Fy)+
+
+
+
       ' L '+FloatToStr(Fx)+' '+FloatToStr(Fy+FHeight)+
       ' L '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy+FHeight)+
+
+
       ' L '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy) +
+
       ' Z';
     end
   else
@@ -679,7 +686,7 @@ end;
 
 procedure TPath.NewStroke( AFrom, ATo: TPolygonPoint );
 begin
-  AddPoint(AFrom);
+  AddPoint(AFrom); //skio
   AddPoint(ATo);
 end;
 
@@ -744,11 +751,13 @@ end;
 
 procedure TPath.AddPoint(AValue: TPolygonPoint);
 begin
+
   FCount := FCount + 1;
   SetLength(FPoints, FCount);
   FPoints[FCount-1].X := AValue.X;
   FPoints[FCount-1].Y := AValue.Y;
   FPoints[FCount-1].Z := AValue.Z;
+
 end;
 
 procedure TPath.SeTPolygonPoint(I: integer; AValue: TPolygonPoint);
