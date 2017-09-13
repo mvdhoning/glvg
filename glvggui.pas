@@ -690,6 +690,7 @@ uses dglopengl;
 
     TglvgRect(self.Elements.Element[2]).Init;
 
+
     //text
     fDrawText.X:=self.X+10;
     fDrawText.Y:=self.Y+7;

@@ -177,6 +177,7 @@ begin
       self.line1.Init;
     end;
   end;
+
 end;
 
 procedure InitializeVariables;

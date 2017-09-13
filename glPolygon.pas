@@ -456,7 +456,7 @@ begin
 
    i:=1;
    polygons[0] := FPoints[high(FPoints)];
-   for loop := high(FPoints)-1 downto 0 do
+   for loop := high(FPoints)-1 downto 1 do //quick fix skip last point as that is the same as the first
    begin
      if not((polygons[i-1].x = FPoints[loop].x) and (polygons[i-1].y = FPoints[loop].y)) then
      begin
