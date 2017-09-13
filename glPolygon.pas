@@ -467,6 +467,7 @@ begin
      end;
    end;
 
+
    //reverse the list of coords
    i:=0;
    setlength(reverse, length(polygons));

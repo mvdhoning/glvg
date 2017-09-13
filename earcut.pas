@@ -1,5 +1,7 @@
 unit earcut;
 
+//https://wiki.delphigl.com/index.php/Ear_Clipping_Triangulierung
+
 {$IFDEF FPC}
   {$MODE Delphi}
 {$ENDIF}
@@ -131,7 +133,11 @@ begin
 
   //Abbrechen, wenn nach zwei ganzen Durchläufen keine Ecke gefunden wurde, oder nur noch
   //drei Ecken übrig sind.
-  until (lastear > lst.Count*2) or (lst.Count = 3);
+  until (lastear > lst.Count*1) or (lst.Count = 3);
+
+  //TODO: next fix local intesection
+
+  //TODO:next slice in 2
 
   if lst.Count = 3 then
   begin
@@ -142,6 +148,9 @@ begin
     ATriangles[High(ATriangles)][0] := Point(p1^.X, p1^.Y, p1^.r, p1^.g, p1^.b, p1^.a);
     ATriangles[High(ATriangles)][1] := Point(p^.X, p^.Y, p^.r, p^.g, p^.b, p^.a);
     ATriangles[High(ATriangles)][2] := Point(p2^.X, p2^.Y, p2^.r, p2^.g, p2^.b, p2^.a);
+  end else
+  begin
+    writeln(lst.count);
   end;
   result := lst.Count = 3;
 
