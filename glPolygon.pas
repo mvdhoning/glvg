@@ -442,7 +442,7 @@ end;
 {$IFDEF EARCUT}
 var
    triangles : TTriangles;
-   polygons: TMyPolygon;
+   polygons, reverse: TMyPolygon;
    i: integer;
 {$ENDIF}
 
@@ -454,9 +454,10 @@ begin
    triangles:= nil;
    SetLength(polygons, 1);
 
+   //remove double coords
    i:=1;
-   polygons[0] := FPoints[high(FPoints)];
-   for loop := high(FPoints)-1 downto 1 do //quick fix skip last point as that is the same as the first
+   polygons[0] := FPoints[0]; //always add first coord
+   for loop := 1 to high(FPoints)-1 do //quick fix skip last point as that is the same as the first
    begin
      if not((polygons[i-1].x = FPoints[loop].x) and (polygons[i-1].y = FPoints[loop].y)) then
      begin
@@ -466,7 +467,18 @@ begin
      end;
    end;
 
-   FTesselated := Triangulate(polygons,triangles);
+   //reverse the list of coords
+   i:=0;
+   setlength(reverse, length(polygons));
+   for loop:=length(polygons)-1 downto 0 do
+   begin
+        reverse[i]:=polygons[loop];
+        i:=i+1;
+   end;
+   setlength(polygons,0);
+
+   FTesselated := Triangulate(reverse,triangles);
+   setlength(reverse,0);
 
    for loop:=0 to high(triangles) do
    begin
@@ -474,6 +486,7 @@ begin
      AddVertex(triangles[loop][1].x, triangles[loop][1].y, triangles[loop][1].z, triangles[loop][1].r, triangles[loop][1].g, triangles[loop][1].b, triangles[loop][1].a);
      AddVertex(triangles[loop][2].x, triangles[loop][2].y, triangles[loop][2].z, triangles[loop][2].r, triangles[loop][2].g, triangles[loop][2].b, triangles[loop][2].a);
    end;
+   setlength(triangles,0);
 
    FTesselated:=true;
   end;
