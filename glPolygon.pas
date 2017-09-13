@@ -468,7 +468,7 @@ begin
 
    FTesselated := Triangulate(polygons,triangles);
 
-   for loop:=0 to high(triangles)-1 do
+   for loop:=0 to high(triangles) do
    begin
      AddVertex(triangles[loop][0].x, triangles[loop][0].y, triangles[loop][0].z, triangles[loop][0].r, triangles[loop][0].g, triangles[loop][0].b, triangles[loop][0].a);
      AddVertex(triangles[loop][1].x, triangles[loop][1].y, triangles[loop][1].z, triangles[loop][1].r, triangles[loop][1].g, triangles[loop][1].b, triangles[loop][1].a);
