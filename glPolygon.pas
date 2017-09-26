@@ -28,8 +28,8 @@ unit glPolygon;
 interface
 
 //Choose either EARCUT or GLUTESS
-{$DEFINE EARCUT}
-//{$DEFINE GLUTESS}
+//{$DEFINE EARCUT}
+{$DEFINE GLUTESS}
 
 {$IFDEF FPC}
   {$MODE Delphi}
