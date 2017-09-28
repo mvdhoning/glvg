@@ -35,6 +35,8 @@ type
 //TODO: implement basic svg shapes using paths.
 //http://www.w3.org/TR/SVG11/paths.html
 
+//TODO: render simpel shapes from polygon points with gltrianglefan!
+
 TPath = class
 private
   fid: integer;
@@ -372,7 +374,9 @@ begin
   if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
   begin
     if fid=0 then fid := random(100); //quick hack to make stencil work
-    if FTesselated = false then Tesselate;
+
+    //if FTesselated = false then Tesselate; //TODO: no need to tesselate simple shapes?
+
     //prepare draw shape
     //turning off writing to the color buffer and depth buffer so we only
     //write to stencil buffer
@@ -478,7 +482,7 @@ procedure TglvgObject.Render;
 begin
   FPolyShape.Render;
   FPolyShape.RenderPath;
-//  FPolyShape.RenderBoundingBox; //DEBUG
+  //FPolyShape.RenderBoundingBox; //DEBUG
 end;
 
 procedure TglvgObject.SetStyle(AValue: TStyle);
@@ -1909,6 +1913,7 @@ begin
         FFontHeight := FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y;
 
       FCharGlyph[loop].FPolyShape.Id:=loop;
+      FCharGlyph[loop].FPolyShape.Tesselate(); //manually call tesselate
       FCharGlyph[loop].Init;
     end;
   end;

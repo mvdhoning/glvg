@@ -312,12 +312,23 @@ var
   loop: integer;
 begin
   //draw shape
+  if fTesselated then
+  begin
   glbegin(GL_TRIANGLES);
   for loop:=0 to FVertexCount-1 do
   begin
     glvertex3f(FVertex[loop].X,FVertex[loop].Y,FVertex[loop].Z);
   end;
   glend;
+  end else
+  begin
+  glbegin(GL_TRIANGLE_FAN); //works only for realy simple shapes
+  for loop:=0 to High(FPoints)-1 do
+  begin
+    glvertex3f(FPoints[loop].X,FPoints[loop].Y,0.0);
+  end;
+  glend;
+  end;
 end;
 
 procedure TPolygon.RenderBoundingBox;
