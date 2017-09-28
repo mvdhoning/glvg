@@ -580,6 +580,8 @@ begin
 end;
 
 procedure TglvgElipse.Init;
+const
+  KAPPA90: single = 0.5522847493; // Length proportional to radius of a cubic bezier handle for 90deg arcs.
 var
   temppath: string;
   angle: single;
@@ -591,6 +593,7 @@ begin
   //Ok Clean Up for a high speed gain ...
   self.CleanUp;
 
+  (*
   //FPolyShape.FcPath.FSplinePrecision := 1;
 
   // draw a circle from a bunch of short lines
@@ -617,6 +620,16 @@ begin
   temppath:=temppath + ' Z';
 
   FPolyShape.Path := temppath;
+  *)
+
+  //draw circle as bezier
+  //http://www.whizkidtech.redprince.net/bezier/circle/kappa/
+        FPolyShape.Path := 'M ' +FloatToStr(fx-rx) + ' ' + FloatToStr(fy) +
+		' C ' + FloatToStr(fx-rx) + ' ' + FloatToStr(fy+ry*KAPPA90) + ' ' + FloatToStr(fx-rx*KAPPA90) + ' ' + FloatToStr(fy+ry) + ' ' + FloatToStr(fx) + ' ' + FloatToStr(fy+ry) +
+		' C ' + FloatToStr(fx+rx*KAPPA90) + ' ' + FloatToStr(fy+ry) + ' ' + FloatToStr(fx+rx) + ' ' + FloatToStr(fy+ry*KAPPA90) + ' ' + FloatToStr(fx+rx) + ' ' + FloatToStr(fy) +
+		' C ' + FloatToStr(fx+rx) + ' ' + FloatToStr(fy-ry*KAPPA90) + ' ' + FloatToStr(fx+rx*KAPPA90) + ' ' + FloatToStr(fy-ry) + ' ' + FloatToStr(fx) + ' ' + FloatToStr(fy-ry) +
+		' C ' + FloatToStr(fx-rx*KAPPA90) + ' ' + FloatToStr(fy-ry) + ' ' + FloatToStr(fx-rx) + ' ' + FloatToStr(fy-ry*KAPPA90) + ' ' + FloatToStr(fx-rx) + ' ' + FloatToStr(fy) +
+		' Z';
 
   inherited init;
 end;
