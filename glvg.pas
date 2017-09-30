@@ -153,7 +153,8 @@ TPolygonShape = class(TPolygon)
   public
     constructor Create();
     Destructor Destroy(); override;
-    procedure Render();
+    procedure Render(); overload;
+    procedure Render(value, mask: integer); overload;
     procedure RenderPath();
     property Path: string read GetPathText write SetPathText;
     property Style: TStyle read FStyle write FStyle;
@@ -373,6 +374,7 @@ begin
 
   if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
   begin
+
     if fid=0 then fid := random(100); //quick hack to make stencil work
 
     //if FTesselated = false then Tesselate; //TODO: no need to tesselate simple shapes?
@@ -391,7 +393,9 @@ begin
     //this is to always pass a one to the stencil buffer where we draw
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
+    //glStencilMask ($ff); (* enable writing to stencil-buffer *)
     Inherited Render();
+    //glStencilMask (0);    (* disable writing to stencil-buffer *)
 
     //until stencil test is diabled, only write to areas where the
     //stencil buffer has a one. This fills the shape
@@ -409,6 +413,46 @@ begin
     //'default' rendering again
     glColorMask(TRUE,TRUE, TRUE, TRUE);
     glDisable(GL_STENCIL_TEST);
+  end;
+
+end;
+
+procedure TPolygonShape.Render(value, mask: integer);
+var
+  tmask: integer;
+begin
+
+  if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
+  begin
+
+    if fid=0 then fid := random(100); //quick hack to make stencil work
+
+    tmask:=value+fid or (1 shl 7{3});
+
+    (* Set to update stencil-buffer with value, when test succeeds *)
+    glStencilOp( gl_keep, gl_keep, gl_replace);
+
+    (* Constrain stencil rendering to be within parent, but "value" will be written *)
+    glStencilFunc( gl_equal, value+fid, mask);
+
+    //glStencilMask ($ff); (* enable writing to stencil-buffer *)
+
+    inherited Render;
+
+    //glStencilMask (0);    (* disable writing to stencil-buffer *)
+
+
+
+    (* Limit further rendering to be within stenciled area...
+     * including children! *)
+    glStencilFunc( gl_equal, value+fid, fid{14});
+
+     //draw fill
+    fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
+
+    (* Restore stencil state to that of parent *)
+    glStencilFunc( gl_equal, value, mask);
+
   end;
 
 end;
