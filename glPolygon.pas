@@ -84,7 +84,7 @@ public
   destructor Destroy(); override;
   procedure Add(X: single; Y: single); overload;
   procedure Add(X: single; Y: single; Z: single); overload;
-  procedure Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single); overload;
+  //procedure Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single); overload;
   procedure Render();
   procedure RenderPath();
   procedure RenderBoundingBox();
@@ -93,6 +93,7 @@ public
   procedure RenderExtruded();
   procedure CalculateBoundBox();
   procedure CleanUp();
+  function IsConvex(): boolean;
   property Id: integer read Fid write Fid;
   property Points[I: integer]: TPolygonPoint read GetPoint write SetPoint;
   property Count: integer read GetCount;
@@ -206,38 +207,39 @@ begin
 end;
 
 procedure TPolygon.Add(X: single; Y: single);
-var
-  CurColor: TPolygonPoint;
 begin
-  FTesselated := false;
-  FCount := FCount + 1;
-  SetLength(FPoints, FCount);
-  FPoints[FCount-1].X := X;
-  FPoints[FCount-1].Y := Y;
-  FPoints[FCount-1].Z := 0.0;
-
-  CurColor:=FColor;
-
-  FPoints[FCount-1].R := CurColor.R;
-  FPoints[FCount-1].G := CurColor.G;
-  FPoints[FCount-1].B := CurColor.B;
-  FPoints[FCount-1].A := CurColor.A;
+  if (FCount=0) or not((FPoints[FCount-1].x = x) and (FPoints[FCount-1].y = y)) then
+  begin
+    FTesselated := false;
+    FCount := FCount + 1;
+    SetLength(FPoints, FCount);
+    FPoints[FCount-1].X := X;
+    FPoints[FCount-1].Y := Y;
+    FPoints[FCount-1].Z := 0.0;
+    FPoints[FCount-1].R := FColor.R;
+    FPoints[FCount-1].G := FColor.G;
+    FPoints[FCount-1].B := FColor.B;
+    FPoints[FCount-1].A := FColor.A;
+  end;
 end;
 
 procedure TPolygon.Add(X: single; Y: single; Z: single);
 begin
-  FTesselated := false;
-  FCount := FCount + 1;
-  SetLength(FPoints, FCount);
-  FPoints[FCount-1].X := X;
-  FPoints[FCount-1].Y := Y;
-  FPoints[FCount-1].Z := Z;
-  FPoints[FCount-1].R := FColor.R;
-  FPoints[FCount-1].G := FColor.G;
-  FPoints[FCount-1].B := FColor.B;
-  FPoints[FCount-1].A := FColor.A;
+  if (FCount=0) or not((FPoints[FCount-1].x = x) and (FPoints[FCount-1].y = y) and (FPoints[FCount-1].z = z)) then
+  begin
+    FTesselated := false;
+    FCount := FCount + 1;
+    SetLength(FPoints, FCount);
+    FPoints[FCount-1].X := X;
+    FPoints[FCount-1].Y := Y;
+    FPoints[FCount-1].Z := Z;
+    FPoints[FCount-1].R := FColor.R;
+    FPoints[FCount-1].G := FColor.G;
+    FPoints[FCount-1].B := FColor.B;
+    FPoints[FCount-1].A := FColor.A;
+  end;
 end;
-
+(*
 procedure TPolygon.Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single);
 begin
   FTesselated := false;
@@ -251,7 +253,7 @@ begin
   FPoints[FCount-1].B := B;
   FPoints[FCount-1].A := A;
 end;
-
+*)
 Procedure TPolygon.CalculateBoundBox();
 var
   loop: integer;
@@ -326,6 +328,7 @@ begin
   for loop:=0 to High(FPoints)-1 do
   begin
     glvertex3f(FPoints[loop].X,FPoints[loop].Y,0.0);
+
   end;
   glend;
   end;
@@ -354,7 +357,7 @@ procedure TPolygon.Extrude();
 var
   loop: integer;
 begin
-  if FTesselated = false then Tesselate;
+  //if FTesselated = false then Tesselate;
 
   F3DVertexCount := FVertexCount*2;
 
@@ -387,6 +390,39 @@ begin
     glvertex3f(F3DVertex[loop].X,F3DVertex[loop].Y,F3DVertex[loop].Z);
   end;
   glend;
+end;
+
+
+function TPolygon.IsConvex(): boolean;
+var
+  i,n: integer;
+  sign: boolean;
+  dx1,dy1,dx2,dy2,zcrossproduct: double;
+begin
+  result:=true;
+
+  //if (high(fpoints)-1 < 4) then
+  //  result := true;
+
+  sign := false;
+  n := high(fpoints)-1;
+
+  for i:=0 to n do
+    begin
+        dx1 := fpoints[(i+1) mod n].X-fpoints[(i mod n)].X;
+        dy1 := fpoints[(i+1) mod n].Y-fpoints[(i mod n)].Y;
+        dx2 := fpoints[(i+2) mod n].X-fpoints[(i+1) mod n].X;
+        dy2 := fpoints[(i+2) mod n].Y-fpoints[(i+1) mod n].Y;
+        zcrossproduct := dx1*dy2 - dy1*dx2;
+        if (i = 0) then
+            sign := zcrossproduct > 0
+        else if (sign <> (zcrossproduct > 0)) then
+          begin
+             result := false;
+             break;
+          end;
+    end;
+  writeln(result)
 end;
 
 procedure TPolygon.Tesselate();

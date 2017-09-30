@@ -434,6 +434,11 @@ begin
     begin
       self.Add(FcPath.Points[i].x, FcPath.Points[i].y);
     end;
+    //tesselate non convex shapes
+    if not self.IsConvex() then
+    begin
+      Tesselate();
+    end;
   end;
 end;
 
@@ -1913,7 +1918,7 @@ begin
         FFontHeight := FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y;
 
       FCharGlyph[loop].FPolyShape.Id:=loop;
-      FCharGlyph[loop].FPolyShape.Tesselate(); //manually call tesselate
+      //FFCharGlyph[loop].FPolyShape.Tesselate(); //manually call tesselate
       FCharGlyph[loop].Init;
     end;
   end;
