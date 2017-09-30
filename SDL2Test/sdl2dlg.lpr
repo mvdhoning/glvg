@@ -423,7 +423,7 @@ begin
   glColorMask(TRUE,TRUE, TRUE, TRUE);
   glDisable(GL_STENCIL_TEST);
 
-  glClear(GL_STENCIL_BUFFER_BIT); //quick fix
+ // glClear(GL_STENCIL_BUFFER_BIT); //quick fix
   //end scissor via stencil poc
 
 
@@ -470,7 +470,7 @@ begin
   glColorMask(TRUE,TRUE, TRUE, TRUE);
   glDisable(GL_STENCIL_TEST);
 
-  glClear(GL_STENCIL_BUFFER_BIT); //quick fix
+//  glClear(GL_STENCIL_BUFFER_BIT); //quick fix
   //end scissor via stencil poc
 
   //writeln(polyrect.Polygon.id);

@@ -370,12 +370,17 @@ begin
 end;
 
 procedure TPolygonShape.Render();
+var
+  sid,smk: integer;
 begin
 
   if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
   begin
 
     if fid=0 then fid := random(100); //quick hack to make stencil work
+
+    sid:=0 or (1 shl 6{3})+1;
+    smk:=sid or (1 shl 7{3});
 
     //if FTesselated = false then Tesselate; //TODO: no need to tesselate simple shapes?
 
@@ -388,7 +393,7 @@ begin
     glEnable(GL_STENCIL_TEST);
 
     //write a one to the stencil buffer everywhere we are about to draw
-    glStencilFunc(GL_ALWAYS, fid, fid);
+    glStencilFunc(GL_ALWAYS, sid+fid, smk);
 
     //this is to always pass a one to the stencil buffer where we draw
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
@@ -399,7 +404,7 @@ begin
 
     //until stencil test is diabled, only write to areas where the
     //stencil buffer has a one. This fills the shape
-    glStencilFunc(GL_EQUAL, fid, fid);
+    glStencilFunc(GL_EQUAL, sid+fid, smk);
 
     // don't modify the contents of the stencil buffer
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -1961,7 +1966,7 @@ begin
       if FFontHeight < FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y then
         FFontHeight := FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y;
 
-      FCharGlyph[loop].FPolyShape.Id:=loop;
+      FCharGlyph[loop].FPolyShape.Id:=10;//loop;
       //FFCharGlyph[loop].FPolyShape.Tesselate(); //manually call tesselate
       FCharGlyph[loop].Init;
     end;
