@@ -9,7 +9,7 @@ program opengl_onewindow;
 {$APPTYPE CONSOLE}
 
 uses
-  dglOpenGL, sysutils, SDL2, glvg, earcut;
+  dglOpenGL, sysutils, SDL2, glvg, earcut, glPolygon;
 
 const
   screenwidth: integer = 640;
@@ -28,6 +28,9 @@ var
   polyrect,bg1: TglvgRect;
   polycirc: TglvgCircle;
   polytext: TglvgText;
+
+  scissor1: TglvgRect;
+  scissor2: TglvgRect;
 
 procedure InitializeVariables;
 begin
@@ -67,7 +70,7 @@ begin
   //set current and last time correct just before rendering
   current_time := SDL_GetTicks();
   last_time:=current_time;
-
+     (*
   //glvg
   bg1 := TglvgRect.Create;
   bg1.X:=100;
@@ -118,7 +121,7 @@ begin
   bg1.Style.LineType := glvgNone;
   bg1.Polygon.Id := 10;
   bg1.Init;
-
+   *)
   //PATHPOLYGON TEST
   polystar := TglvgPolygon.Create();
   polystar.Style.Color.SetColor(1,1,0,1);     //first set color etc
@@ -148,7 +151,7 @@ begin
   //polystar.Style.FillType := glvgLinearGradient;
 
   polystar.Polygon.Id:=6;
-  polystar.Polygon.Tesselate(); //manualy call tesselate
+  //polystar.Polygon.Tesselate(); //manualy call tesselate
   polystar.Init;
 
 
@@ -162,9 +165,9 @@ begin
   polyrect.Rx:=20.0;
   polyrect.Ry:=20.0; //Optional
   polyrect.Style.Color.SetColor(1,1,0,0.6);
-  writeln('Rectangle');
-  polyrect.Init;
-  polyrect.Polygon.Tesselate();
+  //writeln('Rectangle');
+  //polyrect.Init;
+  //polyrect.Polygon.Tesselate();
 
   polyrect.Style.GradColorAngle:=90;
   //polyrect.Style.GradColorAngleAlpha:=0;
@@ -182,6 +185,7 @@ begin
   polyrect.Polygon.Id:=7;
   //polyrect.Style.Color.a:=0.5;
   polyrect.Init;
+
 
   polycirc := TglvgCircle.Create();
   polycirc.Radius:=25;
@@ -227,6 +231,25 @@ begin
   //polytext.Font.Scale := 0.05; //TODO: Should be related to font-size?
   polytext.Text := 'Hello World!';
   polytext.Style.LineWidth:=2.0;
+
+  //scissor
+  scissor1 := TglvgRect.Create;
+  scissor1.X:= 10.0;
+  scissor1.Y:= 20.0;
+  scissor1.Width:=200.0;
+  scissor1.Height:=400.0;
+  scissor1.Style.FillType:=glvgSolid;
+  scissor1.Style.LineType := glvgNone;
+  scissor1.Init();
+
+  scissor2 := TglvgRect.Create;
+  scissor2.X:= 220.0;
+  scissor2.Y:= 20.0;
+  scissor2.Width:=200.0;
+  scissor2.Height:=400.0;
+  scissor2.Style.FillType:=glvgSolid;
+  scissor2.Style.LineType := glvgNone;
+  scissor2.Init();
 
 end;
 
@@ -333,6 +356,11 @@ end;
 
 //Render
 procedure Render;
+var
+  //MVMat    : TGLMatrixd4;
+  //p1,p2,rhs : TPolygonPoint;
+  x,y,w,h: integer;
+  sid,smk: integer;
 begin
   framecount:=framecount+1;
 
@@ -352,20 +380,113 @@ begin
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  //bg1.Render;
+  //begin scissor via stencil poc
+  //polyrect.Polygon.Id:=1;
+  //scissor.Polygon.RenderBoundingBox();
+  //  glcolor4f(1,0,0,1);
+  //scissor.Polygon.RenderStencil();
+  //  glcolor4f(0,0,1,1);
 
-  //polygon render
-  polystar.Render;
-  //polystar.RenderPath;
+  sid:=0 or (1 shl 7{3})+1;
+  writeln(sid);
+  smk:=sid or (1 shl 7{3}); //set bit 8 to value so almost al other values are a child of this
+  //writeln(smk);
+  glColorMask(FALSE, FALSE, FALSE, FALSE);
 
-  polyrect.Render;
+  //enable stencil buffer
+  glEnable(GL_STENCIL_TEST);
+
+  //write a one to the stencil buffer everywhere we are about to draw
+  glStencilFunc(GL_ALWAYS, sid, smk);
+
+  //this is to always pass a one to the stencil buffer where we draw
+  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+  //render scissor
+  scissor1.Polygon.RenderStencil();
+
+  //until stencil test is diabled, only write to areas where the
+  //stencil buffer has a one. This fills the shape
+  glStencilFunc(GL_EQUAL, sid, smk);
+
+  // don't modify the contents of the stencil buffer
+  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+  //draw colors again
+  glColorMask(TRUE,TRUE, TRUE, TRUE);
+
+  //draw shape
+  polystar.Polygon.Render(sid,smk);
+  polystar.Polygon.RenderPath();
+
+  //'default' rendering again
+  glColorMask(TRUE,TRUE, TRUE, TRUE);
+  glDisable(GL_STENCIL_TEST);
+
+  glClear(GL_STENCIL_BUFFER_BIT); //quick fix
+  //end scissor via stencil poc
+
+
+  //begin scissor via stencil poc
+  //polyrect.Polygon.Id:=1;
+  //scissor.Polygon.RenderBoundingBox();
+  //  glcolor4f(1,0,0,1);
+  //scissor.Polygon.RenderStencil();
+  //  glcolor4f(0,0,1,1);
+
+  sid:=0 or (1 shl 7{3})+1;
+  writeln(sid);
+  smk:=sid or (1 shl 7{3}); //set bit 8 to value so almost al other values are a child of this
+  //writeln(smk);
+  glColorMask(FALSE, FALSE, FALSE, FALSE);
+
+  //enable stencil buffer
+  glEnable(GL_STENCIL_TEST);
+
+  //write a one to the stencil buffer everywhere we are about to draw
+  glStencilFunc(GL_ALWAYS, sid, smk);
+
+  //this is to always pass a one to the stencil buffer where we draw
+  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+  //render scissor
+  scissor2.Polygon.RenderStencil();
+
+  //until stencil test is diabled, only write to areas where the
+  //stencil buffer has a one. This fills the shape
+  glStencilFunc(GL_EQUAL, sid, smk);
+
+  // don't modify the contents of the stencil buffer
+  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+  //draw colors again
+  glColorMask(TRUE,TRUE, TRUE, TRUE);
+
+  //draw shape
+  polystar.Polygon.Render(sid,smk);
+  polystar.Polygon.RenderPath();
+
+  //'default' rendering again
+  glColorMask(TRUE,TRUE, TRUE, TRUE);
+  glDisable(GL_STENCIL_TEST);
+
+  glClear(GL_STENCIL_BUFFER_BIT); //quick fix
+  //end scissor via stencil poc
+
+  //writeln(polyrect.Polygon.id);
+
+  polyrect.render;
+  //writeln(floattostr(polyrect.Polygon.Points[80].y));
+
   polycirc.Render; //renders a square fill?
+
 
   //render text with vector font
   //AntiAlias
   glEnable (GL_POLYGON_SMOOTH);
   polytext.Render;
   glDisable (GL_POLYGON_SMOOTH);
+
 
   glFlush(); //for opengl to do its thing
 end;
