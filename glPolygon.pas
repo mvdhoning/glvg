@@ -55,6 +55,7 @@ end;
 TPolygon = class
 protected
   fId: integer;
+  fMask: integer;
   FPoints: array of TPolygonPoint; //polygon point
   FVertex: array of TPolygonPoint; //triangulated data
   FColor: TPolygonPoint;
@@ -96,6 +97,7 @@ public
   procedure CleanUp();
   function IsConvex(): boolean;
   property Id: integer read Fid write Fid;
+  property Mask: integer read Fmask write Fmask;
   property Points[I: integer]: TPolygonPoint read GetPoint write SetPoint;
   property Count: integer read GetCount;
   property ExtrudeDepth: single read FExtrudeDepth write FExtrudeDepth;

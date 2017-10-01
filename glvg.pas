@@ -154,7 +154,7 @@ TPolygonShape = class(TPolygon)
     constructor Create();
     Destructor Destroy(); override;
     procedure Render(); overload;
-    procedure Render(value, mask: integer); overload;
+    procedure Render(parentvalue, parentmask: integer); overload;
     procedure RenderPath();
     property Path: string read GetPathText write SetPathText;
     property Style: TStyle read FStyle write FStyle;
@@ -370,8 +370,8 @@ begin
 end;
 
 procedure TPolygonShape.Render();
-var
-  sid,smk: integer;
+//var
+//  sid,smk: integer;
 begin
 
   if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
@@ -384,10 +384,10 @@ begin
     else
     begin
     //TODO: do not use stencil with flat fills
-    if fid=0 then fid := random(100); //quick hack to make stencil work
+    if fid=0 then fid := random(254); //quick hack to make stencil work
 
-    sid:=0 or (1 shl 6{3})+1;
-    smk:=sid or (1 shl 7{3});
+    //sid:=0 or (1 shl 6{3})+1;
+    //smk:=sid or (1 shl 7{3});
 
     //if FTesselated = false then Tesselate; //TODO: no need to tesselate simple shapes?
 
@@ -400,7 +400,7 @@ begin
     glEnable(GL_STENCIL_TEST);
 
     //write a one to the stencil buffer everywhere we are about to draw
-    glStencilFunc(GL_ALWAYS, sid+fid, smk);
+    glStencilFunc(GL_ALWAYS, fid, 255);
 
     //this is to always pass a one to the stencil buffer where we draw
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
@@ -411,7 +411,7 @@ begin
 
     //until stencil test is diabled, only write to areas where the
     //stencil buffer has a one. This fills the shape
-    glStencilFunc(GL_EQUAL, sid+fid, smk);
+    glStencilFunc(GL_EQUAL, fid, 255);
 
     // don't modify the contents of the stencil buffer
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -431,23 +431,18 @@ begin
 
 end;
 
-procedure TPolygonShape.Render(value, mask: integer);
-var
-  tmask: integer;
+procedure TPolygonShape.Render(parentvalue, parentmask: integer);
 begin
 
   if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
   begin
-    //TODO: do not use stencil with flat fills
-    if fid=0 then fid := random(100); //quick hack to make stencil work
-
-    tmask:=value+fid or (1 shl 7{3});
+    //TODO: do not use stencil with flat fill
 
     (* Set to update stencil-buffer with value, when test succeeds *)
     glStencilOp( gl_keep, gl_keep, gl_replace);
 
     (* Constrain stencil rendering to be within parent, but "value" will be written *)
-    glStencilFunc( gl_equal, value+fid, mask);
+    glStencilFunc( gl_equal, fid, parentmask);
 
     //glStencilMask ($ff); (* enable writing to stencil-buffer *)
 
@@ -455,17 +450,43 @@ begin
 
     //glStencilMask (0);    (* disable writing to stencil-buffer *)
 
-
-
     (* Limit further rendering to be within stenciled area...
      * including children! *)
-    glStencilFunc( gl_equal, value+fid, fid{14});
+    glStencilFunc( gl_equal, fid, fmask);
 
      //draw fill
     fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
 
     (* Restore stencil state to that of parent *)
-    glStencilFunc( gl_equal, value, mask);
+    //glColorMask(TRUE,TRUE, TRUE, TRUE);
+    glStencilFunc( gl_equal, parentvalue, parentmask);
+
+    (*
+    //write a one to the stencil buffer everywhere we are about to draw
+    glStencilFunc(GL_ALWAYS, fid, parentmask);
+
+    //this is to always pass a one to the stencil buffer where we draw
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+    Inherited Render();
+
+    //until stencil test is diabled, only write to areas where the
+    //stencil buffer has a one. This fills the shape
+    glStencilFunc(GL_EQUAL, fid, fmask);
+
+    // don't modify the contents of the stencil buffer
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+    //draw colors again
+    glColorMask(TRUE,TRUE, TRUE, TRUE);
+
+    //draw fill
+    fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
+
+    //'default' rendering again
+    glColorMask(TRUE,TRUE, TRUE, TRUE);
+    glStencilFunc( gl_equal, parentvalue, parentmask);
+    *)
 
   end;
 

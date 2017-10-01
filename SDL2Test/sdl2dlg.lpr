@@ -32,6 +32,8 @@ var
   scissor1: TglvgRect;
   scissor2: TglvgRect;
 
+  test1, test2, test3: TglvgRect;
+
 procedure InitializeVariables;
 begin
   //only for avoiding warnings
@@ -251,6 +253,64 @@ begin
   scissor2.Style.LineType := glvgNone;
   scissor2.Init();
 
+  //test shapes
+  test1 := TglvgRect.Create;
+  test1.X:= 10.0;
+  test1.Y:= 10.0;
+  test1.Width:=100.0;
+  test1.Height:=100.0;
+  test1.Rx:=20.0;
+  test1.Ry:=20.0; //Optional
+  test1.Style.Color.SetColor(1,1,0,0.6);
+  test1.Style.GradColorAngle:=90;
+  test1.Style.NumGradColors := 2;
+  test1.Style.GradColor[0].a :=1.0;
+  test1.Style.GradColor[0].SetColor('#FF0000');
+  test1.Style.GradColor[0].x:=10;
+  test1.Style.GradColor[1].SetColor('#00FF00');
+  test1.Style.GradColor[1].x:=100;
+  test1.Style.FillType := glvgLinearGradient;
+  test1.Style.LineType := glvgSolid;
+  test1.Init;
+
+  test2 := TglvgRect.Create;
+  test2.X:= 120.0;
+  test2.Y:= 10.0;
+  test2.Width:=100.0;
+  test2.Height:=100.0;
+  test2.Rx:=20.0;
+  test2.Ry:=20.0; //Optional
+  test2.Style.Color.SetColor(1,1,0,0.6);
+  test2.Style.GradColorAngle:=90;
+  test2.Style.NumGradColors := 2;
+  test2.Style.GradColor[0].a :=1.0;
+  test2.Style.GradColor[0].SetColor('#FF0000');
+  test2.Style.GradColor[0].x:=10;
+  test2.Style.GradColor[1].SetColor('#00FF00');
+  test2.Style.GradColor[1].x:=100;
+  test2.Style.FillType := glvgLinearGradient;
+  test2.Style.LineType := glvgSolid;
+  test2.Init;
+
+  test3 := TglvgRect.Create;
+  test3.X:= 10.0;
+  test3.Y:= 120.0;
+  test3.Width:=100.0;
+  test3.Height:=100.0;
+  test3.Rx:=20.0;
+  test3.Ry:=20.0; //Optional
+  test3.Style.Color.SetColor(1,1,0,0.6);
+  test3.Style.GradColorAngle:=90;
+  test3.Style.NumGradColors := 2;
+  test3.Style.GradColor[0].a :=1.0;
+  test3.Style.GradColor[0].SetColor('#FF0000');
+  test3.Style.GradColor[0].x:=10;
+  test3.Style.GradColor[1].SetColor('#00FF00');
+  test3.Style.GradColor[1].x:=100;
+  test3.Style.FillType := glvgLinearGradient;
+  test3.Style.LineType := glvgSolid;
+  test3.Init;
+
 end;
 
 procedure ResizeOpenGL(w,h: Integer);
@@ -360,8 +420,13 @@ var
   //MVMat    : TGLMatrixd4;
   //p1,p2,rhs : TPolygonPoint;
   x,y,w,h: integer;
-  sid,smk: integer;
+  pid,cid: integer;
+  a,b,c,d:integer;
+  parentmask:integer;
+  childmask:integer;
 begin
+
+
   framecount:=framecount+1;
 
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT or GL_STENCIL_BUFFER_BIT);
@@ -381,15 +446,71 @@ begin
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   //begin scissor via stencil poc
-  //polyrect.Polygon.Id:=1;
-  //scissor.Polygon.RenderBoundingBox();
-  //  glcolor4f(1,0,0,1);
-  //scissor.Polygon.RenderStencil();
-  //  glcolor4f(0,0,1,1);
+  //parentmask:=12;
+  //childmask:=14;
 
-  sid:=0 or (1 shl 7{3})+1;
-  writeln(sid);
-  smk:=sid or (1 shl 7{3}); //set bit 8 to value so almost al other values are a child of this
+
+  a:=0;
+  b:=0;
+  c:=1;
+  d:=0;
+  //pid := (A shl 24) + (B shl 16) + (C shl 8) + D;
+  pid := (C shl 4) + D;
+
+  a:=0;
+  b:=0;
+  c:=255;
+  d:=0;
+  //parentmask := (A shl 24) + (B shl 16) + (C shl 8) + D;
+  parentmask := (C shl 4) + D;
+
+  a:=0;
+  b:=0;
+  c:=255;
+  d:=255;
+  //childmask := (A shl 24) + (B shl 16) + (C shl 8) + D;
+  childmask := (C shl 4) + D;
+
+  //sid:=4;
+  //sid:=0 or (1 shl 7{3})+1;
+  writeln(pid);
+  //smk:=sid or (1 shl 7{3}); //set bit 8 to value so almost al other values are a child of this
+  //smk:=parentmask;
+
+
+  scissor1.Polygon.id:=pid;
+  scissor1.Polygon.Mask:=parentmask;
+  a:=0;
+  b:=0;
+  c:=1;
+  d:=1;
+  cid := (C shl 4) + D;
+  test1.Polygon.Id:=cid;
+  a:=0;
+  b:=0;
+  c:=1;
+  d:=2;
+  cid := (C shl 4) + D;
+  test2.Polygon.Id:=cid;
+  a:=0;
+  b:=0;
+  c:=1;
+  d:=3;
+  cid := (C shl 4) + D;
+  test3.Polygon.Id:=cid;
+  a:=0;
+  b:=0;
+  c:=1;
+  d:=4;
+  cid := (C shl 4) + D;
+  polystar.Polygon.Id:=cid;
+  polystar.Polygon.Mask:=childmask;
+  test1.Polygon.Mask:=childmask;
+  test2.Polygon.Mask:=childmask;
+  test3.Polygon.Mask:=childmask;
+
+  //scissor1.Render;
+
   //writeln(smk);
   glColorMask(FALSE, FALSE, FALSE, FALSE);
 
@@ -397,7 +518,7 @@ begin
   glEnable(GL_STENCIL_TEST);
 
   //write a one to the stencil buffer everywhere we are about to draw
-  glStencilFunc(GL_ALWAYS, sid, smk);
+  glStencilFunc(GL_ALWAYS, pid, parentmask);
 
   //this is to always pass a one to the stencil buffer where we draw
   glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
@@ -407,7 +528,7 @@ begin
 
   //until stencil test is diabled, only write to areas where the
   //stencil buffer has a one. This fills the shape
-  glStencilFunc(GL_EQUAL, sid, smk);
+  glStencilFunc(GL_EQUAL, pid, parentmask);
 
   // don't modify the contents of the stencil buffer
   glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -415,28 +536,54 @@ begin
   //draw colors again
   glColorMask(TRUE,TRUE, TRUE, TRUE);
 
-  //draw shape
-  polystar.Polygon.Render(sid,smk);
-  polystar.Polygon.RenderPath();
+  //draw contents
+  glPushMatrix();
+    glTranslateF(scissor1.X,scissor1.Y,0);
+    test1.Polygon.render(pid,parentmask);
+    test1.Polygon.renderPath();
+    test2.Polygon.render(pid,parentmask);
+    test2.Polygon.renderPath();
+    test3.Polygon.render(pid,parentmask);
+    test3.Polygon.renderPath();
+    //polystar.Polygon.Render(pid,parentmask);
+    //polystar.Polygon.render;
+    //polystar.Polygon.RenderPath();
+  glPopMatrix();
+  //polystar.Polygon.Render(sid,smk);
+  //polystar.Polygon.RenderPath();
 
   //'default' rendering again
   glColorMask(TRUE,TRUE, TRUE, TRUE);
   glDisable(GL_STENCIL_TEST);
 
- // glClear(GL_STENCIL_BUFFER_BIT); //quick fix
+  //glClear(GL_STENCIL_BUFFER_BIT); //quick fix
+
   //end scissor via stencil poc
 
 
   //begin scissor via stencil poc
-  //polyrect.Polygon.Id:=1;
-  //scissor.Polygon.RenderBoundingBox();
-  //  glcolor4f(1,0,0,1);
-  //scissor.Polygon.RenderStencil();
-  //  glcolor4f(0,0,1,1);
 
-  sid:=0 or (1 shl 7{3})+1;
-  writeln(sid);
-  smk:=sid or (1 shl 7{3}); //set bit 8 to value so almost al other values are a child of this
+
+  //sid:=0 or (1 shl 8{3})+1;
+  //writeln(sid);
+  //smk:=sid or (1 shl 8{3}); //set bit 8 to value so almost al other values are a child of this
+  a:=0;
+  b:=0;
+  c:=2;
+  d:=0;
+  //pid := (A shl 24) + (B shl 16) + (C shl 8) + D;
+  pid := (C shl 4) + D;
+  scissor2.Polygon.id:=pid;
+  scissor2.Polygon.Mask:=parentmask;
+
+  a:=0;
+  b:=0;
+  c:=2;
+  d:=1;
+  cid := (C shl 4) + D;
+  polystar.Polygon.Id:=cid;
+  polystar.Polygon.Mask:=childmask;
+   //scissor2.Polygon.RenderStencil();
   //writeln(smk);
   glColorMask(FALSE, FALSE, FALSE, FALSE);
 
@@ -444,7 +591,7 @@ begin
   glEnable(GL_STENCIL_TEST);
 
   //write a one to the stencil buffer everywhere we are about to draw
-  glStencilFunc(GL_ALWAYS, sid, smk);
+  glStencilFunc(GL_ALWAYS, pid, parentmask);
 
   //this is to always pass a one to the stencil buffer where we draw
   glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
@@ -454,7 +601,7 @@ begin
 
   //until stencil test is diabled, only write to areas where the
   //stencil buffer has a one. This fills the shape
-  glStencilFunc(GL_EQUAL, sid, smk);
+  glStencilFunc(GL_EQUAL, pid, parentmask);
 
   // don't modify the contents of the stencil buffer
   glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -463,7 +610,7 @@ begin
   glColorMask(TRUE,TRUE, TRUE, TRUE);
 
   //draw shape
-  polystar.Polygon.Render(sid,smk);
+  polystar.Polygon.Render(pid,parentmask);
   polystar.Polygon.RenderPath();
 
   //'default' rendering again
@@ -471,6 +618,7 @@ begin
   glDisable(GL_STENCIL_TEST);
 
 //  glClear(GL_STENCIL_BUFFER_BIT); //quick fix
+
   //end scissor via stencil poc
 
   //writeln(polyrect.Polygon.id);
