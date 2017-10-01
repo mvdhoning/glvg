@@ -35,8 +35,6 @@ type
 //TODO: implement basic svg shapes using paths.
 //http://www.w3.org/TR/SVG11/paths.html
 
-//TODO: render simpel shapes from polygon points with gltrianglefan!
-
 TPath = class
 private
   fid: integer;

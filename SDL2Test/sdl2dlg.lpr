@@ -530,7 +530,7 @@ begin
   glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
   //render scissor
-  scissor1.Polygon.RenderStencil();
+  scissor1.Polygon.Render();//Stencil();
 
   //until stencil test is diabled, only write to areas where the
   //stencil buffer has a one. This fills the shape
@@ -610,7 +610,7 @@ begin
   glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
   //render scissor
-  scissor2.Polygon.RenderStencil();
+  scissor2.Polygon.Render();
 
   //until stencil test is diabled, only write to areas where the
   //stencil buffer has a one. This fills the shape
