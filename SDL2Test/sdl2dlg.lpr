@@ -55,7 +55,7 @@ begin
   if SDL_Init(SDL_INIT_VIDEO) = 0 then
     Result := true;
 
-  SDL_SetRelativeMouseMode(SDL_TRUE);
+  SDL_SetRelativeMouseMode(SDL_FALSE); //show mouse
 end;
 
 procedure InitializeOpenGL;

@@ -16,7 +16,7 @@ unit glvg;
  *
  * The Initial Developer of the Original Code is
  * M van der Honing.
- * Portions created by the Initial Developer are Copyright (C) 2002-2004
+ * Portions created by the Initial Developer are Copyright (C) 2002-2017
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -31,121 +31,105 @@ uses DGLOpenGL, glBitmap, glPolygon, classes;
 
 type
 
-
-//TODO: implement basic svg shapes using paths.
-//http://www.w3.org/TR/SVG11/paths.html
-
-TPath = class
-private
-  fid: integer;
-  FCommandText: ansistring;
-  FCount: integer;
-  FPoints: array of TPolygonPoint;
-  FSplinePrecision: integer;
-  procedure NewStroke( AFrom, ATo: TPolygonPoint );
-  function EqualPoints( APoint1, APoint2: TPolygonPoint ): boolean;
-  procedure DrawCSpline( AFrom, ATo, AFromControlPoint, AToControlPoint: TPolygonPoint );
-  procedure DrawQSpline( AFrom, ATo, AControlPoint: TPolygonPoint );
-  procedure AddPoint(AValue: TPolygonPoint);
-  procedure SeTPolygonPoint(I: integer; AValue: TPolygonPoint);
-  function GeTPolygonPoint(I: integer): TPolygonPoint;
-public
-  constructor Create();
-  destructor Destroy(); override;
-  procedure Parse();
-  property Points[I: integer]: TPolygonPoint read GeTPolygonPoint write SeTPolygonPoint;
-  property Text: ansistring read fcommandtext write fcommandtext;
-  property Count: integer read FCount;
-end;
-
-TglvgFillType = (glvgNone, glvgSolid, glvgLinearGradient, glvgCircularGradient,glvgTexture,glvgPattern);
-
-TColor = class
-private
-  fx: single;
-  fy: single;
-  fz: single;
-  fr: single;
-  fg: single;
-  fb: single;
-  fa: single;
-public
-  constructor Create;
-  procedure SetColor(aR: single; aG: single; aB: single;aA: single); overload;
-  procedure SetColor(AName: string); overload;
-  function  GetColorPoint: TPolygonPoint;
-  property x: single read fx write fx;
-  property y: single read fy write fy;
-  property z: single read fz write fz;
-  property r: single read fr write fr;
-  property g: single read fg write fg;
-  property b: single read fb write fb;
-  property a: single read fa write fa;
-end;
-
-TglvgPattern= class;
-
-TStyle = class
-private
-  FPattern: TglvgPattern;
-  FColor: TColor;
-  FLineColor: TColor;
-  FGradColorAngle: single;  //TODO: consider gradient to be a seperate class
-  //FGradColorAngleAlpha: single;  //TODO: consider gradient to be a seperate class
-  FNumGradColors: integer;
-  FGradColors: array of TColor;
-//  FNumAlphaGradColors: integer;
-//  FAlphaGradColors: array of TColor;
-  FLineWidth: single;
-  FFillType: TglvgFillType;
-//  FAlphaFillType: TglvgFillType;
-  FlineType: TglvgFillType;
-//  FAlphaLineType: TglvgFillType;
-  FTextureFileName: string;
-  FTexture: TglBitmap2D;
-  FTextureId: GLuInt;
-  FTextureAngle: single;
-  procedure DrawBox(x: single; y: single; colorfrom: tcolor; colorto: tcolor);// aboundboxminpoint: TPolygonPoint; aboundboxmaxpoint: TPolygonPoint);
-  procedure DrawCircle(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
-  procedure DrawRing(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
-  procedure DrawFill(radius: single; aboundboxminpoint: TPolygonPoint; aboundboxmaxpoint: TPolygonPoint);
-//  procedure DrawAlphaFill(radius: single; aboundboxminpoint: TPolygonPoint; aboundboxmaxpoint: TPolygonPoint);
-  procedure SetGradColor(Index: integer; AValue: TColor);
-  function GetGradColor(Index: integer): TColor;
-  procedure SetNumGradColors(AValue: integer);
-//  procedure SetAlphaGradColor(Index: integer; AValue: TColor);
-//  function GetAlphaGradColor(Index: integer): TColor;
-//  procedure SetNumAlphaGradColors(AValue: integer);
-public
-  constructor Create();
-  destructor Destroy(); override;
-  property GradColorAngle: single read FGradColorAngle write FGradColorAngle;
-//  property GradColorAngleAlpha: single read FGradColorAngleAlpha write FGradColorAngleAlpha;
-  property GradColor[i: integer]: TColor read GetGradColor write SetGradColor;
-  property NumGradColors: integer read FNumGradColors write SetNumGradColors;
-//  property AlphaGradColor[i: integer]: TColor read GetAlphaGradColor write SetAlphaGradColor;
-//  property NumAlphaGradColors: integer read FNumGradColors write SetNumAlphaGradColors;
-  property Color: TColor read FColor write FColor;
-  property Pattern: TglvgPattern read FPattern write Fpattern;
-  property LineColor: TColor read FLineColor write FLineColor;
-  property LineWidth: single read FLineWidth  write FLineWidth;
-  property FillType: TglvgFillType read FFillType write FFillType;
-  property LineType: TglvgFillType read FLineType write FLineType;
-//  property AlphaFillType: TglvgFillType read FAlphaFillType write FAlphaFillType;
-//  property AlphaLineType: TglvgFillType read FAlphaLineType write FAlphaLineType;
-  property TextureAngle: single read FTextureAngle write FTextureAngle;
-  property TextureId: GluInt read FTextureId;
-  property TextureFileName: string read FTextureFileName write FTextureFileName;
-  function TrigGLTriangle(value: single): single;
-  function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPolygonPoint; gradendcolor: TPolygonPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPolygonPoint;
-  function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
-  procedure Init(); //Loads and sets texture;
-end;
-
-TPolygonShape = class(TPolygon)
+  //SVG path http://www.w3.org/TR/SVG11/paths.html
+  TPath = class
   private
-    FcPath: TPath;            //Outline
-    FStyle: TStyle;
+    FCommandText: ansistring;
+    FCount: integer;
+    FPoints: array of TPolygonPoint;
+    FSplinePrecision: integer;
+    procedure NewStroke( AFrom, ATo: TPolygonPoint );
+    function EqualPoints( APoint1, APoint2: TPolygonPoint ): boolean;
+    procedure DrawCSpline( AFrom, ATo, AFromControlPoint, AToControlPoint: TPolygonPoint );
+    procedure DrawQSpline( AFrom, ATo, AControlPoint: TPolygonPoint );
+    procedure AddPoint(AValue: TPolygonPoint);
+    procedure SeTPolygonPoint(I: integer; AValue: TPolygonPoint);
+    function GeTPolygonPoint(I: integer): TPolygonPoint;
+  public
+    constructor Create();
+    destructor Destroy(); override;
+    procedure Parse();
+    property Points[I: integer]: TPolygonPoint read GeTPolygonPoint write SeTPolygonPoint;
+    property Text: ansistring read fcommandtext write fcommandtext;
+    property Count: integer read FCount;
+  end;
+
+  TglvgFillType = (glvgNone, glvgSolid, glvgLinearGradient, glvgCircularGradient,glvgTexture,glvgPattern);
+
+  TColor = class
+  private
+    fx: single;
+    fy: single;
+    fz: single;
+    fr: single;
+    fg: single;
+    fb: single;
+    fa: single;
+  public
+    constructor Create;
+    procedure SetColor(aR: single; aG: single; aB: single;aA: single); overload;
+    procedure SetColor(AName: string); overload;
+    function  GetColorPoint: TPolygonPoint;
+    property x: single read fx write fx;
+    property y: single read fy write fy;
+    property z: single read fz write fz;
+    property r: single read fr write fr;
+    property g: single read fg write fg;
+    property b: single read fb write fb;
+    property a: single read fa write fa;
+  end;
+
+  TglvgPattern= class;
+
+  //Shape fill style
+  TStyle = class
+  private
+    //TODO: bring back support for alpha gradients independend of color gradient
+    FPattern: TglvgPattern;
+    FColor: TColor;
+    FLineColor: TColor;
+    FGradColorAngle: single;
+    FNumGradColors: integer;
+    FGradColors: array of TColor;
+    FLineWidth: single;
+    FFillType: TglvgFillType;
+    FlineType: TglvgFillType;
+    FTextureFileName: string;
+    FTexture: TglBitmap2D;
+    FTextureId: GLuInt;
+    FTextureAngle: single;
+    procedure DrawBox(x: single; y: single; colorfrom: tcolor; colorto: tcolor);
+    procedure DrawCircle(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
+    procedure DrawRing(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
+    procedure DrawFill(radius: single; aboundboxminpoint: TPolygonPoint; aboundboxmaxpoint: TPolygonPoint);
+    procedure SetGradColor(Index: integer; AValue: TColor);
+    function GetGradColor(Index: integer): TColor;
+    procedure SetNumGradColors(AValue: integer);
+  public
+    constructor Create();
+    destructor Destroy(); override;
+    property GradColorAngle: single read FGradColorAngle write FGradColorAngle;
+    property GradColor[i: integer]: TColor read GetGradColor write SetGradColor;
+    property NumGradColors: integer read FNumGradColors write SetNumGradColors;
+    property Color: TColor read FColor write FColor;
+    property Pattern: TglvgPattern read FPattern write Fpattern;
+    property LineColor: TColor read FLineColor write FLineColor;
+    property LineWidth: single read FLineWidth  write FLineWidth;
+    property FillType: TglvgFillType read FFillType write FFillType;
+    property LineType: TglvgFillType read FLineType write FLineType;
+    property TextureAngle: single read FTextureAngle write FTextureAngle;
+    property TextureId: GluInt read FTextureId;
+    property TextureFileName: string read FTextureFileName write FTextureFileName;
+    function TrigGLTriangle(value: single): single;
+    function CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPolygonPoint; gradendcolor: TPolygonPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPolygonPoint;
+    function CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
+    procedure Init(); //Loads and sets texture;
+  end;
+
+  TPolygonShape = class(TPolygon)
+  private
+    FcPath: TPath;  //SVG path of shape
+    FStyle: TStyle; //Fill style
     function GetPathText: string;
     procedure SetPathText(AValue: string);
   public
@@ -156,10 +140,12 @@ TPolygonShape = class(TPolygon)
     procedure RenderPath();
     property Path: string read GetPathText write SetPathText;
     property Style: TStyle read FStyle write FStyle;
-end;
+  end;
 
-TglvgObject = class
+  //Base vector object
+  TglvgObject = class
   private
+    //TODO: add support for line widths and color style for line
     FPolyShape: TPolygonShape;
     FName: string;
     procedure SetStyle(AValue: TStyle);
@@ -171,35 +157,34 @@ TglvgObject = class
     procedure CleanUp; virtual;
     procedure Render; virtual;
     property name: string read fname write fname;
-    //property LineWidth: single read GetLineWidth write SetLineWidth;
     property Style: TStyle read GetStyle write SetStyle;
-    //property Style: TStyle read GetStyle write SetStyle;
     property Polygon: TPolygonShape read FPolyshape write FPolyshape;
-end;
+  end;
 
-TPolygonFont = class
-     private
-        FCharGlyph: array[0..255] of TglvgObject;
-        FCharWidth: array[0..255] of integer;
-        FName: string;
-        FScale: single;
-        FSize: single;
-        FFontHeight: single;
-        FFontWidth: single;
-        FStyle: TStyle;
-        procedure SetSize(AValue: single);
-     public
-        procedure LoadFromFile(AValue: string);
-        procedure RenderChar(AValue: char);
-        procedure RenderString(AValue: string);
-        function GetStringWidth(AValue: string): Single;
-        property Name: string read FName write FName;
-        property Scale: single read FScale write FScale;
-        property Size: single read FSize write SetSize;
-        property Style: TStyle read FStyle write FStyle;
-     end;
+  //Font
+  TPolygonFont = class
+  private
+    FCharGlyph: array[0..255] of TglvgObject;
+    FCharWidth: array[0..255] of integer;
+    FName: string;
+    FScale: single;
+    FSize: single;
+    FFontHeight: single;
+    FStyle: TStyle;
+    procedure SetSize(AValue: single);
+  public
+    procedure LoadFromFile(AValue: string);
+    procedure RenderChar(AValue: char);
+    procedure RenderString(AValue: string);
+    function GetStringWidth(AValue: string): Single;
+    property Name: string read FName write FName;
+    property Scale: single read FScale write FScale;
+    property Size: single read FSize write SetSize;
+    property Style: TStyle read FStyle write FStyle;
+  end;
 
-TglvgRect = class(TglvgObject)
+  //Basic shapes
+  TglvgRect = class(TglvgObject)
   private
     Fx: Single;
     Fy: Single;
@@ -216,9 +201,9 @@ TglvgRect = class(TglvgObject)
     property Height: single read Fheight write Fheight;
     property Rx: single read Frx write Frx;
     property Ry: single read Fry write Fry;
-end;
+  end;
 
-TglvgElipse = class(TglvgObject)
+  TglvgElipse = class(TglvgObject)
   private
     Fx: Single;
     Fy: Single;
@@ -231,17 +216,17 @@ TglvgElipse = class(TglvgObject)
     property Y: single read Fy write Fy;
     property Rx: single read Frx write Frx;
     property Ry: single read Fry write Fry;
-end;
+  end;
 
-TglvgCircle = class(TglvgElipse)
+  TglvgCircle = class(TglvgElipse)
   private
     procedure SetRadius(AValue: Single);
     function  GetRadius(): single;
   public
     property Radius: single read GetRadius write SetRadius;
-end;
+ end;
 
-TglvgLine = class(TglvgObject)
+  TglvgLine = class(TglvgObject)
   private
     Fx1: Single;
     Fy1: Single;
@@ -254,81 +239,71 @@ TglvgLine = class(TglvgObject)
     property Y1: single read Fy1 write Fy1;
     property X2: single read Fx2 write Fx2;
     property Y2: single read Fy2 write Fy2;
-end;
+  end;
 
-TglvgPolyLine = class(TglvgObject) //TODO: implement or use TPolygon directly?
-private
-  points: array of TPolygonPoint;
-public
-//perform an absolute moveto operation to the first coordinate pair in the list of points
-//for each subsequent coordinate pair, perform an absolute lineto operation to that coordinate pair
-  procedure Render; override;
-end;
+  TglvgPolyLine = class(TglvgObject)
+  private
+  public
+    procedure Render; override;
+  end;
 
-TglvgPolygon = class(TglvgObject) //TODO: implement or use TPolygon directly?
-private
-  points: array of TPolygonPoint;
-public
-//perform an absolute moveto operation to the first coordinate pair in the list of points
-//for each subsequent coordinate pair, perform an absolute lineto operation to that coordinate pair
-//perform a closepath command
-end;
+  TglvgPolygon = class(TglvgObject)
+  private
+  public
+  end;
 
-TglvgText = class(TglvgObject)
-private
-  FFont: TPolygonFont;
-  FText: string;
-  FStyle: TStyle;
-  FX: single;
-  FY: single;
-public
-  Constructor Create();
-  Destructor Destroy(); override;
-  procedure Render; override;
-  property X: single read Fx write Fx;
-  property Y: single read Fy write Fy;
-  property Font: TPolygonFont read FFont write FFont;
-  property Text: string read FText write FText;
-  property Style: TStyle read FStyle write FStyle;
-end;
+  TglvgText = class(TglvgObject)
+  private
+    FFont: TPolygonFont;
+    FText: string;
+    FStyle: TStyle;
+    FX: single;
+    FY: single;
+  public
+    Constructor Create();
+    Destructor Destroy(); override;
+    procedure Render; override;
+    property X: single read Fx write Fx;
+    property Y: single read Fy write Fy;
+    property Font: TPolygonFont read FFont write FFont;
+    property Text: string read FText write FText;
+    property Style: TStyle read FStyle write FStyle;
+  end;
 
-TglvgTextPath = class(TglvgText)
-private
-public
-end;
+  TglvgGroup = class
+  private
+  protected
+    FClipShape: TglvgObject;
+    FElements: array of TglvgObject;
+    FNumElements: integer;
+    function  GetElement(Index: Integer): TglvgObject;
+    procedure SetElement(Index: Integer; Value: TglvgObject);
+  public
+    Constructor Create();
+    Destructor Destroy(); override;
+    procedure AddElement(AElement: TglvgObject);
+    procedure Render;
+    property Count: integer read FNumElements;
+    property ClipShape: TglvgObject read FClipShape write FClipShape;
+    property Element[index: integer]: TglvgObject read GetElement write SetElement;
+  published
+  end;
 
-TglvgGroup = class
-private
-protected
-  FElements: array of TglvgObject;
-  FNumElements: integer;
-  function  GetElement(Index: Integer): TglvgObject;
-  procedure SetElement(Index: Integer; Value: TglvgObject);
-public
-  Constructor Create();
-  Destructor Destroy(); override;
-  procedure AddElement(AElement: TglvgObject);
-  procedure Render;
-  property Count: integer read FNumElements;
-  property Element[index: integer]: TglvgObject read GetElement write SetElement;
-published
-end;
-
-TglvgPattern = class(TglvgGroup)
-private
-  Fid: integer;
-protected
-  FWidth: single;
-  FHeight: single;
-public
-  procedure TileRender(bbmin: TPolygonPoint; bbmax: TPolygonPoint);
-  property Width: single read FWidth write FWidth;
-  property Height: single read FHeight write FHeight;
-end;
+  TglvgPattern = class(TglvgGroup)
+  private
+  protected
+    FWidth: single;
+    FHeight: single;
+  public
+    procedure TileRender(bbmin: TPolygonPoint; bbmax: TPolygonPoint);
+    property Width: single read FWidth write FWidth;
+    property Height: single read FHeight write FHeight;
+  end;
 
 implementation
 
 uses math, sysutils;
+
 
 //TPolygonShape
 
@@ -355,7 +330,6 @@ begin
   begin
     glcolor4f(FStyle.LineColor.R,FStyle.LineColor.G,FStyle.LineColor.B, FStyle.LineColor.A);
     glLineWidth(FStyle.LineWidth);
-
     //Draw Path
     glBegin(GL_LINES);
     for loop:=0 to fcpath.Count-1 do
@@ -364,130 +338,72 @@ begin
     end;
     glEnd();
   end;
-
 end;
 
 procedure TPolygonShape.Render();
-//var
-//  sid,smk: integer;
 begin
 
   if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
   begin
-    if (FStyle.FillType = glvgSolid) then
+    if (FStyle.FillType = glvgSolid) then //do not use stencil with flat fills
     begin
       glColor4f(self.FStyle.Color.r,self.FStyle.Color.g,self.FStyle.Color.b,self.FStyle.Color.a);
       inherited render;
     end
     else
     begin
-    //TODO: do not use stencil with flat fills
-    if fid=0 then fid := random(254); //quick hack to make stencil work
-
-    //sid:=0 or (1 shl 6{3})+1;
-    //smk:=sid or (1 shl 7{3});
-
-    //if FTesselated = false then Tesselate; //TODO: no need to tesselate simple shapes?
-
-    //prepare draw shape
-    //turning off writing to the color buffer and depth buffer so we only
-    //write to stencil buffer
-    glColorMask(FALSE, FALSE, FALSE, FALSE);
-
-    //enable stencil buffer
-    glEnable(GL_STENCIL_TEST);
-
-    //write a one to the stencil buffer everywhere we are about to draw
-    glStencilFunc(GL_ALWAYS, fid, 255);
-
-    //this is to always pass a one to the stencil buffer where we draw
-    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-
-    //glStencilMask ($ff); (* enable writing to stencil-buffer *)
-    Inherited Render();
-    //glStencilMask (0);    (* disable writing to stencil-buffer *)
-
-    //until stencil test is diabled, only write to areas where the
-    //stencil buffer has a one. This fills the shape
-    glStencilFunc(GL_EQUAL, fid, 255);
-
-    // don't modify the contents of the stencil buffer
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-    //draw colors again
-    glColorMask(TRUE,TRUE, TRUE, TRUE);
-
-    //draw fill
-    fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
-
-    //'default' rendering again
-    glColorMask(TRUE,TRUE, TRUE, TRUE);
-    glDisable(GL_STENCIL_TEST);
-
+      if fid=0 then fid := random(254); //quick hack to make stencil work
+      //turning off writing to the color buffer and depth buffer so we only
+      //write to stencil buffer
+      glColorMask(FALSE, FALSE, FALSE, FALSE);
+      //enable stencil buffer
+      glEnable(GL_STENCIL_TEST);
+      //write a one to the stencil buffer everywhere we are about to draw
+      glStencilFunc(GL_ALWAYS, fid, 255);
+      //this is to always pass a one to the stencil buffer where we draw
+      glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+      Inherited Render();
+      //until stencil test is diabled, only write to areas where the
+      //stencil buffer has a one. This fills the shape
+      glStencilFunc(GL_EQUAL, fid, 255);
+      // don't modify the contents of the stencil buffer
+      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+      //draw colors again
+      glColorMask(TRUE,TRUE, TRUE, TRUE);
+      //draw fill
+      fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
+      //'default' rendering again
+      glColorMask(TRUE,TRUE, TRUE, TRUE);
+      glDisable(GL_STENCIL_TEST);
     end;
   end;
-
 end;
 
 procedure TPolygonShape.Render(parentvalue, parentmask: integer);
 begin
-
   if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
   begin
-    //TODO: do not use stencil with flat fill
-
-    (* Set to update stencil-buffer with value, when test succeeds *)
-    glStencilOp( gl_keep, gl_keep, gl_replace);
-
-    (* Constrain stencil rendering to be within parent, but "value" will be written *)
-    glStencilFunc( gl_equal, fid, parentmask);
-
-    //glStencilMask ($ff); (* enable writing to stencil-buffer *)
-
-    inherited Render;
-
-    //glStencilMask (0);    (* disable writing to stencil-buffer *)
-
-    (* Limit further rendering to be within stenciled area...
-     * including children! *)
-    glStencilFunc( gl_equal, fid, fmask);
-
-     //draw fill
-    fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
-
-    (* Restore stencil state to that of parent *)
-    //glColorMask(TRUE,TRUE, TRUE, TRUE);
-    glStencilFunc( gl_equal, parentvalue, parentmask);
-
-    (*
-    //write a one to the stencil buffer everywhere we are about to draw
-    glStencilFunc(GL_ALWAYS, fid, parentmask);
-
-    //this is to always pass a one to the stencil buffer where we draw
-    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-
-    Inherited Render();
-
-    //until stencil test is diabled, only write to areas where the
-    //stencil buffer has a one. This fills the shape
-    glStencilFunc(GL_EQUAL, fid, fmask);
-
-    // don't modify the contents of the stencil buffer
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-    //draw colors again
-    glColorMask(TRUE,TRUE, TRUE, TRUE);
-
-    //draw fill
-    fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
-
-    //'default' rendering again
-    glColorMask(TRUE,TRUE, TRUE, TRUE);
-    glStencilFunc( gl_equal, parentvalue, parentmask);
-    *)
-
+    if (FStyle.FillType = glvgSolid) then //do not use stencil with flat fills
+    begin
+      glColor4f(self.FStyle.Color.r,self.FStyle.Color.g,self.FStyle.Color.b,self.FStyle.Color.a);
+      inherited render;
+    end
+    else
+    begin
+      //Set to update stencil-buffer with value, when test succeeds
+      glStencilOp( gl_keep, gl_keep, gl_replace);
+      //Constrain stencil rendering to be within parent, but "value" will be written
+      glStencilFunc( gl_equal, fid, parentmask);
+      inherited Render;
+      //Limit further rendering to be within stenciled area...
+      //including children!
+      glStencilFunc( gl_equal, fid, fmask);
+      //draw fill
+      fStyle.DrawFill(fBoundBoxRadius,fboundboxminpoint,fboundboxmaxpoint);
+      // Restore stencil state to that of parent
+      glStencilFunc( gl_equal, parentvalue, parentmask);
+    end;
   end;
-
 end;
 
 function TPolygonShape.GetPathText: string;
@@ -519,7 +435,9 @@ begin
   end;
 end;
 
+
 //TglvgObject
+
 constructor TglvgObject.Create();
 begin
   inherited create();
@@ -535,20 +453,12 @@ end;
 procedure TglvgObject.Init;
 begin
   FPolyShape.CalculateBoundBox();
-
   if FPolyShape.Style.NumGradColors >=2 then
   begin
-
     if FPolyShape.Style.FGradColors[0].x = -1.0 then
     FPolyShape.Style.FGradColors[0].x := FPolyShape.BoundBoxMinPoint.x;
-    //if FPolyShape.Style.FGradColors[0].y = -1.0 then
-    //FPolyShape.Style.FGradColors[0].y := FPolyShape.FBoundBoxMinPoint.y;
-
     if FPolyShape.Style.FGradColors[1].x = -1.0 then
     FPolyShape.Style.FGradColors[1].x := FPolyShape.BoundBoxMaxPoint.x;
-    //    if FPolyShape.Style.FGradColors[1].y = -1.0 then
-    //FPolyShape.Style.FGradColors[1].y := FPolyShape.FBoundBoxMaxPoint.y;
-
   end;
 end;
 
@@ -564,7 +474,6 @@ procedure TglvgObject.Render;
 begin
   FPolyShape.Render;
   FPolyShape.RenderPath;
-  //FPolyShape.RenderBoundingBox; //DEBUG
 end;
 
 procedure TglvgObject.SetStyle(AValue: TStyle);
@@ -577,13 +486,14 @@ begin
   result := self.FPolyShape.Style;
 end;
 
+
 //TglvgPolyLine
+
 procedure TglvgPolyline.Render();
 begin
-  //glEnable (GL_POLYGON_SMOOTH);
   self.Polygon.RenderPath();
-  //glDisable (GL_POLYGON_SMOOTH);
 end;
+
 
 //TglvgRect
 
@@ -609,15 +519,9 @@ begin
       //simple rectangle with no rounded corners.
       FPolyShape.Path :=
       'M '+FloatToStr(Fx)+' '+FloatToStr(Fy)+
-
-
-
       ' L '+FloatToStr(Fx)+' '+FloatToStr(Fy+FHeight)+
       ' L '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy+FHeight)+
-
-
       ' L '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy) +
-
       ' Z';
     end
   else
@@ -628,20 +532,14 @@ begin
       ' Q '+FloatToStr(Fx)+' '+FloatToStr(Fy)+
       ' '+FloatToStr(Fx)+' '+FloatToStr(Fy+Fry)+
       ' L '+FloatToStr(Fx)+' '+FloatToStr(Fy+FHeight-Fry)+
-
       ' Q '+FloatToStr(Fx)+' '+FloatToStr(Fy+FHeight)+
       ' '+FloatToStr(Fx+Frx)+' '+FloatToStr(Fy+FHeight)+
-
       ' L '+FloatToStr(Fx+FWidth-Frx)+' '+FloatToStr(Fy+FHeight)+
-
       ' Q '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy+FHeight)+
       ' '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy+FHeight-Fry)+
-
       ' L '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy+Fry) +
-
       ' Q '+FloatToStr(Fx+FWidth)+' '+FloatToStr(Fy)+
       ' '+FloatToStr(Fx+FWidth-Frx)+' '+FloatToStr(Fy)+
-
       ' Z';
     end;
 
@@ -653,6 +551,7 @@ begin
 
   inherited init;
 end;
+
 
 //TglvgElipse
 
@@ -679,35 +578,6 @@ begin
   //Ok Clean Up for a high speed gain ...
   self.CleanUp;
 
-  (*
-  //FPolyShape.FcPath.FSplinePrecision := 1;
-
-  // draw a circle from a bunch of short lines
-  angle:=0.0*pi; //start point arc (0.0 for a complete circle)
-  vectorX:=FX+(Frx*sin(angle));
-  vectorY:=FY+(Fry*cos(angle));
-  vectorY1:=vectorY;
-  vectorX1:=vectorX;
-
-  temppath:='M '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
-
-  angle := angle + 0.1; //0.01;
-  while angle < 2.0*pi do   //to endpoint arc (2.0 make a complete circle)
-  begin
-    vectorX:=FX+(Frx*sin(angle));
-    vectorY:=FY+(Fry*cos(angle));
-    temppath:=temppath+' L '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
-    vectorY1:=vectorY;
-    vectorX1:=vectorX;
-    angle := angle + 0.1; //0.01;
-  end;
-
-  temppath:=temppath+' L '+FloatToStr(VectorX1)+' '+FloatToStr(VectorY1);
-  temppath:=temppath + ' Z';
-
-  FPolyShape.Path := temppath;
-  *)
-
   //draw circle as bezier
   //http://www.whizkidtech.redprince.net/bezier/circle/kappa/
         FPolyShape.Path := 'M ' +FloatToStr(fx-rx) + ' ' + FloatToStr(fy) +
@@ -719,6 +589,7 @@ begin
 
   inherited init;
 end;
+
 
 //TglvgCircle
 
@@ -732,6 +603,7 @@ function TglvgCircle.GetRadius;
 begin
   result := Frx;
 end;
+
 
 //TglvgLine
 
@@ -754,6 +626,7 @@ begin
 
   inherited init;
 end;
+
 
 //TglvgText
 
@@ -780,12 +653,13 @@ begin
   glpopmatrix();
 end;
 
+
 //TPath
 //http://www.w3.org/TR/2008/WD-SVGMobile12-20080915/paths.html#PathData
 
 procedure TPath.NewStroke( AFrom, ATo: TPolygonPoint );
 begin
-  AddPoint(AFrom); //skio
+  AddPoint(AFrom);
   AddPoint(ATo);
 end;
 
@@ -826,7 +700,6 @@ procedure TPath.DrawQSpline( AFrom, ATo, AControlPoint: TPolygonPoint );
 var
   di, i: double;
   p1,p2: TPolygonPoint;
-
 begin
   //quadratic bezier line ( (1-i)^2*pa+2*i(1-i)*pb+i^2*pc )
   di := 1.0 / FSplinePrecision;
@@ -850,13 +723,11 @@ end;
 
 procedure TPath.AddPoint(AValue: TPolygonPoint);
 begin
-
   FCount := FCount + 1;
   SetLength(FPoints, FCount);
   FPoints[FCount-1].X := AValue.X;
   FPoints[FCount-1].Y := AValue.Y;
   FPoints[FCount-1].Z := AValue.Z;
-
 end;
 
 procedure TPath.SeTPolygonPoint(I: integer; AValue: TPolygonPoint);
@@ -882,7 +753,7 @@ end;
 
 procedure TPath.Parse();
 var
-  MyParser: TParser; //TODO: collect info on TParser!!!!
+  MyParser: TParser; //https://www.freepascal.org/docs-html/rtl/classes/tparser.html
   MS: TMemoryStream;
   str: string;
   CurToken: char;
@@ -896,7 +767,6 @@ var
   FirsTPolygonPoint: TPolygonPoint;
 
 begin
-
   //clean up eventual old path
   self.FCount:=0;
   setLength(self.FPoints,0);
@@ -906,8 +776,6 @@ begin
   CurCommand := '-';
 
   //parse string (remove linebreaks etc
-
-  //FCommandText := WrapText (FCommandText , 1023 );
   FCommandText := WrapText(FCommandText, #13#10, [' '], 1); //TODO: find better way to break up large paths
 
   MS := TMemoryStream.Create;
@@ -1072,7 +940,6 @@ begin
       Begin
         if paramcount = 4 then
         begin
-
           ParamsPoint[0].x := params[0];
           ParamsPoint[0].y := params[1];
           ParamsPoint[1].x := params[2];
@@ -1087,7 +954,6 @@ begin
       Begin
         if paramcount = 4 then
         begin
-
           ParamsPoint[0].x := CurPoint.x+params[0];
           ParamsPoint[0].y := CurPoint.y+params[1];
           ParamsPoint[1].x := CurPoint.x+params[2];
@@ -1207,9 +1073,8 @@ begin
           paramcount := 0; //prevent drawing again
           CurPoint:=ParamsPoint[2];
           PrevControlPoint := ParamsPoint[1];
-        End;
-      End;
-
+        end;
+      end;
     end;
 
     PrevCommand:=CurCommand;
@@ -1219,6 +1084,7 @@ begin
   MyParser.Free();
   MS.Free();
 end;
+
 
 //TColor
 
@@ -1288,9 +1154,9 @@ begin
      r := HexToInt(Copy(Aname, 2, 2) ) / 254;
      g := HexToInt(Copy(Aname, 4, 2) ) / 254;
      b := HexToInt(Copy(Aname, 6, 2) ) / 254;
-     //a := HexToInt(Copy(Aname, 7, 8) ) /255;
- end;
+  end;
 end;
+
 
 //TStyle
 
@@ -1301,36 +1167,13 @@ begin
   FPattern := TglvgPattern.Create;
   FColor := TColor.Create;
   FLineColor := TColor.Create;
-  //FGradColorPoint1 := TColor.Create;
-  //FGradColorPoint2 := TColor.Create;
-
   FFillType := glvgnone;
   FLineType := glvgsolid;
-  //FAlphaFillType := glvgSolid;
-
   FColor.SetColor(1.0,0,0,1.0);     //first set color etc
   FLineWidth := 1.0;
   FLineColor.SetColor(1,1,1,1);
-
   FGradColorAngle := 0;
-  //FGradColorPoint1.x:=0.0; //min boundbox x
-  //FGradColorPoint1.y:=0.0; //min boundbox y
-  //FGradColorPoint1.r:=0.0;
-  //FGradColorPoint1.g:=1.0;
-  //FGradColorPoint1.b:=0.0;
-  //FGradColorPoint1.a:=1.0;
-
-  //point must make a square (e.g. bounding box of polygon)
-
-  //FGradColorPoint2.x:=1.0; //max boundbox x;
-  //FGradColorPoint2.y:=1.0; //max boundbox y;
-  //FGradColorPoint2.r:=1.0;
-  //FGradColorPoint2.g:=0.0;
-  //FGradColorPoint2.b:=0.0;
-  //FGradColorPoint2.a:=1.0;
-
   ftexture := TglBitmap2D.Create;
-
 end;
 
 destructor TStyle.Destroy;
@@ -1338,20 +1181,16 @@ begin
   FPattern.Free;
   FColor.Free;
   FLineColor.Free;
-  //FGradColorPoint1.Free;
-  //FGradColorPoint2.Free;
   FTexture.Free;
 end;
 
+function TStyle.TrigGLTriangle(value: single): single;
 const
   TRIG_FUNCTABLE_SIZE: integer = 1024;
-
-function TStyle.TrigGLTriangle(value: single): single;
 var
   temp: integer;
 begin
   temp := ROund(value * ( TRIG_FUNCTABLE_SIZE / 360 ) );
-
   if temp < TRIG_FUNCTABLE_SIZE /2 then
     begin
       result := temp / ( TRIG_FUNCTABLE_SIZE / 2 );
@@ -1360,7 +1199,6 @@ begin
     begin
       result := 1.0 - ((temp - TRIG_FUNCTABLE_SIZE / 2) / ( TRIG_FUNCTABLE_SIZE / 2 ));
     end;
-
 end;
 
 function TStyle.CalcGradColor(xpos: single; ypos: single; gradbegincolor: TPolygonPoint; gradendcolor: TPolygonPoint;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): TPolygonPoint;
@@ -1388,12 +1226,9 @@ begin
     else
     if (gradangle >=540) then
       CurPos := CurPosH * TrigGLTriangle( gradangle + 180) + (1.0-CurPosW) * TrigGLTriangle(gradangle);
-
   result.R:=gradbeginColor.R *  (1.0 - CurPos) + GradEndColor.R * CurPos;
   result.G:=gradbeginColor.G *  (1.0 - CurPos) + GradEndColor.G * CurPos;
   result.B:=gradbeginColor.B *  (1.0 - CurPos) + GradEndColor.B * CurPos;
-  //result.A:=gradbeginColor.A *  (1.0 - CurPos) + GradEndColor.A * CurPos;
-
 end;
 
 function TStyle.CalcGradAlpha(xpos: single; ypos: single; gradbeginalpha: single; gradendalpha: single;gradx1: single; grady1: single; gradx2: single; grady2: single; gradangle: single): single;
@@ -1431,58 +1266,45 @@ begin
   ftextureid := ftexture.ID;
 end;
 
-procedure TStyle.DrawBox(x: Single; y: Single; colorfrom: TColor; colorto: TColor);//; aboundboxminpoint: TPolygonPoint; aboundboxmaxpoint: TPolygonPoint);
+procedure TStyle.DrawBox(x: Single; y: Single; colorfrom: TColor; colorto: TColor);
 var
   range: TPolygonPoint;
   offset: TPolygonPoint;
-  loop: integer;
   fx,fy,tx,ty,ts,tt,fs,ft: single;
-
 begin
   //caclulate st coords
   range.x := (FTexture.Width);
   range.y := (FTexture.Height);
   offset.x := 0 + x;
   offset.y := 0 + y;
-
   fx:=colorfrom.x;
-  fy:=colorfrom.y;//ABoundBoxMinPoint.y;//-AboundBoxMaxPoint.y;
-
+  fy:=colorfrom.y;
   tx:=colorto.x;
-  ty:=colorto.y;//ABoundBoxMaxPoint.y;//+AboundBoxMaxPoint.y;
-
+  ty:=colorto.y;
   fs := (fx-offset.x) / range.x;
   ft := (fy-offset.y) / range.y;
   ts := (tx-offset.x) / range.x;
   tt := (ty-offset.y) / range.y;
-
   //draw filled boundingbox using triangles
   glBegin(GL_TRIANGLES);
-
     glTexCoord2f(fs, ft);
     glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
     glVertex3f(fx, fy, 0.0);
-
     glTexCoord2f(ts, ft);
     glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a);
     glVertex3f(tx, fy, 0.0);
-
     glTexCoord2f(ts, tt);
     glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a);
     glVertex3f(tx, ty, 0.0);
-
     glTexCoord2f(ts, tt);
     glcolor4f(colorto.r,colorto.g,colorto.b,colorto.a);
     glVertex3f(tx, ty, 0.0);
-
     glTexCoord2f(fs, tt);
     glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
     glVertex3f(fx, ty, 0.0);
-
     glTexCoord2f(fs, ft);
     glcolor4f(colorfrom.r,colorfrom.g,colorfrom.b,colorfrom.a);
     glVertex3f(fx, fy, 0.0);
-
   glEnd();
 end;
 
@@ -1496,11 +1318,9 @@ var
   i: integer;
   radius: single;
   segments:integer;
-
 begin
   segments:=80;
   radius := colorfrom.x - colorto.x;
-
   y1:=y;
   x1:=x;
   glBegin(GL_TRIANGLES);
@@ -1518,7 +1338,6 @@ begin
         x1:=x2;
       end;
   glEnd();
-
 end;
 
 procedure TStyle.DrawRing(x: single;y: single; colorfrom: tcolor; colorto: tcolor);
@@ -1533,17 +1352,15 @@ var
   MinRadius: single;
   MaxRadius: single;
   Segments: integer;
-
 begin
   MinRadius:= (x - colorfrom.x) * -1;
   MaxRadius:= (colorfrom.x - colorto.x) * -1;
-  segments := 80; //360;
+  segments := 80;
   if Time < 0 then Exit;
   t := 1;//Time / TTL;
   r2 := MinRadius + MaxRadius * (1- t);
   r1 := r2 + MaxRadius;
   if r1 < 0 then r1 := 0;
-
   glPushMatrix;
     glTranslatef(x,y,0);
     glBegin(GL_TRIANGLE_STRIP);
@@ -1572,7 +1389,7 @@ var
   roTPolygonPoint: TPolygonPoint;
   curpoint: TPolygonPoint;
   temp: TPolygonPoint;
-  curpoint2: TPolygonPoint;
+  //curpoint2: TPolygonPoint;
   colorfrom, colorto: tcolor;
 
   function RotatePoint(pPoint: TPolygonPoint; pOrigin: TPolygonPoint; Degrees: Single): TPolygonPoint;
@@ -1584,16 +1401,13 @@ var
   begin
     x := ppoint.X - porigin.X;
     y := ppoint.Y - porigin.Y;
-
     cosAng := cos(DegToRad(Degrees));
     sinAng := sin(DegToRad(Degrees));
-
     RotatePoint.X := (x * cosAng) + (y * sinAng) + porigin.X;
     RotatePoint.Y := (x * sinAng) + (y * cosAng) + porigin.Y;
   end;
 
 begin
-
   colorfrom := tcolor.Create;
   colorto := tcolor.Create;
 
@@ -1608,20 +1422,17 @@ begin
   if FillType = glvgTexture then
   begin
     FTexture.Bind();
-
     //experimental texture matrix (rotating around center)
     glMatrixMode(GL_TEXTURE);
     glLoadIdentity();
-    //glTranslatef(0.5,0.5,0.0); //no need to know the size of the texture
+    glTranslatef(0.5,0.5,0.0); //no need to know the size of the texture
     glRotatef(FTextureAngle,0.0,0.0,1.0);
-    //glTranslatef(-0.5,-0.5,0.0);
+    glTranslatef(-0.5,-0.5,0.0);
     glMatrixMode(GL_MODELVIEW);
-
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
                      GL_REPEAT  );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                      GL_REPEAT );
-
     FColor.x:=ABoundBoxMinPoint.x;
     FColor.y:=ABoundBoxMinPoint.y;
     AddColor:=TColor.Create;
@@ -1631,7 +1442,6 @@ begin
     AddColor.g:=FColor.g;
     AddColor.b:=FColor.b;
     AddColor.a:=FColor.a;
-
     DrawBox(ABoundBoxMinPoint.x, ABoundBoxMinPoint.y, FColor, AddColor);
     AddColor.Free;
     FTexture.UnBind();
@@ -1654,17 +1464,9 @@ begin
 
   if FFillType = glvgLinearGradient then
   begin
-
     cp.x:=((ABoundBoxMaxPoint.x-ABoundBoxMinPoint.x)/2);
     cp.y:=((ABoundBoxMaxPoint.y-ABoundBoxMinPoint.y)/2);
-
-//    glBegin(GL_POINTS);
-//      glcolor3f(1,1,1);
-//      glVertex3f(cp.x,cp.y,0);
-//    glEnd;
-
     roTPolygonPoint:=cp;
-
     mpmin.x:=0;
     mpmin.y:=0;
     mpmin.z:=0;
@@ -1672,7 +1474,6 @@ begin
     mpmin.g:=0;
     mpmin.b:=0;
     mpmin.a:=0;
-
     mpmax.x:=0;
     mpmax.y:=0;
     mpmax.z:=0;
@@ -1680,28 +1481,21 @@ begin
     mpmax.g:=0;
     mpmax.b:=0;
     mpmax.a:=0;
-
     roTPolygonPoint.x:=0+(aboundboxminpoint.x+cp.x);
     roTPolygonPoint.y:=0+(aboundboxminpoint.y+cp.y);
-
     temp.x:=ABoundBoxMinPoint.x;
     temp.y:=ABoundBoxMinPoint.y;
     mpmin:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle);
-
     temp.x:=ABoundBoxMaxPoint.x;
     temp.y:=ABoundBoxMaxPoint.y;
     mpmax:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle);
-
     temp.x:=cp.x;
     temp.y:=cp.y;
-
     temp.x:=FGradColors[0].x;
     temp.y:=FGradColors[0].y;
     curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
     curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
-
     glpushmatrix;
-
       if FGradColorAngle > 0  then
       begin
         gltranslatef(+cp.x, +cp.y,0);
@@ -1710,7 +1504,6 @@ begin
         gltranslatef(-ABoundBoxMinPoint.x,-ABoundBoxMinPoint.y,0);
         gltranslatef(-cp.x, -cp.y,0);
       end;
-
       //extend (clamping)
       addcolor := TColor.Create;
       addcolor.x := mpmin.x;
@@ -1719,12 +1512,10 @@ begin
       addcolor.g := FGradColors[0].g;
       addcolor.b := FGradColors[0].b;
       addcolor.a := FGradColors[0].a;
-
       temp.x:=FGradColors[0].x;
-      temp.y:=ABoundBoxMaxPoint.y;//FGradColors[0].y;
+      temp.y:=ABoundBoxMaxPoint.y;
       curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
       curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
-
       //adjust only the 'first' x cooord (only a cosmetic fix)
       colorto.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;
       colorto.y:=mpmax.y;
@@ -1732,18 +1523,15 @@ begin
       colorto.g:=FGradColors[0].g;
       colorto.b:=FGradColors[0].b;
       colorto.a:=FGradColors[0].a;
-
       DrawBox(curpoint.x, curpoint.y, AddColor, colorto);
       AddColor.Free;
-
       //draw 2 color gradient fill
       if fNumGradColors >= 2 then
       begin
         temp.x:=FGradColors[0].x;
-        temp.y:=ABoundBoxMinPoint.y;//FGradColors[0].y;
+        temp.y:=ABoundBoxMinPoint.y;
         curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
         curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
-
         //adjust only the 'first' x cooord (only a cosmetic fix)
         colorfrom.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;
         colorfrom.y:=mpmin.y;
@@ -1751,27 +1539,22 @@ begin
         colorfrom.g:=FGradColors[0].g;
         colorfrom.b:=FGradColors[0].b;
         colorfrom.a:=FGradColors[0].a;
-
         temp.x:=FGradColors[1].x;
-        temp.y:=ABoundBoxMaxPoint.y;//FGradColors[1].y;
+        temp.y:=ABoundBoxMaxPoint.y;
         curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
         curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
-
         colorto.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;
         colorto.y:=mpmax.y;
         colorto.r:=FGradColors[1].r;
         colorto.g:=FGradColors[1].g;
         colorto.b:=FGradColors[1].b;
         colorto.a:=FGradColors[1].a;
-
         temp.x:=FGradColors[0].x;
         temp.y:=FGradColors[0].y;
         curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
         curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
-
         DrawBox(curpoint.x, curpoint.y, colorfrom, colorto);
       end;
-
       //draw additional 2 color gradient fills
       if fNumGradColors >=3 then
       begin
@@ -1781,26 +1564,22 @@ begin
             temp.y:=ABoundBoxMinPoint.y;
             curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
             curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
-
             colorfrom.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;
             colorfrom.y:=mpmin.y;
             colorfrom.r:=FGradColors[i-1].r;
             colorfrom.g:=FGradColors[i-1].g;
             colorfrom.b:=FGradColors[i-1].b;
             colorfrom.a:=FGradColors[i-1].a;
-
             temp.x:=FGradColors[i].x;
-            temp.y:=ABoundBoxMaxPoint.y;//FGradColors[i].y;
+            temp.y:=ABoundBoxMaxPoint.y;
             curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
             curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
-
             colorto.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;
             colorto.y:=mpmax.y;
             colorto.r:=FGradColors[i].r;
             colorto.g:=FGradColors[i].g;
             colorto.b:=FGradColors[i].b;
             colorto.a:=FGradColors[i].a;
-
             temp.x:=FGradColors[i-1].x;
             temp.y:=FGradColors[i-1].y;
             curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
@@ -1808,7 +1587,6 @@ begin
             DrawBox(curpoint.x, curpoint.y, colorfrom, colorto);
           end;
       end;
-
       //extend (clamping)
       addcolor := TColor.Create;
       addcolor.x := mpmax.x;
@@ -1817,22 +1595,18 @@ begin
       addcolor.g := FGradColors[fNumGradColors-1].g;
       addcolor.b := FGradColors[fNumGradColors-1].b;
       addcolor.a := FGradColors[fNumGradColors-1].a;
-
       temp.x:=FGradColors[fNumGradColors-1].x;
-      temp.y:=ABoundBoxMinPoint.y;//FGradColors[fNumGradColors-1].y;
+      temp.y:=ABoundBoxMinPoint.y;
       curpoint.x:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).x;
       curpoint.y:=RotatePoint(temp, roTPolygonPoint, FGradColorAngle).y;
-
       colorfrom.x:=mpmin.x+temp.x-ABoundBoxMinPoint.x;
       colorfrom.y:=mpmin.y;
       colorfrom.r:=FGradColors[fNumGradColors-1].r;
       colorfrom.g:=FGradColors[fNumGradColors-1].g;
       colorfrom.b:=FGradColors[fNumGradColors-1].b;
       colorfrom.a:=FGradColors[fNumGradColors-1].a;
-
-      DrawBox(curpoint2.x, curpoint2.y, colorfrom, AddColor);
+      DrawBox(curpoint.x, curpoint.y, colorfrom, AddColor);
       AddColor.Free;
-
     //go back to origin
     glpopmatrix;
   end;
@@ -1841,13 +1615,11 @@ begin
   begin
     if fNumGradColors >= 2 then
       DrawCircle(FGradColors[0].x, FGradColors[0].y,FGradColors[0],FGradColors[1]);
-
     if fNumGradColors >=3 then
     begin
       for i := 2 to fNumGradColors - 1 do
         DrawRing(FGradColors[0].x, FGradColors[0].y,FGradColors[i-1],FGradColors[i]);
     end;
-
     //extend (clamping)
     if (FGradColors[fNumGradColors-1].x) < (radius*2) then
     begin
@@ -1856,10 +1628,8 @@ begin
       addcolor.r := FGradColors[fNumGradColors-1].r;
       addcolor.g := FGradColors[fNumGradColors-1].g;
       addcolor.b := FGradColors[fNumGradColors-1].b;
-      addcolor.a := FColor.a;//[fNumGradColors-1].a;
-
+      addcolor.a := FColor.a;
       DrawRing(FGradColors[0].x, FGradColors[0].y,FGradColors[fNumGradColors-1],AddColor);
-
       AddColor.Free;
     end;
   end;
@@ -1898,6 +1668,7 @@ begin
     result := self.FGradColors[Index];
 end;
 
+
 //TPolygonFont
 
 procedure TPolygonFont.SetSize(AValue: Single);
@@ -1905,7 +1676,7 @@ var
   frs: single; //font render size
   upm: single; //units per em
 begin
-  //TODO: this calculation asumes 1 unit is 1px so glortho has to be setup alike
+  //this calculation asumes 1 unit is 1px so glortho has to be setup alike
   fsize:=avalue;
   frs := (fsize/(72))*100; //assume dpi of 72
   upm := 1000; //units per em for the font
@@ -1915,39 +1686,27 @@ end;
 procedure TPolygonFont.RenderChar(AValue: char);
 begin
   glpushmatrix();
-
     glscalef(FSCALE,-FSCALE,0);
     gltranslatef(0,-FFontHeight  ,0);
     FCharGlyph[ord(AValue)].Render;
-
   glpopmatrix();
-
   glTranslatef((FCharWidth[ord(AValue)]*FSCALE), 0, 0);
-
   if AValue = ' ' then
   begin
     gltranslatef(fsize/2,0,0); //TODO: properly detemine width of space character
   end;
-
 end;
 
 procedure TPolygonFont.RenderString(AValue: string);
 var
   i: integer;
 begin
-
-  //glEnable( GL_POLYGON_SMOOTH );
-  //glHint( GL_POLYGON_SMOOTH_HINT, GL_FASTEST );
-
   glpushmatrix();
   for i :=1 to length(AValue) do
   begin
     RenderChar(AValue[i]);
   end;
   glpopmatrix();
-
-  //glDisable (GL_POLYGON_SMOOTH);
-
 end;
 
 function TPolygonFont.GetStringWidth(AValue: string): Single;
@@ -1969,37 +1728,28 @@ var
   loop: integer;
   fs: TStringList;
 begin
-
   FFontHeight := 0.0;
-
   fs := TStringList.Create;
   fs.LoadFromFile(AValue);
-
   FName := fs[0];
-
   for loop := 0 to 255 do
   begin
     FCharGlyph[loop] := TglvgObject.Create;
     FCharGlyph[loop].Style:=FStyle;
     FCharGlyph[loop].FPolyShape.FcPath.FSplinePrecision := 3; //gpu/cpu friendly and nicely rounded
-
     // Get glyphs' strokes per char
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) or ( (loop >= ord('0')) and (loop <= ord('9')) )then
     begin
       FCharGlyph[loop].FPolyShape.Path := fs.Values[inttostr(loop)];
       FCharGlyph[loop].FPolyShape.CalculateBoundBox();
       FCharWidth[loop] := Round(FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.x);
-
       //determine highest character size.
       if FFontHeight < FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y then
         FFontHeight := FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y;
-
-      FCharGlyph[loop].FPolyShape.Id:=10;//loop; //TODO: should not be set manually
-      //FFCharGlyph[loop].FPolyShape.Tesselate(); //manually call tesselate
+      FCharGlyph[loop].FPolyShape.Id:=10; //TODO: should not be set manually
       FCharGlyph[loop].Init;
     end;
   end;
-
   for loop := 0 to 255 do
   begin
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) or ( (loop >= ord('0')) and (loop <= ord('9')) )then
@@ -2009,9 +1759,9 @@ begin
       FCharGlyph[loop].Init;
     end;
   end;
-
   fs.Free;
 end;
+
 
 //TglvgGroup
 
@@ -2032,7 +1782,6 @@ begin
       FElements[i].Free;
     end;
   end;
-
   SetLength(FElements,0);
   inherited Destroy;
 end;
@@ -2065,51 +1814,34 @@ begin
   end;
 end;
 
+
+//TglvgPattern
+
 procedure TglvgPattern.TileRender(bbmin: TPolygonPoint; bbmax: TPolygonPoint);
 var
   xpos,ypos: single;
 begin
-
-//if fid<>0 then
-//begin
-//  glCallList(fid);
-//end
-//else
-//begin
-
-// create one display list
-//Fid := glGenLists(1);
-
-// compile the display list, store a triangle in it
-//glNewList(Fid, GL_COMPILE);
-
-
+  //TODO: bring back support for display lists
   if (width>0) or (height >0) then
   begin
-
-  xpos:=bbmin.x;
-  ypos:=bbmin.y;
-
-  glpushmatrix();
-  gltranslatef(xpos, ypos, 0);
-
-  repeat
-
-    glpushmatrix();
-    repeat
-      self.Render;
-      xpos:=xpos+fwidth;
-      gltranslatef(fwidth, 0, 0);
-    until (xpos>=bbmax.x);
-    glpopmatrix();
     xpos:=bbmin.x;
-    ypos:=ypos+fheight;
-    gltranslatef(0, fheight, 0);
+    ypos:=bbmin.y;
+    glpushmatrix();
+    gltranslatef(xpos, ypos, 0);
+    repeat
+      glpushmatrix();
+      repeat
+        self.Render;
+        xpos:=xpos+fwidth;
+        gltranslatef(fwidth, 0, 0);
+      until (xpos>=bbmax.x);
+      glpopmatrix();
+      xpos:=bbmin.x;
+      ypos:=ypos+fheight;
+      gltranslatef(0, fheight, 0);
     until (ypos>=bbmax.y);
-  glpopmatrix();
+    glpopmatrix();
   end;
-//  glendlist;
-//end;
 end;
 
 end.
