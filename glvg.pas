@@ -274,11 +274,13 @@ type
     property Style: TStyle read FStyle write FStyle;
   end;
 
+  TglvgGroup = class;
+
   TglvgGroup = class
   private
     Fid: integer;
   protected
-    FClipShape: TglvgObject;
+    FClipPath: TglvgGroup;
     FElements: array of TglvgObject;
     FNumElements: integer;
     function  GetElement(Index: Integer): TglvgObject;
@@ -290,7 +292,7 @@ type
     procedure Render;
     property Id: integer read fid write fid;
     property Count: integer read FNumElements;
-    property ClipShape: TglvgObject read FClipShape write FClipShape;
+    property ClipPath: TglvgGroup read FClipPath write FClipPath;
     property Element[index: integer]: TglvgObject read GetElement write SetElement;
   published
   end;
@@ -1776,7 +1778,7 @@ end;
 constructor TglvgGroup.Create;
 begin
   inherited Create;
-  FClipShape:=nil;
+  FClipPath:=nil;
   FNumElements:=0;
 end;
 
@@ -1784,7 +1786,7 @@ destructor TglvgGroup.Destroy;
 var
     i: integer;
 begin
-  FreeAndNil(fClipShape);
+  FreeAndNil(FClipPath);
   if FElements <> nil then
   begin
     For i:=FNumElements-1 downto 0 do
@@ -1822,7 +1824,7 @@ var
   c,d: integer;
   pid,cid: integer;
 begin
-  if fclipshape = nil then
+  if FClipPath = nil then
   begin
     //Normal render
     for i:=0 to FNumElements-1 do
@@ -1835,19 +1837,24 @@ begin
     c:=fid;
     d:=0;
     pid := (C shl 4) + D;
-    c:=255;
+    c:=15;//255;
     d:=0;
     parentmask := (C shl 4) + D;
-    fclipshape.Polygon.id:=pid;
-    fclipshape.Polygon.Mask:=parentmask;
+    for i:=0 to FNumElements-1 do
+      begin
+        FClipPath.Element[i].Polygon.id:=pid;
+        FClipPath.Element[i].Polygon.Mask:=parentmask;
+      end;
+    //FClipPath.Polygon.id:=pid;
+    //FClipPath.Polygon.Mask:=parentmask;
 
-    c:=255;
-    d:=255;
+    c:=15;//255;
+    d:=15;//255;
     childmask := (C shl 4) + D;
 
     for i:=0 to FNumElements-1 do
       begin
-        c:=1;
+        c:=fid;
         d:=i+1;
         cid := (C shl 4) + D;
         FElements[i].Polygon.Id:=cid;
@@ -1867,7 +1874,12 @@ begin
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
     //render scissor
-    fclipshape.Polygon.Render();;
+    for i:=0 to FNumElements-1 do
+      begin
+        FClipPath.Element[i].Polygon.Render(pid,parentmask);
+        FClipPath.Element[i].Polygon.RenderPath();
+      end;
+    //FClipPath.Polygon.Render();
 
     //until stencil test is diabled, only write to areas where the
     //stencil buffer has a one. This fills the shape
@@ -1881,7 +1893,7 @@ begin
 
     //draw contents
     //glPushMatrix();
-      //glTranslateF(fclipshape.Y,fclipshape.X,0);
+      //glTranslateF(FClipPath.Y,FClipPath.X,0);
       for i:=0 to FNumElements-1 do
       begin
         FElements[i].Polygon.Render(pid,parentmask);

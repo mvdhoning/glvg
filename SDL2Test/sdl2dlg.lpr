@@ -320,7 +320,8 @@ begin
 
   grouptest:=TglvgGroup.Create();
   grouptest.id:=2;
-  grouptest.ClipShape:=scissor2;
+  grouptest.ClipPath:=TglvgGroup.Create();//scissor2;
+  grouptest.ClipPath.AddElement(scissor2);
   grouptest.AddElement(polystar);
 
 end;
