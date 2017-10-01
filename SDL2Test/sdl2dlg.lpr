@@ -285,12 +285,13 @@ begin
   test2.Style.NumGradColors := 2;
   test2.Style.GradColor[0].a :=1.0;
   test2.Style.GradColor[0].SetColor('#FF0000');
-  test2.Style.GradColor[0].x:=10;
+  test2.Style.GradColor[0].x:=10+test2.x; //adjust color start coord according to x pos of shape
   test2.Style.GradColor[1].SetColor('#00FF00');
-  test2.Style.GradColor[1].x:=100;
+  test2.Style.GradColor[1].x:=100+test2.x;;
   test2.Style.FillType := glvgLinearGradient;
   test2.Style.LineType := glvgSolid;
   test2.Init;
+
 
   test3 := TglvgRect.Create;
   test3.X:= 10.0;
@@ -310,6 +311,7 @@ begin
   test3.Style.FillType := glvgLinearGradient;
   test3.Style.LineType := glvgSolid;
   test3.Init;
+
 
 end;
 
@@ -473,7 +475,7 @@ begin
 
   //sid:=4;
   //sid:=0 or (1 shl 7{3})+1;
-  writeln(pid);
+  //writeln(pid);
   //smk:=sid or (1 shl 7{3}); //set bit 8 to value so almost al other values are a child of this
   //smk:=parentmask;
 
@@ -498,13 +500,13 @@ begin
   d:=3;
   cid := (C shl 4) + D;
   test3.Polygon.Id:=cid;
-  a:=0;
-  b:=0;
-  c:=1;
-  d:=4;
-  cid := (C shl 4) + D;
-  polystar.Polygon.Id:=cid;
-  polystar.Polygon.Mask:=childmask;
+  //a:=0;
+  //b:=0;
+  //c:=1;
+  //d:=4;
+  //cid := (C shl 4) + D;
+  //polystar.Polygon.Id:=cid;
+  //polystar.Polygon.Mask:=childmask;
   test1.Polygon.Mask:=childmask;
   test2.Polygon.Mask:=childmask;
   test3.Polygon.Mask:=childmask;
@@ -543,6 +545,7 @@ begin
     test1.Polygon.renderPath();
     test2.Polygon.render(pid,parentmask);
     test2.Polygon.renderPath();
+    //test2.Polygon.RenderBoundingBox();
     test3.Polygon.render(pid,parentmask);
     test3.Polygon.renderPath();
     //polystar.Polygon.Render(pid,parentmask);

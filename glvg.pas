@@ -1614,9 +1614,9 @@ begin
     //experimental texture matrix (rotating around center)
     glMatrixMode(GL_TEXTURE);
     glLoadIdentity();
-    glTranslatef(0.5,0.5,0.0); //no need to know the size of the texture
+    //glTranslatef(0.5,0.5,0.0); //no need to know the size of the texture
     glRotatef(FTextureAngle,0.0,0.0,1.0);
-    glTranslatef(-0.5,-0.5,0.0);
+    //glTranslatef(-0.5,-0.5,0.0);
     glMatrixMode(GL_MODELVIEW);
 
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
