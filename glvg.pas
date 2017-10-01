@@ -146,6 +146,8 @@ type
   TglvgObject = class
   private
     //TODO: add support for line widths and color style for line
+    Fx: Single;
+    Fy: Single;
     FPolyShape: TPolygonShape;
     FName: string;
     procedure SetStyle(AValue: TStyle);
@@ -156,6 +158,8 @@ type
     procedure Init; virtual;
     procedure CleanUp; virtual;
     procedure Render; virtual;
+    property X: single read Fx write Fx;
+    property Y: single read Fy write Fy;
     property name: string read fname write fname;
     property Style: TStyle read GetStyle write SetStyle;
     property Polygon: TPolygonShape read FPolyshape write FPolyshape;
@@ -186,8 +190,8 @@ type
   //Basic shapes
   TglvgRect = class(TglvgObject)
   private
-    Fx: Single;
-    Fy: Single;
+    //Fx: Single;
+    //Fy: Single;
     Fwidth: Single;
     Fheight: Single;
     Frx: Single;
@@ -195,8 +199,8 @@ type
   public
     Constructor Create();
     procedure Init; override;
-    property X: single read Fx write Fx;
-    property Y: single read Fy write Fy;
+    //property X: single read Fx write Fx;
+    //property Y: single read Fy write Fy;
     property Width: single read Fwidth write Fwidth;
     property Height: single read Fheight write Fheight;
     property Rx: single read Frx write Frx;
@@ -205,15 +209,15 @@ type
 
   TglvgElipse = class(TglvgObject)
   private
-    Fx: Single;
-    Fy: Single;
+    //Fx: Single;
+    //Fy: Single;
     Frx: Single;
     Fry: Single;
   public
     Constructor Create();
     procedure Init; override;
-    property X: single read Fx write Fx;
-    property Y: single read Fy write Fy;
+    //property X: single read Fx write Fx;
+    //property Y: single read Fy write Fy;
     property Rx: single read Frx write Frx;
     property Ry: single read Fry write Fry;
   end;
@@ -228,15 +232,15 @@ type
 
   TglvgLine = class(TglvgObject)
   private
-    Fx1: Single;
-    Fy1: Single;
+    //Fx1: Single;
+    //Fy1: Single;
     Fx2: Single;
     Fy2: Single;
   public
     Constructor Create();
     procedure Init; override;
-    property X1: single read Fx1 write Fx1;
-    property Y1: single read Fy1 write Fy1;
+    //property X1: single read Fx1 write Fx1;
+    //property Y1: single read Fy1 write Fy1;
     property X2: single read Fx2 write Fx2;
     property Y2: single read Fy2 write Fy2;
   end;
@@ -257,14 +261,14 @@ type
     FFont: TPolygonFont;
     FText: string;
     FStyle: TStyle;
-    FX: single;
-    FY: single;
+    //FX: single;
+    //FY: single;
   public
     Constructor Create();
     Destructor Destroy(); override;
     procedure Render; override;
-    property X: single read Fx write Fx;
-    property Y: single read Fy write Fy;
+    //property X: single read Fx write Fx;
+    //property Y: single read Fy write Fy;
     property Font: TPolygonFont read FFont write FFont;
     property Text: string read FText write FText;
     property Style: TStyle read FStyle write FStyle;
@@ -272,6 +276,7 @@ type
 
   TglvgGroup = class
   private
+    Fid: integer;
   protected
     FClipShape: TglvgObject;
     FElements: array of TglvgObject;
@@ -283,6 +288,7 @@ type
     Destructor Destroy(); override;
     procedure AddElement(AElement: TglvgObject);
     procedure Render;
+    property Id: integer read fid write fid;
     property Count: integer read FNumElements;
     property ClipShape: TglvgObject read FClipShape write FClipShape;
     property Element[index: integer]: TglvgObject read GetElement write SetElement;
@@ -442,6 +448,8 @@ constructor TglvgObject.Create();
 begin
   inherited create();
   FPolyShape:= TPolygonShape.Create;
+  Fx:= 0.0;
+  Fy:= 0.0;
 end;
 
 destructor TglvgObject.Destroy;
@@ -610,8 +618,8 @@ end;
 constructor TglvgLine.Create;
 begin
   inherited Create;
-  Fx1:= 0.0;
-  Fy1:= 0.0;
+  //Fx1:= 0.0;
+  //Fy1:= 0.0;
   Fx2:= 0.0;
   Fy2:= 0.0;
 end;
@@ -621,7 +629,7 @@ begin
   //Ok Clean Up for a high speed gain ...
   self.CleanUp;
 
-  FPolyShape.Path := 'M '+FloatToStr(Fx1)+ ' '+FloatToStr(Fy1)+
+  FPolyShape.Path := 'M '+FloatToStr(Fx)+ ' '+FloatToStr(Fy)+
                      'L '+FloatToStr(Fx2)+ ' '+FloatToStr(Fy2);
 
   inherited init;
@@ -1768,6 +1776,7 @@ end;
 constructor TglvgGroup.Create;
 begin
   inherited Create;
+  FClipShape:=nil;
   FNumElements:=0;
 end;
 
@@ -1775,6 +1784,7 @@ destructor TglvgGroup.Destroy;
 var
     i: integer;
 begin
+  FreeAndNil(fClipShape);
   if FElements <> nil then
   begin
     For i:=FNumElements-1 downto 0 do
@@ -1807,10 +1817,81 @@ end;
 procedure TglvgGroup.Render;
 var
   i: integer;
+  parentmask: integer;
+  childmask: integer;
+  c,d: integer;
+  pid,cid: integer;
 begin
-  for i:=0 to FNumElements-1 do
+  if fclipshape = nil then
   begin
-    FElements[i].Render;
+    //Normal render
+    for i:=0 to FNumElements-1 do
+    begin
+      FElements[i].Render;
+    end;
+  end
+  else
+  begin
+    c:=fid;
+    d:=0;
+    pid := (C shl 4) + D;
+    c:=255;
+    d:=0;
+    parentmask := (C shl 4) + D;
+    fclipshape.Polygon.id:=pid;
+    fclipshape.Polygon.Mask:=parentmask;
+
+    c:=255;
+    d:=255;
+    childmask := (C shl 4) + D;
+
+    for i:=0 to FNumElements-1 do
+      begin
+        c:=1;
+        d:=i+1;
+        cid := (C shl 4) + D;
+        FElements[i].Polygon.Id:=cid;
+        FElements[i].Polygon.Mask:=childmask;
+      end;
+
+    //Render with scissor clipping
+    glColorMask(FALSE, FALSE, FALSE, FALSE);
+
+    //enable stencil buffer
+    glEnable(GL_STENCIL_TEST);
+
+    //write a one to the stencil buffer everywhere we are about to draw
+    glStencilFunc(GL_ALWAYS, pid, parentmask);
+
+    //this is to always pass a one to the stencil buffer where we draw
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+    //render scissor
+    fclipshape.Polygon.Render();;
+
+    //until stencil test is diabled, only write to areas where the
+    //stencil buffer has a one. This fills the shape
+    glStencilFunc(GL_EQUAL, pid, parentmask);
+
+    // don't modify the contents of the stencil buffer
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+    //draw colors again
+    glColorMask(TRUE,TRUE, TRUE, TRUE);
+
+    //draw contents
+    //glPushMatrix();
+      //glTranslateF(fclipshape.Y,fclipshape.X,0);
+      for i:=0 to FNumElements-1 do
+      begin
+        FElements[i].Polygon.Render(pid,parentmask);
+        FElements[i].Polygon.RenderPath();
+      end;
+    //glPopMatrix();
+
+    //'default' rendering again
+    glColorMask(TRUE,TRUE, TRUE, TRUE);
+    glDisable(GL_STENCIL_TEST);
   end;
 end;
 

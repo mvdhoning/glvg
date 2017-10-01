@@ -36,6 +36,8 @@ var
   hc1: single;
     up: boolean;
 
+  grouptest: TglvgGroup;
+
 procedure InitializeVariables;
 begin
   //only for avoiding warnings
@@ -314,7 +316,12 @@ begin
   test3.Style.FillType := glvgLinearGradient;
   test3.Style.LineType := glvgSolid;
   test3.Init;
-   up:=false;
+  up:=false;
+
+  grouptest:=TglvgGroup.Create();
+  grouptest.id:=2;
+  grouptest.ClipShape:=scissor2;
+  grouptest.AddElement(polystar);
 
 end;
 
@@ -575,7 +582,7 @@ begin
 
 
   //begin scissor via stencil poc
-
+  (*
 
   //sid:=0 or (1 shl 8{3})+1;
   //writeln(sid);
@@ -631,7 +638,8 @@ begin
   glDisable(GL_STENCIL_TEST);
 
 //  glClear(GL_STENCIL_BUFFER_BIT); //quick fix
-
+  *)
+  grouptest.render;
   //end scissor via stencil poc
 
   //writeln(polyrect.Polygon.id);
