@@ -376,7 +376,14 @@ begin
 
   if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
   begin
-
+    if (FStyle.FillType = glvgSolid) then
+    begin
+      glColor4f(self.FStyle.Color.r,self.FStyle.Color.g,self.FStyle.Color.b,self.FStyle.Color.a);
+      inherited render;
+    end
+    else
+    begin
+    //TODO: do not use stencil with flat fills
     if fid=0 then fid := random(100); //quick hack to make stencil work
 
     sid:=0 or (1 shl 6{3})+1;
@@ -418,6 +425,8 @@ begin
     //'default' rendering again
     glColorMask(TRUE,TRUE, TRUE, TRUE);
     glDisable(GL_STENCIL_TEST);
+
+    end;
   end;
 
 end;
@@ -429,7 +438,7 @@ begin
 
   if FStyle.FillType <> glvgNone then //no need to tesselate something that is not shown
   begin
-
+    //TODO: do not use stencil with flat fills
     if fid=0 then fid := random(100); //quick hack to make stencil work
 
     tmask:=value+fid or (1 shl 7{3});
@@ -1966,7 +1975,7 @@ begin
       if FFontHeight < FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y then
         FFontHeight := FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y;
 
-      FCharGlyph[loop].FPolyShape.Id:=10;//loop;
+      FCharGlyph[loop].FPolyShape.Id:=10;//loop; //TODO: should not be set manually
       //FFCharGlyph[loop].FPolyShape.Tesselate(); //manually call tesselate
       FCharGlyph[loop].Init;
     end;
