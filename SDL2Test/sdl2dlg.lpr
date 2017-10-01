@@ -33,6 +33,8 @@ var
   scissor2: TglvgRect;
 
   test1, test2, test3: TglvgRect;
+  hc1: single;
+    up: boolean;
 
 procedure InitializeVariables;
 begin
@@ -243,6 +245,7 @@ begin
   scissor1.Style.FillType:=glvgSolid;
   scissor1.Style.LineType := glvgNone;
   scissor1.Init();
+  hc1:=scissor1.y;
 
   scissor2 := TglvgRect.Create;
   scissor2.X:= 220.0;
@@ -311,7 +314,7 @@ begin
   test3.Style.FillType := glvgLinearGradient;
   test3.Style.LineType := glvgSolid;
   test3.Init;
-
+   up:=false;
 
 end;
 
@@ -426,6 +429,7 @@ var
   a,b,c,d:integer;
   parentmask:integer;
   childmask:integer;
+
 begin
 
 
@@ -540,7 +544,7 @@ begin
 
   //draw contents
   glPushMatrix();
-    glTranslateF(scissor1.X,scissor1.Y,0);
+    glTranslateF(scissor1.Y,hc1,0);
     test1.Polygon.render(pid,parentmask);
     test1.Polygon.renderPath();
     test2.Polygon.render(pid,parentmask);
@@ -552,6 +556,12 @@ begin
     //polystar.Polygon.render;
     //polystar.Polygon.RenderPath();
   glPopMatrix();
+  if up then
+     hc1:=hc1+0.01
+  else
+     hc1:=hc1-0.01;
+  if hc1<=0 then up:=true;
+  if hc1>=scissor1.y+scissor1.Height-10 then up:=false;
   //polystar.Polygon.Render(sid,smk);
   //polystar.Polygon.RenderPath();
 
