@@ -9,7 +9,7 @@ program opengl_onewindow;
 {$APPTYPE CONSOLE}
 
 uses
-  dglOpenGL, sysutils, SDL2, glvg, earcut, glPolygon;
+  dglOpenGL, sysutils, SDL2, glvg;
 
 const
   screenwidth: integer = 640;

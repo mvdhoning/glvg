@@ -16,7 +16,7 @@ unit glPolygon;
  *
  * The Initial Developer of the Original Code is
  * M van der Honing.
- * Portions created by the Initial Developer are Copyright (C) 2002-2004
+ * Portions created by the Initial Developer are Copyright (C) 2002-2017
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -85,9 +85,7 @@ public
   destructor Destroy(); override;
   procedure Add(X: single; Y: single); overload;
   procedure Add(X: single; Y: single; Z: single); overload;
-  //procedure Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single); overload;
   procedure Render();
-
   procedure RenderPath();
   procedure RenderBoundingBox();
   procedure Tesselate();
@@ -108,10 +106,10 @@ public
 end;
 
 implementation
+
 {$IFDEF EARCUT}
 uses earcut;
 {$ENDIF}
-
 {$IFDEF GLUTESS}
 type
   TGLArrayd7 = array[0..6] of GLDouble;
@@ -123,6 +121,7 @@ type
 threadvar
   PolygonClass: TPolygon;
 {$ENDIF}
+
 
 //TPolygon
 
@@ -242,21 +241,7 @@ begin
     FPoints[FCount-1].A := FColor.A;
   end;
 end;
-(*
-procedure TPolygon.Add(X: single; Y: single; Z: single; R: single; G: single; B: single; A: single);
-begin
-  FTesselated := false;
-  FCount := FCount + 1;
-  SetLength(FPoints, FCount);
-  FPoints[FCount-1].X := X;
-  FPoints[FCount-1].Y := Y;
-  FPoints[FCount-1].Z := Z;
-  FPoints[FCount-1].R := R;
-  FPoints[FCount-1].G := G;
-  FPoints[FCount-1].B := B;
-  FPoints[FCount-1].A := A;
-end;
-*)
+
 Procedure TPolygon.CalculateBoundBox();
 var
   loop: integer;
@@ -301,7 +286,6 @@ begin
   dx := thirdpoint.x;
   dy := thirdpoint.y;
   FBoundBoxRadius := sqrt(dx*dx) + sqrt(dy*dy) /2;
-
 end;
 
 procedure TPolygon.CleanUp();
@@ -331,7 +315,6 @@ begin
   for loop:=0 to High(FPoints)-1 do
   begin
     glvertex3f(FPoints[loop].X,FPoints[loop].Y,0.0);
-
   end;
   glend;
   end;
@@ -360,8 +343,6 @@ procedure TPolygon.Extrude();
 var
   loop: integer;
 begin
-  //if FTesselated = false then Tesselate;
-
   F3DVertexCount := FVertexCount*2;
 
   //copy front faces
@@ -384,8 +365,6 @@ Procedure TPolygon.RenderExtruded();
 var
   loop: integer;
 begin
-  //if FTesselated = false then Tesselate;
-
   glbegin(GL_TRIANGLES);
   for loop:=0 to F3DVertexCount-1 do
   begin
@@ -394,7 +373,6 @@ begin
   end;
   glend;
 end;
-
 
 function TPolygon.IsConvex(): boolean;
 var
@@ -430,6 +408,7 @@ end;
 procedure TPolygon.Tesselate();
 var
   loop: integer;
+
 {$IFDEF GLUTESS}
   tess: pointer;
   test: TGLArrayd3;
@@ -452,10 +431,8 @@ end;
 
 procedure iTessVertexCB(data: PGLArrayd7); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
 begin
-  //PolygonClass.tessVertex(data[0], data[1], data[2], data[3], data[4], data[5],0);
   PolygonClass.AddVertex(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
 end;
-
 
 procedure iTessCombineCB(newVertex : PGLArrayd7; neighborVertex : Pointer; neighborWeight : Pointer; var outData : Pointer); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
 var
@@ -487,7 +464,6 @@ begin
   outData:= vertex;
 end;
 {$ENDIF}
-
 {$IFDEF EARCUT}
 var
    triangles : TTriangles;
@@ -541,7 +517,6 @@ begin
    FTesselated:=true;
   end;
   {$ENDIF}
-
   {$IFDEF GLUTESS}
   PolygonClass := Self;
 
