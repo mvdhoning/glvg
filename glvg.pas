@@ -336,15 +336,18 @@ var
 begin
   if FStyle.LineType <> glvgNone then
   begin
+
     glcolor4f(FStyle.LineColor.R,FStyle.LineColor.G,FStyle.LineColor.B, FStyle.LineColor.A);
     glLineWidth(FStyle.LineWidth);
     //Draw Path
+    glEnable (GL_POLYGON_SMOOTH);
     glBegin(GL_LINES);
     for loop:=0 to fcpath.Count-1 do
     begin
       glVertex2f(fcpath.Points[loop].x, fcpath.Points[loop].y);
     end;
     glEnd();
+    glDisable (GL_POLYGON_SMOOTH);
   end;
 end;
 
@@ -785,6 +788,28 @@ begin
   paramcount := 0;
   CurCommand := '-';
 
+  //add spaces to commands to prevent parsing errors
+  FCommandText := stringreplace(FCommandText, 'M', ' M ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'm', ' m ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'L', ' L ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'l', ' l ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'H', ' H ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'h', ' h ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'V', ' V ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'v', ' v ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'C', ' C ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'c', ' c ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'S', ' S ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 's', ' s ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'Q', ' Q ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'q', ' q ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'T', ' T ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 't', ' t ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'A', ' A ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'a', ' a ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'Z', ' Z ', [rfReplaceAll]);
+  FCommandText := stringreplace(FCommandText, 'z', ' z ', [rfReplaceAll]);
+
   //parse string (remove linebreaks etc
   FCommandText := WrapText(FCommandText, #13#10, [' '], 1); //TODO: find better way to break up large paths
 
@@ -841,6 +866,7 @@ begin
     end;
 
     //detect command: (Uppercase is absolute coords vs Lowercase relative coords)
+    //TODO: add support for arc command A a
     Case CurCommand of
       // Move To (M m)
       'M':
@@ -888,6 +914,7 @@ begin
           CurPoint := ParamsPoint[0];
         end;
       End;
+      // horizontal lineto
       'H':
       Begin
         if paramcount = 1 then
@@ -910,6 +937,7 @@ begin
           CurPoint := ParamsPoint[0];
         end;
       End;
+      // vertical lineto
       'V':
       Begin
         if paramcount = 1 then
@@ -1035,6 +1063,7 @@ begin
           PrevControlPoint := ParamsPoint[1];
         End;
       End;
+      // smooth curveto
       'S':
       Begin
         if paramcount = 4 then
