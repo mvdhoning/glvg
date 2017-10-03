@@ -778,7 +778,8 @@ var
   CurPoint: TPolygonPoint;
   PrevControlPoint: TPolygonPoint;
   FirsTPolygonPoint: TPolygonPoint;
-
+  i:integer;
+  newCommandText: string;
 begin
   //clean up eventual old path
   self.FCount:=0;
@@ -789,35 +790,22 @@ begin
   CurCommand := '-';
 
   //add spaces to commands to prevent parsing errors
-  FCommandText := stringreplace(FCommandText, 'M', ' M ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'm', ' m ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'L', ' L ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'l', ' l ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'H', ' H ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'h', ' h ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'V', ' V ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'v', ' v ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'C', ' C ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'c', ' c ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'S', ' S ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 's', ' s ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'Q', ' Q ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'q', ' q ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'T', ' T ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 't', ' t ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'A', ' A ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'a', ' a ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'Z', ' Z ', [rfReplaceAll]);
-  FCommandText := stringreplace(FCommandText, 'z', ' z ', [rfReplaceAll]);
+  newCommandText:='';
+  for i := 1 to Length(FCommandText) do
+    if (UpperCase(FCommandText[i])[1] in ['M','L','H','V','C','S','Q','T','A','Z']) then
+      newCommandText := newCommandText + ' ' + FCommandText[i] + ' '
+    else
+      newCommandText := newCommandText + FCommandText[i];
 
   //parse string (remove linebreaks etc
-  FCommandText := WrapText(FCommandText, #13#10, [' '], 1); //TODO: find better way to break up large paths
+  newCommandText := WrapText(newCommandText, #13#10, [' '], 1); //TODO: find better way to break up large paths
 
   MS := TMemoryStream.Create;
   MS.Position := 0;
-  MS.Write(FCommandText[1], Length(FCommandText));
+  MS.Write(newCommandText[1], Length(newCommandText));
   MS.Position := 0;
   MyParser := TParser.Create(MS);
+  newCommandText:='';
 
   prevcommand := '-';
   curtoken := ' ';
