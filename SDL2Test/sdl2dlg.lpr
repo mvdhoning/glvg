@@ -9,11 +9,14 @@ program opengl_onewindow;
 {$APPTYPE CONSOLE}
 
 uses
-  dglOpenGL, sysutils, SDL2, glvg;
+  dglOpenGL, sysutils, SDL2, glvg, caticon;
 
 const
   screenwidth: integer = 640;
   screenheight: integer = 480;
+
+type
+  GLMatrix= array[0..15] of GLfloat; // Matrix type
 
 var
   //needed for application itself
@@ -37,6 +40,8 @@ var
     up: boolean;
 
   grouptest: TglvgGroup;
+
+  matrix: GLMatrix;
 
 procedure InitializeVariables;
 begin
@@ -128,6 +133,7 @@ begin
   bg1.Polygon.Id := 10;
   bg1.Init;
    *)
+
   //PATHPOLYGON TEST
   polystar := TglvgPolygon.Create();
   polystar.Style.Color.SetColor(1,1,0,1);     //first set color etc
@@ -136,10 +142,22 @@ begin
   polystar.Style.FillType:=glvgsolid;
 
   //mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
+  //mypath := 'M 25,100 C 25,150 75,150 75,100 S 100,25 150,75';
+  //mypath := 'M16,0 c 0,0 –16,24 –16,33 c 0,9 7,15 16,15 c 9,0 16,–7 16,–15 c 0,–9 –16,–33 –16,–33';
+
+  //mypath := 'M 100,100 C 220,100 250,120 250,150'; //absolute
+  mypath := 'M 100,100 c 120,0 150,20 150,50 c 120,0 150,20 150,50';       //relative
+
+  //mypath := 'M100,200 C100,100 400,100 400,200 c100,200 400,100 300,0';
+  //mypath := 'M100,200 C100,100 400,100 400,200 s100,100 300,0';
+
+  //mypath := 'M 150.316,161.805 C 163.998,176.83 192.441,188.11 198.279,186.679 C 203.021,185.538 202.283,146.414 198.481,124.025 C 182.321,150.822 150.316,161.805 150.316,161.805';
+
+
   //mypath := 'M100,200 C100,100 400,100 400,200';
 
   //mypath := 'M365,563 L 183,-33 L 0,563 H 101 L 183, 296 L 270, 563 H365 Z';
-  mypath := 'M35,1 H 18 V 564 H 355 V 420 H 125 V 144 H 248 V 211 H 156 V 355 H 355 V 1 Z';
+//  mypath := 'M35,1 H 18 V 564 H 355 V 420 H 125 V 144 H 248 V 211 H 156 V 355 H 355 V 1 Z';
 
   //mypath := 'M150 0 L75 200 L225 200 Z'; //Simple Triangle
 
@@ -324,6 +342,8 @@ begin
   grouptest.ClipPath.AddElement(scissor2);
   grouptest.AddElement(polystar);
 
+  loadcat();
+
 end;
 
 procedure ResizeOpenGL(w,h: Integer);
@@ -434,7 +454,7 @@ var
   //p1,p2,rhs : TPolygonPoint;
   x,y,w,h: integer;
   pid,cid: integer;
-  a,b,c,d:integer;
+  i,a,b,c,d:integer;
   parentmask:integer;
   childmask:integer;
 
@@ -577,6 +597,7 @@ begin
   glColorMask(TRUE,TRUE, TRUE, TRUE);
   glDisable(GL_STENCIL_TEST);
 
+
   //glClear(GL_STENCIL_BUFFER_BIT); //quick fix
 
   //end scissor via stencil poc
@@ -640,6 +661,7 @@ begin
 
 //  glClear(GL_STENCIL_BUFFER_BIT); //quick fix
   *)
+
   grouptest.render;
   //end scissor via stencil poc
 
@@ -656,6 +678,42 @@ begin
   glEnable (GL_POLYGON_SMOOTH);
   polytext.Render;
   glDisable (GL_POLYGON_SMOOTH);
+
+  polystar.render();
+
+
+  //gltranslatef(100,250,0);
+  //glscalef(1,-1,0);
+
+
+  //matrix(1.25 0 0 -1.25 0 45)
+  gltranslatef(0,45,0); //times zoomvalue
+
+  matrix[0] := 1.25;
+  matrix[1] := 0;
+  matrix[2] := 0;
+  matrix[3] := 0;
+
+  matrix[4] := 0;
+  matrix[5] := -1.25;
+  matrix[6] := 0;
+  matrix[7] := 0;
+
+  matrix[8] := 0;
+  matrix[9] := 0;
+  matrix[10] := 1;
+  matrix[11] := 0;
+
+  matrix[12] := 0;
+  matrix[13] := 0;
+  matrix[14] := 0;
+  matrix[15] := 1;
+
+
+  glMultMatrixf(matrix);
+  //matrix
+
+  cat.Render();
 
 
   glFlush(); //for opengl to do its thing

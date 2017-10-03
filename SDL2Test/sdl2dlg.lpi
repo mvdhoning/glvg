@@ -31,7 +31,7 @@
         <FormatVersion Value="1"/>
       </local>
     </RunParams>
-    <Units Count="3">
+    <Units Count="4">
       <Unit0>
         <Filename Value="sdl2dlg.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -45,6 +45,10 @@
         <Filename Value="..\earcut.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="..\Resources\caticon.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -55,7 +59,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\..\Pascal-SDL-2-Headers;..;..\..\dglOpenGL;..\..\glBitmap"/>
+      <OtherUnitFiles Value="..\..\Pascal-SDL-2-Headers;..;..\..\dglOpenGL;..\..\glBitmap;..\Resources"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
