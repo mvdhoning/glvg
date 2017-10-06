@@ -15,9 +15,6 @@ const
   screenwidth: integer = 640;
   screenheight: integer = 480;
 
-type
-  GLMatrix= array[0..15] of GLfloat; // Matrix type
-
 var
   //needed for application itself
   window: PSDL_Window;
@@ -41,7 +38,7 @@ var
 
   grouptest: TglvgGroup;
 
-  matrix: GLMatrix;
+  testTransform : TTransform;
 
 procedure InitializeVariables;
 begin
@@ -343,6 +340,10 @@ begin
   grouptest.AddElement(polystar);
 
   loadcat();
+
+  testTransform := TTransform.Create();
+  testTransform.Text:='translate(100.0,20) scale(1,2,3)';
+  testTransform.Parse();
 
 end;
 
@@ -679,42 +680,9 @@ begin
   polytext.Render;
   glDisable (GL_POLYGON_SMOOTH);
 
-  polystar.render();
-
-
-  //gltranslatef(100,250,0);
-  //glscalef(1,-1,0);
-
-
-  //matrix(1.25 0 0 -1.25 0 45)
-  gltranslatef(0,45,0); //times zoomvalue
-
-  matrix[0] := 1.25;
-  matrix[1] := 0;
-  matrix[2] := 0;
-  matrix[3] := 0;
-
-  matrix[4] := 0;
-  matrix[5] := -1.25;
-  matrix[6] := 0;
-  matrix[7] := 0;
-
-  matrix[8] := 0;
-  matrix[9] := 0;
-  matrix[10] := 1;
-  matrix[11] := 0;
-
-  matrix[12] := 0;
-  matrix[13] := 0;
-  matrix[14] := 0;
-  matrix[15] := 1;
-
-
-  glMultMatrixf(matrix);
-  //matrix
+  //polystar.render();
 
   cat.Render();
-
 
   glFlush(); //for opengl to do its thing
 end;

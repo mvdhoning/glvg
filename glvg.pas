@@ -43,15 +43,62 @@ type
     procedure DrawCSpline( AFrom, ATo, AFromControlPoint, AToControlPoint: TPolygonPoint );
     procedure DrawQSpline( AFrom, ATo, AControlPoint: TPolygonPoint );
     procedure AddPoint(AValue: TPolygonPoint);
-    procedure SeTPolygonPoint(I: integer; AValue: TPolygonPoint);
-    function GeTPolygonPoint(I: integer): TPolygonPoint;
+    procedure SetPolygonPoint(I: integer; AValue: TPolygonPoint);
+    function GetPolygonPoint(I: integer): TPolygonPoint;
   public
     constructor Create();
     destructor Destroy(); override;
     procedure Parse();
-    property Points[I: integer]: TPolygonPoint read GeTPolygonPoint write SeTPolygonPoint;
+    property Points[I: integer]: TPolygonPoint read GetPolygonPoint write SetPolygonPoint;
     property Text: ansistring read fcommandtext write fcommandtext;
     property Count: integer read FCount;
+  end;
+
+  //https://www.w3.org/TR/SVG11/coords.html#TransformAttribute
+  TglvgTransformType = (glvgMatrix, glvgTranslate, glvgScale, glvgRotate, glvgSkewX, glvgSkewY);
+
+  TTransformStep = class
+  private
+    fa: single;
+    fb: single;
+    fc: single;
+    fd: single;
+    fe: single;
+    ff: single;
+    fangle: single;
+    fx: single;
+    fy: single;
+    ftype: TglvgTransformType;
+  public
+    constructor Create();
+    destructor Destroy(); override;
+    procedure Apply();
+    property x: single read fx write fx;
+    property y: single read fy write fy;
+    property angle: single read fangle write fangle;
+    property a: single read fa write fa;
+    property b: single read fb write fb;
+    property c: single read fc write fc;
+    property d: single read fd write fd;
+    property e: single read fe write fe;
+    property f: single read ff write ff;
+    property transformType: TglvgTransformType read ftype write ftype;
+  end;
+
+  TTransform = class
+  private
+    FCommandText: ansistring;
+    FTransformations: array of TTransformStep;
+    procedure SetTransformStep(I: integer; AValue: TTransformStep);
+    function GetTransformStep(I: integer): TTransformStep;
+  public
+    constructor Create(); overload;
+    constructor Create(AValue: string); overload;
+    destructor Destroy(); override;
+    procedure Parse();
+    procedure Apply();
+    property Steps[I: integer]: TTransformStep read GetTransformStep write SetTransformStep;
+    property Text: ansistring read fcommandtext write fcommandtext;
   end;
 
   TglvgFillType = (glvgNone, glvgSolid, glvgLinearGradient, glvgCircularGradient,glvgTexture,glvgPattern);
@@ -150,6 +197,7 @@ type
     Fy: Single;
     FPolyShape: TPolygonShape;
     FName: string;
+    FTransform: TTransform; //Transformations
     procedure SetStyle(AValue: TStyle);
     function GetStyle(): TStyle;
   public
@@ -163,6 +211,7 @@ type
     property name: string read fname write fname;
     property Style: TStyle read GetStyle write SetStyle;
     property Polygon: TPolygonShape read FPolyshape write FPolyshape;
+    property Transform: TTransform read FTransform write FTransform;
   end;
 
   //Font
@@ -279,6 +328,7 @@ type
   TglvgGroup = class
   private
     Fid: integer;
+    FTransform: TTransform;
   protected
     FClipPath: TglvgGroup;
     FElements: array of TglvgObject;
@@ -294,6 +344,7 @@ type
     property Count: integer read FNumElements;
     property ClipPath: TglvgGroup read FClipPath write FClipPath;
     property Element[index: integer]: TglvgObject read GetElement write SetElement;
+    property Transform: TTransform read FTransform write FTransform;
   published
   end;
 
@@ -455,10 +506,12 @@ begin
   FPolyShape:= TPolygonShape.Create;
   Fx:= 0.0;
   Fy:= 0.0;
+  FTransform := nil;
 end;
 
 destructor TglvgObject.Destroy;
 begin
+  FreeAndNil(FTransform);
   FPolyShape.Free;
   inherited Destroy;
 end;
@@ -485,8 +538,15 @@ end;
 
 procedure TglvgObject.Render;
 begin
+  if FTransform<>nil then
+  begin
+    glPushMatrix();
+    FTransform.Apply();
+  end;
   FPolyShape.Render;
   FPolyShape.RenderPath;
+  if FTransform<>nil then
+     glPopMatrix();
 end;
 
 procedure TglvgObject.SetStyle(AValue: TStyle);
@@ -580,13 +640,6 @@ end;
 procedure TglvgElipse.Init;
 const
   KAPPA90: single = 0.5522847493; // Length proportional to radius of a cubic bezier handle for 90deg arcs.
-var
-  temppath: string;
-  angle: single;
-  vectorx: single;
-  vectory: single;
-  vectorx1: single;
-  vectory1: single;
 begin
   //Ok Clean Up for a high speed gain ...
   self.CleanUp;
@@ -1112,6 +1165,204 @@ begin
   MS.Free();
 end;
 
+//TTransform
+
+constructor TTransformStep.Create();
+begin
+ //
+end;
+
+destructor  TTransformStep.Destroy();
+begin
+ inherited Destroy;
+end;
+
+procedure  TTransformStep.Apply();
+type
+  GLMatrix= array[0..15] of GLfloat; // Matrix type
+var
+  matrix: GLMatrix;
+begin
+  case fType of
+  glvgMatrix: begin
+      gltranslatef(e,f,0);
+
+      matrix[0] := a;
+      matrix[1] := b;
+      matrix[2] := 0;
+      matrix[3] := 0;
+
+      matrix[4] := c;
+      matrix[5] := d;
+      matrix[6] := 0;
+      matrix[7] := 0;
+
+      matrix[8] := 0;
+      matrix[9] := 0;
+      matrix[10] := 1;
+      matrix[11] := 0;
+
+      matrix[12] := 0;
+      matrix[13] := 0;
+      matrix[14] := 0;
+      matrix[15] := 1;
+
+      glMultMatrixf(matrix);
+    end;
+  glvgTranslate: gltranslatef(x,y,0);
+  glvgScale: glscalef(x,y,1);
+  end;
+end;
+
+
+constructor TTransform.Create();
+begin
+ inherited Create();
+end;
+
+constructor TTransform.Create(AValue: string);
+begin
+ inherited Create();
+ self.Text:=AValue;
+ self.Parse();
+end;
+
+destructor  TTransform.Destroy();
+var
+  i: integer;
+begin
+ for i:=0 to high(FTransformations)-1 do
+     FreeAndNil(FTransformations[i]);
+ FreeAndNil(FTransformations);
+ inherited Destroy;
+end;
+
+procedure  TTransform.SetTransformStep(I: integer; AValue: TTransformStep);
+begin
+  FTransformations[I] := AValue;
+end;
+
+function  TTransform.GetTransformStep(I: integer): TTransformStep;
+begin
+  result := FTransformations[I];
+end;
+
+procedure  TTransform.Parse();
+var
+  MyParser: TParser; //https://www.freepascal.org/docs-html/rtl/classes/tparser.html
+  MS: TMemoryStream;
+  newCommandText: ansistring;
+  str: ansistring;
+  curcommand: ansistring;
+  paramcount: byte;
+  params: array[0..5] of single;
+begin
+  setLength(self.FTransformations,0); //clean up previous transforms
+
+  //parse string (remove linebreaks etc
+  newCommandText := WrapText(FCommandText, #13#10, [' '], 1); //TODO: find better way to break up large texts
+
+  MS := TMemoryStream.Create;
+  MS.Position := 0;
+  MS.Write(newCommandText[1], Length(newCommandText));
+  MS.Position := 0;
+  MyParser := TParser.Create(MS);
+  newCommandText:='';
+
+  curcommand:='';
+  while MyParser.Token <> toEOF do
+  begin
+    str := MyParser.TokenString;
+    WriteLn(str);
+
+    case(MyParser.Token) of
+      toSymbol:
+      begin
+        writeln('Symbol: '+str);
+        curcommand:=str;
+        paramcount:=0;
+      end;
+      toInteger:
+      begin
+        writeln('Integer: '+str);
+        params[paramcount]:=StrToInt(str);
+        paramcount:=paramcount+1;
+      end;
+      toFloat:
+      begin
+        writeln('Float: '+str);
+        params[paramcount]:=StrToFloat(str);
+        paramcount:=paramcount+1;
+      end;
+    end;
+
+    writeln(paramcount);
+    if str=')' then //on close of transform command add it
+    begin
+      if High(FTransformations)<0 then
+        setLength(FTransformations,1)
+      else
+        setLength(FTransformations,High(FTransformations)+1);
+
+      if (curcommand='matrix') then
+      begin
+        FTransformations[High(FTransformations)] := TTransformStep.Create();
+        FTransformations[High(FTransformations)].transformType:=glvgMatrix;
+        FTransformations[High(FTransformations)].a:=params[0];
+        FTransformations[High(FTransformations)].b:=params[1];
+        FTransformations[High(FTransformations)].c:=params[2];
+        FTransformations[High(FTransformations)].d:=params[3];
+        FTransformations[High(FTransformations)].e:=params[4];
+        FTransformations[High(FTransformations)].f:=params[5];
+
+        writeln('scale added with '+floattostr(FTransformations[High(FTransformations)].x)+','+floattostr(FTransformations[High(FTransformations)].y));
+
+      end;
+
+      if (curcommand='translate') then
+      begin
+        FTransformations[High(FTransformations)] := TTransformStep.Create();
+        FTransformations[High(FTransformations)].transformType:=glvgTranslate;
+        FTransformations[High(FTransformations)].x:=params[0];
+        if paramcount>=2 then //y is optional
+          FTransformations[High(FTransformations)].y:=params[1]
+        else
+          FTransformations[High(FTransformations)].y:=0;
+
+        writeln('translate added with '+floattostr(FTransformations[High(FTransformations)].x)+','+floattostr(FTransformations[High(FTransformations)].y));
+
+      end;
+
+      if (curcommand='scale') then
+      begin
+        FTransformations[High(FTransformations)] := TTransformStep.Create();
+        FTransformations[High(FTransformations)].transformType:=glvgScale;
+        FTransformations[High(FTransformations)].x:=params[0];
+        if paramcount>=2 then //y is optional
+          FTransformations[High(FTransformations)].y:=params[1]
+        else
+          FTransformations[High(FTransformations)].y:=0;
+
+        writeln('scale added with '+floattostr(FTransformations[High(FTransformations)].x)+','+floattostr(FTransformations[High(FTransformations)].y));
+
+      end;
+
+    end;
+
+    MyParser.NextToken;
+  end;
+
+  MyParser.Free();
+  MS.Free();
+end;
+
+procedure  TTransform.Apply();
+var
+  i: integer;
+begin
+  for i := 0 to High(FTransformations) do
+      FTransformations[i].Apply();
+end;
 
 //TColor
 
@@ -1797,12 +2048,14 @@ begin
   inherited Create;
   FClipPath:=nil;
   FNumElements:=0;
+  FTransform:=nil;
 end;
 
 destructor TglvgGroup.Destroy;
 var
     i: integer;
 begin
+  FreeAndNil(FTransform);
   FreeAndNil(FClipPath);
   if FElements <> nil then
   begin
@@ -1841,6 +2094,12 @@ var
   c,d: integer;
   pid,cid: integer;
 begin
+  if FTransform<>nil then
+  begin
+    glPushMatrix();
+    FTransform.Apply();
+  end;
+
   if FClipPath = nil then
   begin
     //Normal render
@@ -1922,6 +2181,9 @@ begin
     glColorMask(TRUE,TRUE, TRUE, TRUE);
     glDisable(GL_STENCIL_TEST);
   end;
+
+  if FTransform<>nil then
+    glPopMatrix();
 end;
 
 

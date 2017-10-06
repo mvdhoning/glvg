@@ -20,6 +20,7 @@ implementation
 procedure loadcat();
 begin
   cat:=TglvgGroup.Create();
+  cat.Transform:=TTransform.Create('matrix(1.25 0 0 -1.25 0 45)');
 
   cat.AddElement(TglvgPolygon.Create());
   cat.Element[cat.Count-1].Style.Color.SetColor('#FFCB4E');
@@ -65,6 +66,7 @@ begin
 
   //translate(10.02) //TODO implement transformation on shapes to render eye at correct position
   cat.AddElement(TglvgPolygon.Create());
+  cat.Element[cat.Count-1].Transform := TTransform.Create('translate(10.02)');
   cat.Element[cat.Count-1].Style.Color.SetColor('#2A2F33');
   cat.Element[cat.Count-1].Style.FillType := glvgSolid;
   cat.Element[cat.Count-1].Style.LineType := glvgNone;
