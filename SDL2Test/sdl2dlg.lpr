@@ -480,6 +480,7 @@ begin
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+
   //begin scissor via stencil poc
   //parentmask:=12;
   //childmask:=14;
@@ -676,15 +677,17 @@ begin
 
   //render text with vector font
   //AntiAlias
-  glEnable (GL_POLYGON_SMOOTH);
+  //glPolygonMode( GL_FRONT, GL_FILL ) ;
+  //glEnable (GL_POLYGON_SMOOTH);
+  //glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST ) ;
   polytext.Render;
-  glDisable (GL_POLYGON_SMOOTH);
+  //glDisable (GL_POLYGON_SMOOTH);
 
   //polystar.render();
-
   cat.Render();
 
   glFlush(); //for opengl to do its thing
+
 end;
 
 
@@ -710,6 +713,10 @@ begin
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2 ); //force opengl version
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1 ); //force opengl version
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1); //doublebuffer
+
+  //antialias by multisample
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
   //create the window,
   //caption - first parameter

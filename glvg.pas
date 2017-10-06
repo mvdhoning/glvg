@@ -391,14 +391,14 @@ begin
     glcolor4f(FStyle.LineColor.R,FStyle.LineColor.G,FStyle.LineColor.B, FStyle.LineColor.A);
     glLineWidth(FStyle.LineWidth);
     //Draw Path
-    glEnable (GL_POLYGON_SMOOTH);
+    //glEnable (GL_POLYGON_SMOOTH);
     glBegin(GL_LINES);
     for loop:=0 to fcpath.Count-1 do
     begin
       glVertex2f(fcpath.Points[loop].x, fcpath.Points[loop].y);
     end;
     glEnd();
-    glDisable (GL_POLYGON_SMOOTH);
+    //glDisable (GL_POLYGON_SMOOTH);
   end;
 end;
 
