@@ -684,7 +684,9 @@ begin
   //glDisable (GL_POLYGON_SMOOTH);
 
   //polystar.render();
+  glEnable(GL_MULTISAMPLE); //smooth shape by antialias by multisample
   cat.Render();
+  glDisable(GL_MULTISAMPLE);
 
   glFlush(); //for opengl to do its thing
 
