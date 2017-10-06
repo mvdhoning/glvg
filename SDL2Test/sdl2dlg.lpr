@@ -342,7 +342,9 @@ begin
   loadcat();
 
   testTransform := TTransform.Create();
-  testTransform.Text:='translate(100.0,20) scale(1,2,3)';
+  //testTransform.Text:='translate(100.0,20) scale(1,2,3)';
+  //testTransform.Text:='skewX(-30)';
+  testTransform.Text:='rotate(45)';
   testTransform.Parse();
 
 end;
@@ -680,13 +682,18 @@ begin
   //glPolygonMode( GL_FRONT, GL_FILL ) ;
   //glEnable (GL_POLYGON_SMOOTH);
   //glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST ) ;
-  polytext.Render;
+ // polytext.Render;
   //glDisable (GL_POLYGON_SMOOTH);
 
   //polystar.render();
-  glEnable(GL_MULTISAMPLE); //smooth shape by antialias by multisample
+  //glDisable(GL_MULTISAMPLE); //smooth shape by antialias by multisample
+
+
   cat.Render();
-  glDisable(GL_MULTISAMPLE);
+  //glDisable(GL_MULTISAMPLE);
+
+  testTransform.Apply();
+  polytext.Render;
 
   glFlush(); //for opengl to do its thing
 

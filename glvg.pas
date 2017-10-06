@@ -1209,8 +1209,63 @@ begin
 
       glMultMatrixf(matrix);
     end;
+  glvgRotate: begin
+      //should this use the x,y begin coord of the shape if no x,y supplied
+      glTranslatef (x, y , 0);
+      glRotatef (angle, 0, 0, 1);
+      glTranslatef (-x, -y, 0);
+    end;
   glvgTranslate: gltranslatef(x,y,0);
   glvgScale: glscalef(x,y,1);
+  glvgSkewX: begin //skew also moves shape from left to right?
+
+      matrix[0] := 1;
+      matrix[1] := 0;
+      matrix[2] := 0;
+      matrix[3] := 0;
+
+      matrix[4] := Tan(DegToRad(angle));
+      matrix[5] := 1;
+      matrix[6] := 0;
+      matrix[7] := 0;
+
+      matrix[8] := 0;
+      matrix[9] := 0;
+      matrix[10] := 1;
+      matrix[11] := 0;
+
+      matrix[12] := 0;
+      matrix[13] := 0;
+      matrix[14] := 0;
+      matrix[15] := 1;
+
+      glMultMatrixf(matrix);
+    end;
+  glvgSkewY: begin
+
+      matrix[0] := 1;
+      matrix[1] := Tan(DegToRad(angle));
+      matrix[2] := 0;
+      matrix[3] := 0;
+
+      matrix[4] := 0;
+      matrix[5] := 1;
+      matrix[6] := 0;
+      matrix[7] := 0;
+
+      matrix[8] := 0;
+      matrix[9] := 0;
+      matrix[10] := 1;
+      matrix[11] := 0;
+
+      matrix[12] := 0;
+      matrix[13] := 0;
+      matrix[14] := 0;
+      matrix[15] := 1;
+
+      glMultMatrixf(matrix);
+
+    end;
   end;
 end;
 
@@ -1273,32 +1328,34 @@ begin
   while MyParser.Token <> toEOF do
   begin
     str := MyParser.TokenString;
-    WriteLn(str);
+    //WriteLn(str);
 
     case(MyParser.Token) of
       toSymbol:
       begin
-        writeln('Symbol: '+str);
-        curcommand:=str;
+        //writeln('Symbol: '+str);
+        curcommand:=LowerCase(str);
         paramcount:=0;
       end;
       toInteger:
       begin
-        writeln('Integer: '+str);
+        //writeln('Integer: '+str);
         params[paramcount]:=StrToInt(str);
         paramcount:=paramcount+1;
       end;
       toFloat:
       begin
-        writeln('Float: '+str);
+        //writeln('Float: '+str);
         params[paramcount]:=StrToFloat(str);
         paramcount:=paramcount+1;
       end;
     end;
 
-    writeln(paramcount);
+    //writeln(paramcount);
     if str=')' then //on close of transform command add it
     begin
+
+      //Add TransfromStep
       if High(FTransformations)<0 then
         setLength(FTransformations,1)
       else
@@ -1314,9 +1371,6 @@ begin
         FTransformations[High(FTransformations)].d:=params[3];
         FTransformations[High(FTransformations)].e:=params[4];
         FTransformations[High(FTransformations)].f:=params[5];
-
-        writeln('scale added with '+floattostr(FTransformations[High(FTransformations)].x)+','+floattostr(FTransformations[High(FTransformations)].y));
-
       end;
 
       if (curcommand='translate') then
@@ -1328,9 +1382,6 @@ begin
           FTransformations[High(FTransformations)].y:=params[1]
         else
           FTransformations[High(FTransformations)].y:=0;
-
-        writeln('translate added with '+floattostr(FTransformations[High(FTransformations)].x)+','+floattostr(FTransformations[High(FTransformations)].y));
-
       end;
 
       if (curcommand='scale') then
@@ -1341,10 +1392,37 @@ begin
         if paramcount>=2 then //y is optional
           FTransformations[High(FTransformations)].y:=params[1]
         else
+          FTransformations[High(FTransformations)].y:=1;
+      end;
+
+      if (curcommand='rotate') then
+      begin
+        FTransformations[High(FTransformations)] := TTransformStep.Create();
+        FTransformations[High(FTransformations)].transformType:=glvgRotate;
+        FTransformations[High(FTransformations)].angle:=params[0];
+        if paramcount>=2 then //x is optional
+          FTransformations[High(FTransformations)].x:=params[1]
+        else
+          FTransformations[High(FTransformations)].x:=0;
+        if paramcount>=3 then //y is optional
+          FTransformations[High(FTransformations)].y:=params[2]
+        else
           FTransformations[High(FTransformations)].y:=0;
+        writeln('rotate '+floattostr(FTransformations[High(FTransformations)].angle)+' '+floattostr(FTransformations[High(FTransformations)].x)+' '+floattostr(FTransformations[High(FTransformations)].y));
+      end;
 
-        writeln('scale added with '+floattostr(FTransformations[High(FTransformations)].x)+','+floattostr(FTransformations[High(FTransformations)].y));
+      if (curcommand='skewx') then
+      begin
+        FTransformations[High(FTransformations)] := TTransformStep.Create();
+        FTransformations[High(FTransformations)].transformType:=glvgSkewX;
+        FTransformations[High(FTransformations)].angle:=params[0];
+      end;
 
+      if (curcommand='skewy') then
+      begin
+        FTransformations[High(FTransformations)] := TTransformStep.Create();
+        FTransformations[High(FTransformations)].transformType:=glvgSkewY;
+        FTransformations[High(FTransformations)].angle:=params[0];
       end;
 
     end;
