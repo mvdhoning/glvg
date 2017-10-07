@@ -42,6 +42,7 @@ type
     function EqualPoints( APoint1, APoint2: TPolygonPoint ): boolean;
     procedure DrawCSpline( AFrom, ATo, AFromControlPoint, AToControlPoint: TPolygonPoint );
     procedure DrawQSpline( AFrom, ATo, AControlPoint: TPolygonPoint );
+    procedure DrawArc( AFrom: TPolygonPoint; ARadius: TPolygonPoint; AXrot: single; ALargeArcFlag: boolean; ASweepFlag: boolean; ATo: TPolygonPoint);
     procedure AddPoint(AValue: TPolygonPoint);
     procedure SetPolygonPoint(I: integer; AValue: TPolygonPoint);
     function GetPolygonPoint(I: integer): TPolygonPoint;
@@ -787,6 +788,265 @@ begin
   NewStroke( p2, ATo);
 end;
 
+procedure TPath.DrawArc( AFrom: TPolygonPoint; ARadius: TPolygonPoint; AXrot: single; ALargeArcFlag: boolean; ASweepFlag: boolean; ATo: TPolygonPoint);
+var
+  FromPoint,ToPoint,ControlPoint, Center, Angles: TPolygonPoint;
+
+
+  function VectorDot(const A, B : TPolygonPoint): Single;
+  begin
+    Result := 0;
+    Result := Result + (A.x * B.x);
+    Result := Result + (A.y * B.y);
+  end;
+
+  function VectorLength(const A: TPolygonPoint): double;
+  begin
+     Result:=0.0;
+     Result:=Result + (A.x*A.x);
+     Result:=Result + (A.y*A.y);
+     Result:=sqrt(Result);
+  end;
+
+  //https://mortoray.com/2017/02/16/rendering-an-svg-elliptical-arc-as-bezier-curves/
+
+  function svgAngle( ux, uy, vx, vy: single ): single;
+  var
+    u,v: TPolygonPoint;
+    dot, len, ang: double;
+  begin
+      u.x:=ux;
+      u.y:=uy;
+      v.x:=vx;
+      v.y:=vy;
+      //(F.6.5.4)
+      dot := VectorDot(u,v);
+      len := VectorLength(u) * VectorLength(v);
+      ang := ArcCos( EnsureRange(dot / len,-1,1) ); //floating point precision, slightly over values appear
+      if ( ( (u.X*v.Y) - (u.Y*v.X) ) < 0) then
+          ang := -ang;
+      result := ang;
+  end;
+
+  (*
+      Perform the endpoint to center arc parameter conversion as detailed in the SVG 1.1 spec.
+      F.6.5 Conversion from endpoint to center parameterization
+
+      @param r must be a ref in case it needs to be scaled up, as per the SVG spec
+  *)
+  procedure EndpointToCenterArcParams( p1: TPolygonPoint; p2:TPolygonPoint; radius: TPolygonPoint; xAngle: Single;
+      flagA: boolean; flagS: boolean; out center: TPolygonPoint; out angles: TPolygonPoint ) ;
+  var
+    rx,ry, dx2, dy2, x1p, y1p, rxs, rys, x1ps, y1ps, cr, s, dq, pq, q, cxp, cyp, cx, cy, theta, delta: single;
+
+    function RealMod(const a,b: single): single;
+    begin
+      result:= a-b * trunc(a/b);
+    end;
+
+  begin
+      rX := Abs(radius.X);
+      rY := Abs(radius.Y);
+
+        writeln('xangle '+floattostr(xangle));
+      //(F.6.5.1)
+      dx2 := (p1.X - p2.X) / 2.0;
+      dy2 := (p1.Y - p2.Y) / 2.0;
+      x1p := Cos(xAngle)*dx2 + Sin(xAngle)*dy2;
+      y1p := -Sin(xAngle)*dx2 + Cos(xAngle)*dy2;
+
+      //(F.6.5.2)
+      rxs := rX * rX;
+      rys := rY * rY;
+      x1ps := x1p * x1p;
+      y1ps := y1p * y1p;
+      // check if the radius is too small `pq < 0`, when `dq > rxs * rys` (see below)
+      // cr is the ratio (dq : rxs * rys)
+      cr := x1ps/rxs + y1ps/rys;
+      if (cr > 1) then
+        begin
+          //scale up rX,rY equally so cr == 1
+          s := Sqrt(cr);
+          rX := s * rX;
+          rY := s * rY;
+          rxs := rX * rX;
+          rys := rY * rY;
+        end;
+      dq := (rxs * y1ps + rys * x1ps);
+      pq := (rxs*rys - dq) / dq;
+      q := Sqrt( Max(0,pq) ); //use Max to account for float precision
+      if (flagA = flagS) then
+          q := -q;
+      cxp := q * rX * y1p / rY;
+      cyp := - q * rY * x1p / rX;
+
+      //(F.6.5.3)
+      cx := Cos(xAngle)*cxp - Sin(xAngle)*cyp + (p1.X + p2.X)/2;
+      cy := Sin(xAngle)*cxp + Cos(xAngle)*cyp + (p1.Y + p2.Y)/2;
+
+      //(F.6.5.5)
+      theta := svgAngle( 1,0, (x1p-cxp) / rX, (y1p - cyp)/rY );
+
+      //(F.6.5.6)
+      delta := svgAngle(
+          (x1p - cxp)/rX, (y1p - cyp)/rY,
+          (-x1p - cxp)/rX, (-y1p-cyp)/rY);
+             delta := delta+theta;
+       //writeln('theta: '+floattostr(theta));
+       //writeln('delta: '+floattostr(delta));
+      //writeln('max: '+floattostr(degtorad(350)));
+      //writeln('2*pi: '+floattostr(2*PI));
+
+      delta := RealMod(delta, 2 * PI);
+      //writeln('delta: '+floattostr(delta));
+      //if (not flagS) then
+      //   delta := (delta -  2 * PI);
+      //      writeln('delta: '+floattostr(delta));
+
+      radius.x := rX;
+      radius.y := rY;
+      center.x := cx;
+      center.y := cy;
+      angles.y := theta;
+      angles.x := delta;
+  end;
+
+var da,hda,kappa: single;
+   i,ndivs: integer;
+   a,dx,dy, tanx,tany, px,py,ptany,ptanx: single;
+   l,p,f,t: TPolygonPoint;
+   txr: single;
+begin
+  //https://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
+
+  writeln('xrot '+floattostr(AXRot));
+  txr:=AXRot;
+  txr:=degtorad(AXRot);
+  //Get Center
+  EndpointToCenterArcParams( AFrom, ATo, Aradius, txr, ALargeArcFlag, ASweepFlag, center, angles);
+  writeln('afrom '+floattostr(afrom.x)+', '+floattostr(afrom.y));
+  //writeln('ato '+floattostr(ato.x)+', '+floattostr(ato.y));
+
+  //center.x:=150;
+  //center.y:=150;
+  //writeln('center '+floattostr(center.x)+', '+floattostr(center.y));
+  //writeln('radius '+floattostr(aradius.x)+', '+floattostr(aradius.y));
+  //writeln('angles '+floattostr(angles.x)+', '+floattostr(angles.y));
+  //writeln('angles '+floattostr(radtodeg(angles.x))+', '+floattostr(radtodeg(angles.y)));
+
+  //angles.y := -0.004167;
+  //angles.x := 1.051364;
+
+  //angles.y := 1.043031;
+  //angles.x := 2.098562;
+
+  // Clamp Angles (do i need to take care of direction? yep ccw)
+  //angles.y:=degtorad(-315);
+  //angles.x:=15;
+  //writeln('angles '+floattostr(angles.x)+', '+floattostr(angles.y));
+  da := angles.y - angles.x;
+
+  //TODO: use ASweepFlag
+  if ASweepFlag then
+  begin
+    if (abs(da) >= pi*2) then
+      da := -PI*2
+    else
+      while (da > 0.0) do da := da - PI*2;
+  end
+  else
+  begin
+    if (abs(da) >= PI*2) then
+      da := PI*2
+    else
+      while (da < 0.0) do da := da +(PI*2);
+  end;
+
+  // Split arc into max 90 degree segments.
+  ndivs := trunc( max(1, min((abs(da) / (pi*0.5) + 0.5), 5)));
+  //constsegments = Math.max(Math.ceil(Math.abs(ang2) / (TAU / 4)), 1)
+  hda := (da / ndivs) / 2.0;
+  kappa := abs(4.0 / 3.0 * (1.0 - cos(hda)) / sin(hda) );
+  if asweepflag then
+     kappa:=-kappa;
+
+  //writeln('ndivs '+floattostr(ndivs));
+  //writeln('da '+floattostr(da));
+  //writeln('da deg '+floattostr(radtodeg(da)));
+  //writeln('hda '+floattostr(hda));
+  //writeln('kappa '+floattostr(kappa));
+
+  //NewStroke( AFrom, ATo); //from to debug line
+  //NewStroke( ATo, Center); //to centern debug line
+
+  for i := 0 to ndivs do
+  begin
+    a := angles.x + da * (i/ndivs);
+    dx := cos(a);
+    dy := sin(a);
+    p.x := center.x + dx*ARadius.x;
+    p.y := center.y + dy*ARadius.y;
+
+    //if (p.x>ato.x) and (p.y>ato.y) then
+    //  ato:=p;
+
+    tanx := -dy*ARadius.x*kappa;
+    tany := dx*ARadius.y*kappa;
+
+    //writeln('tan '+floattostr(tanx)+', '+floattostr(tany));
+
+
+    if (i = 0) then
+    begin
+       //AddPoint(p);
+       //writeln('add point');
+       px:=0;
+       py:=0;
+       l.x:=0;
+       l.y:=0;
+       ptanx := 0;
+       ptany := 0;
+    end
+    else
+    begin
+        //writeln('p '+floattostr(p.x)+', '+floattostr(p.y));
+
+
+        f.x:=px+ptanx;
+        f.y:=py+ptany;
+
+        t.x:=p.x-tanx;
+        t.y:=p.y-tany;
+
+        //writeln('f '+floattostr(f.x)+', '+floattostr(f.y));
+        //writeln('t '+floattostr(t.x)+', '+floattostr(t.y));
+
+        //NewStroke(l,p);
+
+        //DrawQSpline(p,t,f);
+        //DrawQSpline(l,p,t);
+
+        //nvg__tesselateBezier(ctx, last->x,last->y, cp1[0],cp1[1], cp2[0],cp2[1], p[0],p[1], 0, NVG_PT_CORNER);
+        DrawCspline(l,p,f,t);
+
+        //NewStroke( l, p);
+        // NewStroke( t, f);
+        //DrawCSpline(l,p,f,t);
+
+        //writeln('draw spline');
+    end;
+
+    l:=p;
+    px := p.x;
+    py := p.y;
+    ptanx := tanx;
+    ptany := tany;
+
+  end;
+
+  //DrawQSpline(FromPoint,ToPoint, ControlPoint);
+end;
+
 procedure TPath.AddPoint(AValue: TPolygonPoint);
 begin
   FCount := FCount + 1;
@@ -833,6 +1093,7 @@ var
   FirsTPolygonPoint: TPolygonPoint;
   i:integer;
   newCommandText: string;
+  flaga, flagb: boolean;
 begin
   //clean up eventual old path
   self.FCount:=0;
@@ -1155,6 +1416,41 @@ begin
           PrevControlPoint := ParamsPoint[1];
         end;
       end;
+      'A':
+      Begin
+        if paramcount = 7 then
+        Begin
+          ParamsPoint[0].x:=params[0];
+          ParamsPoint[0].y:=params[1];
+          ParamsPoint[1].x:=params[5];
+          ParamsPoint[1].y:=params[6];
+          flaga:=false;
+          flagb:=false;
+          if params[3]>0 then flaga:=true;
+          if params[4]>0 then flagb:=true;
+          DrawArc(CurPoint, ParamsPoint[0], params[2], flaga, flagb, ParamsPoint[1]);
+          paramcount := 0; //prevent drawing again
+          CurPoint:=ParamsPoint[1];
+          //Writeln('ARC');
+        End;
+      End;
+      'a':
+      Begin
+        if paramcount = 7 then
+        Begin
+          ParamsPoint[0].x:=params[0];
+          ParamsPoint[0].y:=params[1];
+          ParamsPoint[1].x:=Curpoint.x+params[5];
+          ParamsPoint[1].y:=CurPoint.y+params[6];
+          flaga:=false;
+          flagb:=false;
+          if params[3]>0 then flaga:=true;
+          if params[4]>0 then flagb:=true;
+          DrawArc(CurPoint, ParamsPoint[0], params[2], flaga, flagb, ParamsPoint[1]);
+          paramcount := 0; //prevent drawing again
+          CurPoint:=ParamsPoint[1];
+        End;
+      End;
     end;
 
     PrevCommand:=CurCommand;

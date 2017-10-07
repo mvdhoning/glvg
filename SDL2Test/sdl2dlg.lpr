@@ -40,6 +40,8 @@ var
 
   testTransform : TTransform;
 
+  arc1: TglvgPolygon;
+
 procedure InitializeVariables;
 begin
   //only for avoiding warnings
@@ -136,14 +138,14 @@ begin
   polystar.Style.Color.SetColor(1,1,0,1);     //first set color etc
   polystar.Style.LineWidth := 1.0;
   polystar.Style.LineColor.SetColor(1,0,1,1);
-  polystar.Style.FillType:=glvgsolid;
+  polystar.Style.FillType:=glvgNone;//glvgsolid;
 
   //mypath := 'M100,200 C100,100 250,100 250,200 S400,300 400,200';
   //mypath := 'M 25,100 C 25,150 75,150 75,100 S 100,25 150,75';
   //mypath := 'M16,0 c 0,0 –16,24 –16,33 c 0,9 7,15 16,15 c 9,0 16,–7 16,–15 c 0,–9 –16,–33 –16,–33';
 
   //mypath := 'M 100,100 C 220,100 250,120 250,150'; //absolute
-  mypath := 'M 100,100 c 120,0 150,20 150,50 c 120,0 150,20 150,50';       //relative
+  //mypath := 'M 100,100 c 120,0 150,20 150,50 c 120,0 150,20 150,50';       //relative
 
   //mypath := 'M100,200 C100,100 400,100 400,200 c100,200 400,100 300,0';
   //mypath := 'M100,200 C100,100 400,100 400,200 s100,100 300,0';
@@ -159,6 +161,20 @@ begin
   //mypath := 'M150 0 L75 200 L225 200 Z'; //Simple Triangle
 
   //mypath := 'M 190 328 L 190 328 L 475 328 L 475 328 L 475 505 Q 475 505 475 551.390625 469.109375 566.109375 Q 469.109375 566.109375 464.5625 577.265625 450.046875 585.296875 Q 450.046875 585.296875 430.546875 596 408.765625 596 L 408.765625 596 L 387 596 L 387 596 L 387 613 L 387 613 L 650 613 L 650 613 L 650 596 L 650 596 L 628.234375 596 Q 628.234375 596 606.453125 596 586.953125 585.734375 Q 586.953125 585.734375 572.4375 578.609375 567.21875 564.109375 Q 567.21875 564.109375 562 549.609375 562 505 L 562 505 L 562 108 Q 562 108 562 61.828125 567.890625 47.03125 Q 567.890625 47.03125 572.4375 35.828125 586.5 27.765625 Q 586.5 27.765625 606.453125 17 628.234375 17 L 628.234375 17 L 650 17 L 650 17 L 650 0 L 650 0 L 387 0 L 387 0 L 387 17 L 387 17 L 408.765625 17 Q 408.765625 17 446.421875 17 463.65625 38.96875 Q 463.65625 38.96875 475 53.3125 475 108 L 475 108 L 475 295 L 475 295 L 190 295 L 190 295 L 190 108 Q 190 108 190 61.828125 195.859375 47.03125 Q 195.859375 47.03125 200.375 35.828125 214.828125 27.765625 Q 214.828125 27.765625 234.21875 17 255.890625 17 L 255.890625 17 L 278 17 L 278 17 L 278 0 L 278 0 L 15 0 L 15 0 L 15 17 L 15 17 L 36.765625 17 Q 36.765625 17 74.875 17 92.109375 38.96875 Q 92.109375 38.96875 103 53.3125 103 108 L 103 108 L 103 505 Q 103 505 103 551.390625 97.109375 566.109375 Q 97.109375 566.109375 92.5625 577.265625 78.5 585.296875 Q 78.5 585.296875 58.546875 596 36.765625 596 L 36.765625 596 L 15 596 L 15 596 L 15 613 L 15 613 L 278 613 L 278 613 L 278 596 L 278 596 L 255.890625 596 Q 255.890625 596 234.21875 596 214.828125 585.734375 Q 214.828125 585.734375 200.828125 578.609375 195.4140625 564.109375 Q 195.4140625 564.109375 190 549.609375 190 505 L 190 505 Z';
+
+  //mypath:='M50,50 A30,50 0 0,1 100,100'; //arc0
+
+  //mypath:='M40,20 A30,30 0 0,0 70,70'; //arc1
+  //mypath:='M40,20  A30,30 0 1,0 70,70'; //arc2
+  //mypath:='M40,20  A30,30 0 1,1 70,70'; //arc3
+  //mypath:='M40,20  A30,30 0 0,1 70,70'; //arc4
+
+  mypath:='M10 315 L 110 215 A 30 50 0 0 1 162.55 162.45 L 172.55 152.45 A 30 50 -45 0 1 215.1 109.9 L 315 10';// TODO bugged does not draw 2nd arc correct xrot is not handled correctly
+  //mypath:='M10 315 L 172.55 152.45 A 30 50 -45 0 1 215.1 109.9 L 315 10'; //xrot -45 does bug
+  //mypath:='M80 80 A 45 45, 0, 0, 0, 125 125 L 125 80 Z'; //arc4
+  //mypath:='M230 80 A 45 45, 0, 1, 0, 275 125 L 275 80 Z'; //arc4
+  //mypath:='M80 230 A 45 45, 0, 0, 1, 125 275 L 125 230 Z'; //arc4
+  //mypath:='M230 230 A 45 45, 0, 1, 1, 275 275 L 275 230 Z'; //arc4
 
   polystar.Polygon.Path := mypath;
 
@@ -344,7 +360,7 @@ begin
   testTransform := TTransform.Create();
   //testTransform.Text:='translate(100.0,20) scale(1,2,3)';
   //testTransform.Text:='skewX(-30)';
-  testTransform.Text:='rotate(45)';
+  testTransform.Text:='rotate(45,100,100)';// translate(100,100) ';
   testTransform.Parse();
 
 end;
@@ -482,7 +498,7 @@ begin
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
+   (*
   //begin scissor via stencil poc
   //parentmask:=12;
   //childmask:=14;
@@ -600,7 +616,7 @@ begin
   //'default' rendering again
   glColorMask(TRUE,TRUE, TRUE, TRUE);
   glDisable(GL_STENCIL_TEST);
-
+  *)
 
   //glClear(GL_STENCIL_BUFFER_BIT); //quick fix
 
@@ -666,15 +682,15 @@ begin
 //  glClear(GL_STENCIL_BUFFER_BIT); //quick fix
   *)
 
-  grouptest.render;
+  //grouptest.render;
   //end scissor via stencil poc
 
   //writeln(polyrect.Polygon.id);
 
-  polyrect.render;
+  //polyrect.render;
   //writeln(floattostr(polyrect.Polygon.Points[80].y));
 
-  polycirc.Render; //renders a square fill?
+  //polycirc.Render; //renders a square fill?
 
 
   //render text with vector font
@@ -688,12 +704,15 @@ begin
   //polystar.render();
   //glDisable(GL_MULTISAMPLE); //smooth shape by antialias by multisample
 
-
+  (*
   cat.Render();
   //glDisable(GL_MULTISAMPLE);
 
   testTransform.Apply();
   polytext.Render;
+  *)
+
+  polystar.Render();
 
   glFlush(); //for opengl to do its thing
 
