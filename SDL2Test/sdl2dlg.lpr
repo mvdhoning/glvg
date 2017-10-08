@@ -170,12 +170,17 @@ begin
   //mypath:='M40,20  A30,30 0 0,1 70,70'; //arc4
 
   //https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths
-  mypath:='M10 315 L 110 215 A 30 50 0 0 1 162.55 162.45 L 172.55 152.45 A 30 50 -45 0 1 215.1 109.9 L 315 10';// TODO bugged does not draw 2nd arc correct xrot is not handled correctly
+  //mypath:='M10 315 L 110 215 A 30 50 0 0 1 162.55 162.45 L 172.55 152.45 A 30 50 -45 0 1 215.1 109.9 L 315 10';// TODO bugged does not draw 2nd arc correct xrot is not handled correctly
   //mypath:='M10 315 L 172.55 152.45 A 30 50 -45 0 1 215.1 109.9 L 315 10'; //xrot -45 does bug
   //http://xahlee.info/js/svg_path_ellipse_arc.html
   //mypath:='M 0 50 L 10 50 A 30 20, 30, 0 0, 90 50 L 100 50';  //'M 0 50 L 10 50 A 3 2, 30, 0 0, 90 50 L 100 50'
-  //mypath:='M 0 50 L 10 50 A 30 20, 0, 0 0, 90 50 L 100 50'; //lines do not touch?
-  //TODO: draw debug elipse shape as shown on url above
+  mypath:='M 10 315 L 20 215 A 30 50, 0, 0 1, 162 162 L 182 162'; //lines do not touch?
+
+  //TODO svg scales the radius*2 to match distance between start and end point
+  //https://jsfiddle.net/rxf7j0px/ test case
+  //https://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes F62
+  //If rx, ry and (mod360) are such that there is no solution (basically, the ellipse is not big enough to reach from (x1, y1) to (x2, y2)) then the ellipse is scaled up uniformly until there is exactly one solution
+  //(until the ellipse is just big enough)
 
   //mypath:='M80 80 A 45 45, 0, 0, 0, 125 125 L 125 80 Z'; //arc4
   //mypath:='M230 80 A 45 45, 0, 1, 0, 275 125 L 275 80 Z'; //arc4

@@ -835,7 +835,7 @@ var
 
       @param r must be a ref in case it needs to be scaled up, as per the SVG spec
   *)
-  procedure EndpointToCenterArcParams( p1: TPolygonPoint; p2:TPolygonPoint; radius: TPolygonPoint; xAngle: Single;
+  procedure EndpointToCenterArcParams( p1: TPolygonPoint; p2:TPolygonPoint; var radius: TPolygonPoint; xAngle: Single;
       flagA: boolean; flagS: boolean; out center: TPolygonPoint; out angles: TPolygonPoint ) ;
   var
     rx,ry, dx2, dy2, x1p, y1p, rxs, rys, x1ps, y1ps, cr, s, dq, pq, q, cxp, cyp, cx, cy, theta, delta: single;
@@ -995,14 +995,14 @@ begin
   //writeln('kappa '+floattostr(kappa));
 
   //NewStroke( AFrom, ATo); //from to debug line
-  //NewStroke( ATo, Center); //to centern debug line
+  //NewStroke( Ato, Center); //to centern debug line
 
   for i := 0 to ndivs do
   begin
     a := angles.x + da * (i/ndivs);
     dx := cos(a);
     dy := sin(a);
-    p.x := center.x + dx*ARadius.x;
+    p.x := center.x + (dx*ARadius.x);
     p.y := center.y + dy*ARadius.y;
 
     //if (p.x>ato.x) and (p.y>ato.y) then
@@ -1449,14 +1449,16 @@ begin
       Begin
         if paramcount = 7 then
         Begin
-          ParamsPoint[0].x:=params[0];
-          ParamsPoint[0].y:=params[1];
+          ParamsPoint[0].x:=params[1];
+          ParamsPoint[0].y:=params[0];
           ParamsPoint[1].x:=params[5];
           ParamsPoint[1].y:=params[6];
           flaga:=false;
           flagb:=false;
           if params[3]>0 then flaga:=true;
           if params[4]>0 then flagb:=true;
+          writeln('cpx: '+floattostr(curpoint.x));
+          writeln('cpy: '+floattostr(curpoint.y));
           writeln('param1: '+floattostr(params[0]));
           writeln('param2: '+floattostr(params[1]));
           writeln('param3: '+floattostr(params[2]));
