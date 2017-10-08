@@ -725,6 +725,7 @@ end;
 //http://www.w3.org/TR/2008/WD-SVGMobile12-20080915/paths.html#PathData
 
 procedure TPath.NewStroke( AFrom, ATo: TPolygonPoint );
+
 begin
   AddPoint(AFrom);
   AddPoint(ATo);
@@ -911,17 +912,33 @@ var
       angles.x := delta;
   end;
 
+ function RotateRadians(v: TPolygonPoint; radians: single; c: TPolygonPoint): TPolygonPoint;
+var
+  ca,sa: single;
+  tx,ty: single;
+begin
+  ca := Cos(radians);
+  sa := Sin(radians);
+  tx:=v.x-c.x;
+  ty:=v.y-c.y;
+  result.x:=tx * ca - ty * sa;
+  result.y:=tx * sa + ty * ca;
+  result.x:=result.x + c.x;
+  result.y:=result.y + c.y;
+end;
+
 var da,hda,kappa: single;
    i,ndivs: integer;
    a,dx,dy, tanx,tany, px,py,ptany,ptanx: single;
    l,p,f,t: TPolygonPoint;
+   rl,rp,rf,rt: TPolygonPoint;
    txr: single;
 begin
   //https://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
 
   writeln('xrot '+floattostr(AXRot));
-  txr:=AXRot;
   txr:=degtorad(AXRot);
+  //txr:=degtorad(0);
   //Get Center
   EndpointToCenterArcParams( AFrom, ATo, Aradius, txr, ALargeArcFlag, ASweepFlag, center, angles);
   writeln('afrom '+floattostr(afrom.x)+', '+floattostr(afrom.y));
@@ -944,6 +961,7 @@ begin
   //angles.y:=degtorad(-315);
   //angles.x:=15;
   //writeln('angles '+floattostr(angles.x)+', '+floattostr(angles.y));
+
   da := angles.y - angles.x;
 
   //TODO: use ASweepFlag
@@ -1027,11 +1045,23 @@ begin
         //DrawQSpline(l,p,t);
 
         //nvg__tesselateBezier(ctx, last->x,last->y, cp1[0],cp1[1], cp2[0],cp2[1], p[0],p[1], 0, NVG_PT_CORNER);
-        DrawCspline(l,p,f,t);
+
+        if txr<>0 then
+        begin
+          rl:=RotateRadians(l,txr,center);
+          rp:=RotateRadians(p,txr,center);
+          rf:=RotateRadians(f,txr,center);
+          rt:=RotateRadians(t,txr,center);
+          DrawCspline(rl,rp,rf,rt);
+        end
+        else
+         DrawCspline(l,p,f,t);
 
         //NewStroke( l, p);
+
         // NewStroke( t, f);
         //DrawCSpline(l,p,f,t);
+
 
         //writeln('draw spline');
     end;
@@ -1044,7 +1074,6 @@ begin
 
   end;
 
-  //DrawQSpline(FromPoint,ToPoint, ControlPoint);
 end;
 
 procedure TPath.AddPoint(AValue: TPolygonPoint);
@@ -1428,6 +1457,13 @@ begin
           flagb:=false;
           if params[3]>0 then flaga:=true;
           if params[4]>0 then flagb:=true;
+          writeln('param1: '+floattostr(params[0]));
+          writeln('param2: '+floattostr(params[1]));
+          writeln('param3: '+floattostr(params[2]));
+          writeln('param4: '+floattostr(params[3]));
+          writeln('param5: '+floattostr(params[4]));
+          writeln('param6: '+floattostr(params[5]));
+          writeln('param7: '+floattostr(params[6]));
           DrawArc(CurPoint, ParamsPoint[0], params[2], flaga, flagb, ParamsPoint[1]);
           paramcount := 0; //prevent drawing again
           CurPoint:=ParamsPoint[1];

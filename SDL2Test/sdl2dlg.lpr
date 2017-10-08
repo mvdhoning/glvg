@@ -26,7 +26,7 @@ var
   //glvg
   polystar: TglvgPolygon; //TPolygonShape;
   polyrect,bg1: TglvgRect;
-  polycirc: TglvgCircle;
+  polycirc: TglvgElipse;
   polytext: TglvgText;
 
   scissor1: TglvgRect;
@@ -169,8 +169,14 @@ begin
   //mypath:='M40,20  A30,30 0 1,1 70,70'; //arc3
   //mypath:='M40,20  A30,30 0 0,1 70,70'; //arc4
 
+  //https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths
   mypath:='M10 315 L 110 215 A 30 50 0 0 1 162.55 162.45 L 172.55 152.45 A 30 50 -45 0 1 215.1 109.9 L 315 10';// TODO bugged does not draw 2nd arc correct xrot is not handled correctly
   //mypath:='M10 315 L 172.55 152.45 A 30 50 -45 0 1 215.1 109.9 L 315 10'; //xrot -45 does bug
+  //http://xahlee.info/js/svg_path_ellipse_arc.html
+  //mypath:='M 0 50 L 10 50 A 30 20, 30, 0 0, 90 50 L 100 50';  //'M 0 50 L 10 50 A 3 2, 30, 0 0, 90 50 L 100 50'
+  //mypath:='M 0 50 L 10 50 A 30 20, 0, 0 0, 90 50 L 100 50'; //lines do not touch?
+  //TODO: draw debug elipse shape as shown on url above
+
   //mypath:='M80 80 A 45 45, 0, 0, 0, 125 125 L 125 80 Z'; //arc4
   //mypath:='M230 80 A 45 45, 0, 1, 0, 275 125 L 275 80 Z'; //arc4
   //mypath:='M80 230 A 45 45, 0, 0, 1, 125 275 L 125 230 Z'; //arc4
@@ -224,8 +230,12 @@ begin
   polyrect.Init;
 
 
-  polycirc := TglvgCircle.Create();
-  polycirc.Radius:=25;
+  polycirc := TglvgElipse.Create();
+  //polycirc.Transform:=TTransform.Create('rotate(-45)');
+  polycirc.X:=172.55+(215.1-172.55)/2; //110+(162.55 - 110)/2;
+  polycirc.Y:=152.45+(109.9-152.45)/2;//215+(162.45-215)/2;
+  polycirc.Rx:=30;
+  polycirc.Ry:=50;
   polycirc.Style.Color.SetColor(1,0,0,0.5);
   polycirc.Style.FillType:=glvgsolid;
   polyrect.Style.LineType := glvgSolid;
@@ -360,7 +370,7 @@ begin
   testTransform := TTransform.Create();
   //testTransform.Text:='translate(100.0,20) scale(1,2,3)';
   //testTransform.Text:='skewX(-30)';
-  testTransform.Text:='rotate(45,100,100)';// translate(100,100) ';
+  testTransform.Text:='rotate(-45,'+floattostr(polycirc.x)+','+floattostr(polycirc.y)+')';//rotate debug circle;
   testTransform.Parse();
 
 end;
@@ -712,7 +722,13 @@ begin
   polytext.Render;
   *)
 
+
+  glpushmatrix();
+  testTransform.Apply();
+  polycirc.Render();
+  glpopmatrix();
   polystar.Render();
+
 
   glFlush(); //for opengl to do its thing
 
