@@ -1449,8 +1449,8 @@ begin
       Begin
         if paramcount = 7 then
         Begin
-          ParamsPoint[0].x:=params[1];
-          ParamsPoint[0].y:=params[0];
+          ParamsPoint[0].x:=params[0];
+          ParamsPoint[0].y:=params[1];
           ParamsPoint[1].x:=params[5];
           ParamsPoint[1].y:=params[6];
           flaga:=false;
