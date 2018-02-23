@@ -117,9 +117,12 @@ type
   TGLArrayvertex4 = array[0..3] of PGLArrayd7;
   PGLArrayvertex4 = ^TGLArrayvertex4;
   PGLArrayf4 = ^TGLArrayf4;
+  PArray = array of PGLArrayd7;
 
 threadvar
   PolygonClass: TPolygon;
+  verarray: parray; //temporary vertex data
+  countver: integer; //counter for temporary vertex data
 {$ENDIF}
 
 
@@ -185,11 +188,18 @@ end;
 destructor TPolygon.Destroy();
 begin
   FTesselated := false;
+  CleanUp();
+  inherited Destroy;
+end;
+
+procedure TPolygon.CleanUp();
+begin
   FCount := 0;
   FVertexCount := 0;
-  SetLength(FPoints, FCount);
-  SetLength(FVertex, FVertexCount);
-  inherited Destroy;
+  F3DVertexCount := 0;
+  SetLength(FPoints,0);
+  SetLength(FVertex,0);
+  SetLength(F3DVertex,0);
 end;
 
 procedure TPolygon.SetPoint(I: integer; Value: TPolygonPoint);
@@ -286,14 +296,6 @@ begin
   dx := thirdpoint.x;
   dy := thirdpoint.y;
   FBoundBoxRadius := sqrt(dx*dx) + sqrt(dy*dy) /2;
-end;
-
-procedure TPolygon.CleanUp();
-begin
-  self.FCount:= 0;
-  self.FVertexCount := 0;
-  SetLength(self.FPoints,0);
-  SetLength(self.FVertex,0);
 end;
 
 Procedure TPolygon.Render();
@@ -413,6 +415,8 @@ var
   tess: pointer;
   test: TGLArrayd3;
   pol: PGLArrayd7;
+  polarray: parray;
+
 
 procedure iTessBeginCB(which: GLenum); {$IFDEF Win32}stdcall; {$ELSE}cdecl; {$ENDIF}
 begin
@@ -461,7 +465,11 @@ begin
   end;
 
   // return output data (vertex coords and others)
-  outData:= vertex;
+  SetLength(verarray,countver+1);
+  verarray[countver]:=vertex;
+  countver:=countver+1;
+  outdata := vertex;
+
 end;
 {$ENDIF}
 {$IFDEF EARCUT}
@@ -518,6 +526,9 @@ begin
   end;
   {$ENDIF}
   {$IFDEF GLUTESS}
+  countver:=0;
+  SetLength(verarray,0);
+
   PolygonClass := Self;
 
   tess := gluNewTess();
@@ -533,6 +544,7 @@ begin
   gluTessBeginPolygon(tess, nil);                   // with NULL data
   gluTessBeginContour(tess);
 
+  SetLength(polarray,FCount);
   for loop := 0 to FCount-1 do
   begin
       new(pol);
@@ -545,9 +557,11 @@ begin
       pol[1]:=FPoints[loop].Y;
       pol[2]:=0;
 
-      test[0] := pol[0];
-      test[1] := pol[1];
-      test[2] := pol[2];
+      test[0] := FPoints[loop].X;
+      test[1] := FPoints[loop].Y;
+      test[2] := 0;
+
+      polarray[loop]:=pol;
       gluTessVertex(tess, test, pol);
   end;
 
@@ -555,8 +569,30 @@ begin
   gluTessEndPolygon(tess);
   gluDeleteTess(tess);        // delete after tessellation
 
+  tess := nil;
   PolygonClass := nil;
   FTesselated := true;
+
+  //clean up used memory
+  if countver>=1 then
+  begin
+  for loop := 0 to countver-1 do
+  begin
+    if verarray<>nil then
+    dispose(verarray[loop]);
+    verarray[loop]:=nil;
+  end;
+  setLength(verarray,0);
+  verarray:=nil;
+  end;
+  for loop := 0 to Fcount-1 do
+  begin
+    dispose(polarray[loop]);
+    polarray[loop]:=nil;
+  end;
+  setLength(polarray,0);
+  polarray:=nil;
+
   {$ENDIF}
 
 end;

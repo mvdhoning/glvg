@@ -9,6 +9,7 @@ program opengl_onewindow;
 {$APPTYPE CONSOLE}
 
 uses
+  //cmem,
   dglOpenGL, sysutils, SDL2, glvg, glvggui,classes;
 
 const
@@ -73,7 +74,6 @@ begin
       init;
     end;  *)
 //  end;
-
 
   button1 := TglvgguiButton.Create(self);
   button1.Name:='button1';
@@ -150,13 +150,14 @@ begin
   end;
 
   //Free Components
-  line1.Free;
-  node1.Free;
-  node2.Free;
-  edit1.Free;
-  edit2.Free;
-  connector1.Free;
-  button1.Free;
+  FreeAndNil(line1);
+  FreeAndNil(node1);
+  FreeAndNil(node2);
+  FreeAndNil(edit1);
+  FreeAndNil(edit2);
+  FreeAndNil(connector1);
+  FreeAndNil(button1);
+
   inherited Destroy();
 
 end;

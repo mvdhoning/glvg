@@ -62,8 +62,8 @@ private
   fParent: TglvgGuiControl;
   //fHasFocus: boolean;
 public
-  Constructor Create(aowner:TComponent); override;
-
+  constructor Create(aowner:TComponent); override;
+  destructor Destroy(); override;
   procedure Render; virtual;
 
   procedure MouseDrag; virtual;
@@ -229,6 +229,12 @@ uses dglopengl;
     fElements := TglvgGroup.Create();
     fIsDragged := false;
     fAccept:=false;
+  end;
+
+  destructor TglvgGuiControl.Destroy();
+  begin
+    FreeAndNil(fElements);
+    inherited Destroy();
   end;
 
   function TglvgGuiControl.GetAbsoluteX(): single;
@@ -729,36 +735,38 @@ uses dglopengl;
 
   procedure TglvgGuiButton.MouseIn;
   begin
-    (*
+
     TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#0000C0');
     TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#00C0C0');
     TglvgRect(self.Elements.Element[0]).Init;
-    *)
+
     inherited MouseIn;
   end;
 
   procedure TglvgGuiButton.MouseOut;
   begin
-    (*
+
    TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#00C0C0');
    TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
    TglvgRect(self.Elements.Element[0]).Init;
-   *)
+
    inherited MouseOut;
   end;
 
   procedure TglvgGuiButton.Click;
   begin
     //handle mouseclick
-   (*
+
     TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#0000C0');
     TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
     TglvgRect(self.Elements.Element[0]).Init;
-   *)
+
     inherited Click;
-    //TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#00C0C0');
-    //TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
-    //TglvgRect(self.Elements.Element[0]).Init;
+
+    TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#00C0C0');
+    TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
+    TglvgRect(self.Elements.Element[0]).Init;
+
   end;
 
   procedure TglvgGuiButton.Render;
@@ -779,7 +787,9 @@ uses dglopengl;
 
   destructor TglvgGuiEdit.Destroy;
   begin
-    fDrawText.Free;
+    FreeAndNil(fDrawText);
+    FreeAndNil(fCursor);
+    FreeAndNil(fElements);
     inherited Destroy;
   end;
 

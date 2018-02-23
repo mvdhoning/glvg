@@ -30,6 +30,7 @@
       <Unit0>
         <Filename Value="sdl2dlg.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="opengl_onewindow"/>
       </Unit0>
     </Units>
   </ProjectOptions>

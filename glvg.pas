@@ -555,7 +555,7 @@ end;
 
 procedure TglvgObject.SetStyle(AValue: TStyle);
 begin
-  //freeAndNil(FPolyShape.fStyle); //free previous style
+  freeAndNil(FPolyShape.fStyle); //free previous style
   FPolyShape.Style := AValue;
 end;
 
@@ -1611,6 +1611,8 @@ end;
 constructor TTransform.Create();
 begin
  inherited Create();
+ self.FTransformations:=nil;
+ SetLength(self.FTransformations,0);
 end;
 
 constructor TTransform.Create(AValue: string);
@@ -1624,9 +1626,14 @@ destructor  TTransform.Destroy();
 var
   i: integer;
 begin
- for i:=0 to high(FTransformations)-1 do
-     FreeAndNil(FTransformations[i]);
- FreeAndNil(FTransformations);
+ writeln(high(FTransformations));
+ for i:=0 to high(FTransformations) do
+ begin
+   writeln(i);
+   FTransformations[i].Free;
+ end;
+ SetLength(FTransformations,0);
+ FTransformations:=nil;
  inherited Destroy;
 end;
 
@@ -1694,6 +1701,7 @@ begin
     begin
 
       //Add TransfromStep
+      writeln('transform '+IntToStr(High(FTransformations)));
       if High(FTransformations)<0 then
         setLength(FTransformations,1)
       else
@@ -1735,6 +1743,7 @@ begin
 
       if (curcommand='rotate') then
       begin
+        writeln('rotete '+IntToStr(High(FTransformations)));
         FTransformations[High(FTransformations)] := TTransformStep.Create();
         FTransformations[High(FTransformations)].transformType:=glvgRotate;
         FTransformations[High(FTransformations)].angle:=params[0];
@@ -1871,11 +1880,17 @@ begin
 end;
 
 destructor TStyle.Destroy;
+var
+  i: integer;
 begin
   FPattern.Free;
   FColor.Free;
   FLineColor.Free;
   FTexture.Free;
+  for i:=0 to FNumGradColors-1 do
+      FreeAndNil(FGradColors[i]);
+  SetLength(FGradColors,0);
+  FGradColors:=nil;
 end;
 
 function TStyle.TrigGLTriangle(value: single): single;
@@ -2369,7 +2384,6 @@ constructor TPolygonFont.Create();
 var
   loop: integer;
 begin
-  writeln('TPolygonFont.Create()');
   for loop := 0 to 255 do
   begin
     FCharGlyph[loop]:=nil;
@@ -2380,11 +2394,9 @@ destructor TPolygonFont.Destroy();
 var
   loop: integer;
 begin
-  writeln('TPolygonFont.Destroy()');
   for loop := 0 to 255 do
   begin
     if (FCharGlyph[loop]<>nil) then begin
-      writeln(loop);
       FCharGlyph[loop].cleanUp;
       if loop = 0 then begin
         //FCharGlyph[loop].Style.Free;
@@ -2398,10 +2410,8 @@ begin
       //FreeAndNil(FCharGlyph[loop]);
       FCharGlyph[loop].destroy;
       FCharGlyph[loop]:=nil;
-      writeln(loop);
     end;
   end;
-  writeln(loop);
 end;
 
 procedure TPolygonFont.SetSize(AValue: Single);
@@ -2519,7 +2529,7 @@ begin
   begin
     For i:=FNumElements-1 downto 0 do
     begin
-      FElements[i].Free;
+      if FElements[i]<>nil then FreeAndNil(FElements[i]);
     end;
   end;
   SetLength(FElements,0);

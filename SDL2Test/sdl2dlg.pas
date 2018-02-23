@@ -9,6 +9,7 @@ program opengl_onewindow;
 {$APPTYPE CONSOLE}
 
 uses
+  //cmem,
   dglOpenGL, sysutils, SDL2, glvg, caticon;
 
 const
@@ -25,7 +26,8 @@ var
   framecount: integer;
   //glvg
   polystar: TglvgPolygon; //TPolygonShape;
-  polyrect,bg1: TglvgRect;
+  polyrect: TglvgRect;
+  //bg1: TglvgRect;
   polycirc: TglvgElipse;
   polytext: TglvgText;
 
@@ -34,13 +36,13 @@ var
 
   test1, test2, test3: TglvgRect;
   hc1: single;
-    up: boolean;
+  up: boolean;
 
   grouptest: TglvgGroup;
 
   testTransform : TTransform;
 
-  arc1: TglvgPolygon;
+  //arc1: TglvgPolygon;
 
 procedure InitializeVariables;
 begin
@@ -133,6 +135,7 @@ begin
   bg1.Init;
    *)
 
+
   //PATHPOLYGON TEST
   polystar := TglvgPolygon.Create();
   polystar.Style.Color.SetColor(1,1,0,1);     //first set color etc
@@ -203,7 +206,6 @@ begin
   polystar.Init;
 
 
-
   //next shape
   polyrect := TglvgRect.Create;
   polyrect.X:= 10.0;
@@ -233,7 +235,7 @@ begin
   polyrect.Polygon.Id:=7;
   //polyrect.Style.Color.a:=0.5;
   polyrect.Init;
-
+  polyrect.Style.LineType := glvgSolid;
 
   polycirc := TglvgElipse.Create();
   //polycirc.Transform:=TTransform.Create('rotate(-45)');
@@ -243,7 +245,7 @@ begin
   polycirc.Ry:=50;
   polycirc.Style.Color.SetColor(1,0,0,0.5);
   polycirc.Style.FillType:=glvgsolid;
-  polyrect.Style.LineType := glvgSolid;
+
   polycirc.Init;
 
 
@@ -283,6 +285,7 @@ begin
   //polytext.Font.Scale := 0.05; //TODO: Should be related to font-size?
   polytext.Text := 'Hello World!';
   polytext.Style.LineWidth:=2.0;
+
 
   //scissor
   scissor1 := TglvgRect.Create;
@@ -364,6 +367,7 @@ begin
   test3.Init;
   up:=false;
 
+
   grouptest:=TglvgGroup.Create();
   grouptest.id:=2;
   grouptest.ClipPath:=TglvgGroup.Create();//scissor2;
@@ -372,10 +376,12 @@ begin
 
   loadcat();
 
+
   testTransform := TTransform.Create();
   //testTransform.Text:='translate(100.0,20) scale(1,2,3)';
   //testTransform.Text:='skewX(-30)';
   testTransform.Text:='rotate(-45,'+floattostr(polycirc.x)+','+floattostr(polycirc.y)+')';//rotate debug circle;
+  //testTransform.Text:='rotate(-45,0,0)';//rotate debug circle;
   testTransform.Parse();
 
 end;
@@ -729,8 +735,8 @@ begin
 
 
   glpushmatrix();
-  testTransform.Apply();
-  polycirc.Render();
+    testTransform.Apply();
+    polycirc.Render();
   glpopmatrix();
 
   polystar.Render();
@@ -743,7 +749,7 @@ end;
 
 
 begin
-
+  setHeapTraceOutput('trace.log');
   InitializeVariables;
   try
     //initialize SDL
@@ -802,15 +808,38 @@ begin
 
   finally
 
-  polystar.Free;
-  polyrect.Free;
-  polycirc.Free;
-  bg1.Free;
-  polytext.Free;
+  Writeln('cleanup grouptest');
+  FreeAndNil(grouptest);
+  //FreeAndNil(polystar); //free called in grouptest free
+  //FreeAndNil(scissor2); //free called in grouptest free
 
+  FreeAndNil(polyrect);
+  writeln('cleanup polycirc');
+  FreeAndNil(polycirc);
+  //bg1.Free;
+  FreeAndNil(polytext);
+
+  FreeAndNil(test1);
+  FreeAndNil(test2);
+  FreeAndNil(test3);
+
+  FreeAndNil(cat);
+
+  FreeAndNil(scissor1);
+
+
+  writeln('cleanup testtransfrom');
+  testTransform.Free;
+  //arc1.Free;
+
+
+
+  writeln('cleanup SDL');
+  readln();
   SDL_GL_DeleteContext(context);
   SDL_DestroyWindow(window);
   SDL_Quit;
+
 
 end;
 
