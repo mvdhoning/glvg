@@ -22,3 +22,9 @@ Textures/
 
 #exclude Lazarus Project Session file
 *.lps
+
+#exclude log files
+*.log
+
+#exclude font files
+*.ttf
