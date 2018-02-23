@@ -28,7 +28,7 @@
     </RunParams>
     <Units Count="1">
       <Unit0>
-        <Filename Value="sdl2dlg.pp"/>
+        <Filename Value="sdl2dlg.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
     </Units>
