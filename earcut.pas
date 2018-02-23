@@ -150,7 +150,8 @@ begin
     ATriangles[High(ATriangles)][2] := Point(p2^.X, p2^.Y, p2^.r, p2^.g, p2^.b, p2^.a);
   end else
   begin
-    writeln(lst.count);
+    //todo: handle this situation
+    //writeln(lst.count);
   end;
   result := lst.Count = 3;
 

@@ -4,7 +4,7 @@
     <PathDelim Value="\"/>
     <Version Value="10"/>
     <BuildModes Active="Default"/>
-    <Units Count="5">
+    <Units Count="6">
       <Unit0>
         <Filename Value="sdl2dlg.pas"/>
         <IsPartOfProject Value="True"/>
@@ -15,10 +15,9 @@
       </Unit0>
       <Unit1>
         <Filename Value="..\glvg.pas"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="2396"/>
-        <CursorPos X="5" Y="2419"/>
+        <TopLine Value="2397"/>
+        <CursorPos X="73" Y="2412"/>
         <UsageCount Value="11"/>
         <Loaded Value="True"/>
       </Unit1>
@@ -32,9 +31,10 @@
       </Unit2>
       <Unit3>
         <Filename Value="..\glPolygon.pas"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="3"/>
-        <TopLine Value="67"/>
-        <CursorPos X="3" Y="85"/>
+        <TopLine Value="16"/>
+        <CursorPos X="3" Y="31"/>
         <UsageCount Value="11"/>
         <Loaded Value="True"/>
       </Unit3>
@@ -45,127 +45,134 @@
         <CursorPos X="3" Y="11299"/>
         <UsageCount Value="10"/>
       </Unit4>
+      <Unit5>
+        <Filename Value="..\earcut.pas"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="122"/>
+        <CursorPos X="34" Y="153"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit5>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="997" Column="12" TopLine="975"/>
+        <Caret Line="998" Column="12" TopLine="976"/>
       </Position1>
       <Position2>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="998" Column="12" TopLine="976"/>
+        <Caret Line="999" Column="12" TopLine="977"/>
       </Position2>
       <Position3>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="999" Column="12" TopLine="977"/>
+        <Caret Line="1018" Column="14" TopLine="996"/>
       </Position3>
       <Position4>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1018" Column="14" TopLine="996"/>
+        <Caret Line="1024" Column="17" TopLine="1002"/>
       </Position4>
       <Position5>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1024" Column="17" TopLine="1002"/>
+        <Caret Line="1034" Column="18" TopLine="1012"/>
       </Position5>
       <Position6>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1034" Column="18" TopLine="1012"/>
+        <Caret Line="1043" Column="18" TopLine="1021"/>
       </Position6>
       <Position7>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1043" Column="18" TopLine="1021"/>
+        <Caret Line="1044" Column="18" TopLine="1022"/>
       </Position7>
       <Position8>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1044" Column="18" TopLine="1022"/>
+        <Caret Line="1070" Column="18" TopLine="1048"/>
       </Position8>
       <Position9>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1070" Column="18" TopLine="1048"/>
+        <Caret Line="1464" Column="18" TopLine="1442"/>
       </Position9>
       <Position10>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1464" Column="18" TopLine="1442"/>
+        <Caret Line="1465" Column="18" TopLine="1443"/>
       </Position10>
       <Position11>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1465" Column="18" TopLine="1443"/>
+        <Caret Line="1466" Column="18" TopLine="1444"/>
       </Position11>
       <Position12>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1466" Column="18" TopLine="1444"/>
+        <Caret Line="1467" Column="18" TopLine="1445"/>
       </Position12>
       <Position13>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1467" Column="18" TopLine="1445"/>
+        <Caret Line="1468" Column="18" TopLine="1446"/>
       </Position13>
       <Position14>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1468" Column="18" TopLine="1446"/>
+        <Caret Line="1469" Column="18" TopLine="1447"/>
       </Position14>
       <Position15>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1469" Column="18" TopLine="1447"/>
+        <Caret Line="1470" Column="18" TopLine="1448"/>
       </Position15>
       <Position16>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1470" Column="18" TopLine="1448"/>
+        <Caret Line="1471" Column="18" TopLine="1449"/>
       </Position16>
       <Position17>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1471" Column="18" TopLine="1449"/>
+        <Caret Line="1472" Column="18" TopLine="1450"/>
       </Position17>
       <Position18>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1472" Column="18" TopLine="1450"/>
+        <Caret Line="1476" Column="20" TopLine="1454"/>
       </Position18>
       <Position19>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1476" Column="20" TopLine="1454"/>
+        <Caret Line="1629" Column="9" TopLine="1611"/>
       </Position19>
       <Position20>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1629" Column="9" TopLine="1611"/>
+        <Caret Line="1632" Column="11" TopLine="1611"/>
       </Position20>
       <Position21>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1632" Column="11" TopLine="1611"/>
+        <Caret Line="1676" Column="14" TopLine="1654"/>
       </Position21>
       <Position22>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1676" Column="14" TopLine="1654"/>
+        <Caret Line="1681" Column="18" TopLine="1659"/>
       </Position22>
       <Position23>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1681" Column="18" TopLine="1659"/>
+        <Caret Line="1687" Column="18" TopLine="1665"/>
       </Position23>
       <Position24>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1687" Column="18" TopLine="1665"/>
+        <Caret Line="1693" Column="18" TopLine="1671"/>
       </Position24>
       <Position25>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1693" Column="18" TopLine="1671"/>
+        <Caret Line="1699" Column="14" TopLine="1677"/>
       </Position25>
       <Position26>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1699" Column="14" TopLine="1677"/>
+        <Caret Line="1704" Column="14" TopLine="1682"/>
       </Position26>
       <Position27>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1704" Column="14" TopLine="1682"/>
+        <Caret Line="1746" Column="16" TopLine="1724"/>
       </Position27>
       <Position28>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1746" Column="16" TopLine="1724"/>
+        <Caret Line="1758" Column="16" TopLine="1736"/>
       </Position28>
       <Position29>
         <Filename Value="..\glvg.pas"/>
-        <Caret Line="1758" Column="16" TopLine="1736"/>
+        <Caret Line="2387" Column="10" TopLine="2364"/>
       </Position29>
       <Position30>
-        <Filename Value="..\glvg.pas"/>
-        <Caret Line="2387" Column="10" TopLine="2364"/>
+        <Filename Value="..\earcut.pas"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>
