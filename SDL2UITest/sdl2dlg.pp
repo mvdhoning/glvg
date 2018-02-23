@@ -50,11 +50,30 @@ var
 
 constructor TMyApplication.Create();
 begin
+  setHeapTraceOutput('trace.log');
   inherited Create(nil);
   self.X:=50;
   self.Y:=10;
   self.Width:=screenwidth;
   self.Height:=screenheight;
+
+//  GuiManager.Style := TglvgGroup.Create();
+//  GuiManager.Style.AddElement(TglvgGroup.Create());
+//  with GuiManager.Style.Element[GuiManager.Style.Count-1] as TglvgGroup do
+//  begin
+    //AddElement(TglvgRect.Create());
+    (*
+    with Element[Count-1] as TglvgRect do
+    begin
+      name:='sButton';
+      Rx:=3.0;
+      Ry:=3.0;
+      Style.Color.SetColor(28,30,34,192);
+      Style.FillType:=glvgSolid;
+      init;
+    end;  *)
+//  end;
+
 
   button1 := TglvgguiButton.Create(self);
   button1.Name:='button1';

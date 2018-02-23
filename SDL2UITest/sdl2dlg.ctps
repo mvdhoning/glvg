@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="10"/>
+    <BuildModes Active="Default"/>
+    <Units Count="3">
+      <Unit0>
+        <Filename Value="sdl2dlg.pp"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="opengl_onewindow"/>
+        <TopLine Value="150"/>
+        <CursorPos X="23" Y="167"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="..\glvg.pas"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <CursorPos X="15" Y="181"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="..\glvggui.pas"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="36"/>
+        <CursorPos Y="98"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit2>
+    </Units>
+    <JumpHistory Count="9" HistoryIndex="8">
+      <Position1>
+        <Filename Value="sdl2dlg.pp"/>
+        <Caret Line="12" Column="31" TopLine="11"/>
+      </Position1>
+      <Position2>
+        <Filename Value="..\glvg.pas"/>
+        <Caret Line="384" Column="5" TopLine="382"/>
+      </Position2>
+      <Position3>
+        <Filename Value="..\glvg.pas"/>
+        <Caret Line="708" Column="25" TopLine="700"/>
+      </Position3>
+      <Position4>
+        <Filename Value="..\glvg.pas"/>
+        <Caret Line="709" Column="9" TopLine="700"/>
+      </Position4>
+      <Position5>
+        <Filename Value="..\glvg.pas"/>
+        <Caret Line="723" Column="11" TopLine="700"/>
+      </Position5>
+      <Position6>
+        <Filename Value="..\glvg.pas"/>
+        <Caret Line="202" Column="27" TopLine="188"/>
+      </Position6>
+      <Position7>
+        <Filename Value="..\glvg.pas"/>
+        <Caret Line="213" Column="5" TopLine="197"/>
+      </Position7>
+      <Position8>
+        <Filename Value="..\glvg.pas"/>
+        <Caret Line="202" Column="24" TopLine="201"/>
+      </Position8>
+      <Position9>
+        <Filename Value="sdl2dlg.pp"/>
+        <Caret Line="167" Column="23" TopLine="150"/>
+      </Position9>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>

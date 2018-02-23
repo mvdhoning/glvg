@@ -227,6 +227,8 @@ type
     FStyle: TStyle;
     procedure SetSize(AValue: single);
   public
+    Constructor Create();
+    Destructor Destroy(); override;
     procedure LoadFromFile(AValue: string);
     procedure RenderChar(AValue: char);
     procedure RenderString(AValue: string);
@@ -326,7 +328,7 @@ type
 
   TglvgGroup = class;
 
-  TglvgGroup = class
+  TglvgGroup = class //(TglvgObject) TODO fix to allow nested groups
   private
     Fid: integer;
     FTransform: TTransform;
@@ -377,8 +379,9 @@ end;
 
 destructor TPolygonShape.Destroy();
 begin
-  FcPath.Free;
-  FStyle.Free;
+  CleanUp();
+  freeAndNil(FcPath);
+  freeAndNil(FStyle);
   inherited Destroy();
 end;
 
@@ -552,6 +555,7 @@ end;
 
 procedure TglvgObject.SetStyle(AValue: TStyle);
 begin
+  //freeAndNil(FPolyShape.fStyle); //free previous style
   FPolyShape.Style := AValue;
 end;
 
@@ -666,7 +670,7 @@ begin
   Fry := AValue;
 end;
 
-function TglvgCircle.GetRadius;
+function TglvgCircle.GetRadius: Single;
 begin
   result := Frx;
 end;
@@ -707,8 +711,8 @@ end;
 
 destructor TglvgText.Destroy;
 begin
-  FFont.Free;
-  FStyle.Free;
+  freeAndNil(FFont);
+  freeAndNil(FStyle);
   inherited Destroy;
 end;
 
@@ -1790,7 +1794,7 @@ begin
   fa := 1;
 end;
 
-function TColor.GetColorPoint;
+function TColor.GetColorPoint: TPolygonPoint;
 begin
   result.x := fx;
   result.y := fy;
@@ -2361,6 +2365,45 @@ end;
 
 //TPolygonFont
 
+constructor TPolygonFont.Create();
+var
+  loop: integer;
+begin
+  writeln('TPolygonFont.Create()');
+  for loop := 0 to 255 do
+  begin
+    FCharGlyph[loop]:=nil;
+  end;
+end;
+
+destructor TPolygonFont.Destroy();
+var
+  loop: integer;
+begin
+  writeln('TPolygonFont.Destroy()');
+  for loop := 0 to 255 do
+  begin
+    if (FCharGlyph[loop]<>nil) then begin
+      writeln(loop);
+      FCharGlyph[loop].cleanUp;
+      if loop = 0 then begin
+        //FCharGlyph[loop].Style.Free;
+        //FCharGlyph[loop].FPolyShape.Style.Free;
+        FCharGlyph[loop].FPolyShape.Style:=nil;
+        end
+      else begin
+        //FCharGlyph[loop].Style:=nil;
+        FCharGlyph[loop].FPolyShape.Style:=nil;
+      end;
+      //FreeAndNil(FCharGlyph[loop]);
+      FCharGlyph[loop].destroy;
+      FCharGlyph[loop]:=nil;
+      writeln(loop);
+    end;
+  end;
+  writeln(loop);
+end;
+
 procedure TPolygonFont.SetSize(AValue: Single);
 var
   frs: single; //font render size
@@ -2425,7 +2468,9 @@ begin
   for loop := 0 to 255 do
   begin
     FCharGlyph[loop] := TglvgObject.Create;
+
     FCharGlyph[loop].Style:=FStyle;
+
     FCharGlyph[loop].FPolyShape.FcPath.FSplinePrecision := 3; //gpu/cpu friendly and nicely rounded
     // Get glyphs' strokes per char
     if ( (loop >= ord('A')) and (loop <= ord('Z')) ) or ( (loop >= ord('a')) and (loop <= ord('z')) ) or ( (loop >= ord('0')) and (loop <= ord('9')) )then
@@ -2437,8 +2482,9 @@ begin
       if FFontHeight < FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y then
         FFontHeight := FCharGlyph[loop].FPolyShape.BoundBoxMaxPoint.y;
       FCharGlyph[loop].FPolyShape.Id:=10; //TODO: should not be set manually
-      FCharGlyph[loop].Init;
+      //FCharGlyph[loop].Init;
     end;
+    FCharGlyph[loop].Init;
   end;
   for loop := 0 to 255 do
   begin
@@ -2506,6 +2552,8 @@ var
   c,d: integer;
   pid,cid: integer;
 begin
+  //inherited Render();
+
   if FTransform<>nil then
   begin
     glPushMatrix();

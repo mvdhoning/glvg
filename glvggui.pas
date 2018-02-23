@@ -31,7 +31,7 @@ interface
   {$MODE Delphi}
 {$ENDIF}
 
-uses glvg, types, classes,sysutils,crt;
+uses glvg, classes,sysutils,crt;
 
 type
 //Experimental idea for making a vector gui ... (or group control)
@@ -194,6 +194,7 @@ private
  ffocuscontrol: TglvgGuiControl;
  fmouseclicked: boolean;
  fleftup : boolean;
+ fstyle : TglvgGroup;
 public
  procedure HandleMouseEvent(mousex: integer; mousey: integer; mousemovex: integer; mousemovey: integer; leftclick: boolean; dragclick: boolean; leftup: boolean);
  procedure HandleTextInputEvent(atext: string);
@@ -203,6 +204,7 @@ published
  property FocusControl: TglvgGuiControl read ffocuscontrol write ffocuscontrol;
  property LeftMouseUp: boolean read fleftup write fleftup;
  property LeftMouseClicked: boolean read fmouseclicked write fmouseclicked;
+ property Style: TglvgGroup read fstyle write fstyle;
 end;
 
 var
@@ -620,7 +622,27 @@ uses dglopengl;
 
   procedure TglvgGuiButton.Init;
   begin
+    (*
+    if guiManager.Style.Element[0]<>nil then
+    begin
 
+      with guiManager.Style.Element[0] as TglvgGroup do
+      begin
+        self.Elements.AddElement(Element[0]);
+      end;
+
+      //text
+      fDrawText.X:=self.X+10;
+      fDrawText.Y:=self.Y+7;
+      fDrawText.Font.Size:=12;
+      fDrawText.Text:='Dummy';
+      fDrawText.Style.Color.SetColor(1,1,1,1);
+      fDrawText.Style.FillType:=glvgsolid;
+      fDrawText.Style.LineType:=glvgnone;
+
+    end
+    else
+    begin *)
 
     TglvgRect(self.Elements.Element[0]).X := 0;
     TglvgRect(self.Elements.Element[0]).Y := 0;
@@ -701,30 +723,38 @@ uses dglopengl;
     fDrawText.Style.LineType:=glvgnone;
     //fDrawText.Init;
     //self.Elements.AddElement(FDrawText); //Does not render it when set this way
+
+    //end;
   end;
 
   procedure TglvgGuiButton.MouseIn;
   begin
+    (*
     TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#0000C0');
     TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#00C0C0');
     TglvgRect(self.Elements.Element[0]).Init;
+    *)
     inherited MouseIn;
   end;
 
   procedure TglvgGuiButton.MouseOut;
   begin
+    (*
    TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#00C0C0');
    TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
    TglvgRect(self.Elements.Element[0]).Init;
+   *)
    inherited MouseOut;
   end;
 
   procedure TglvgGuiButton.Click;
   begin
     //handle mouseclick
+   (*
     TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#0000C0');
     TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
     TglvgRect(self.Elements.Element[0]).Init;
+   *)
     inherited Click;
     //TglvgRect(self.Elements.Element[0]).Style.GradColor[0].SetColor('#00C0C0');
     //TglvgRect(self.Elements.Element[0]).Style.GradColor[1].SetColor('#0000C0');
