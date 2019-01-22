@@ -312,7 +312,7 @@ type
   private
     FFont: TPolygonFont;
     FText: string;
-    FStyle: TStyle;
+    //FStyle: TStyle;
     //FX: single;
     //FY: single;
   public
@@ -323,7 +323,7 @@ type
     //property Y: single read Fy write Fy;
     property Font: TPolygonFont read FFont write FFont;
     property Text: string read FText write FText;
-    property Style: TStyle read FStyle write FStyle;
+    //property Style: TStyle read FStyle write FStyle;
   end;
 
   TglvgGroup = class;
@@ -704,15 +704,15 @@ end;
 constructor TglvgText.Create;
 begin
   inherited Create;
-  FStyle := TStyle.Create;
+  //FStyle := TStyle.Create;
   FFont := TPolygonFont.Create;
-  FFont.Style := FStyle;
+  FFont.Style := Style;
 end;
 
 destructor TglvgText.Destroy;
 begin
   freeAndNil(FFont);
-  freeAndNil(FStyle);
+  //freeAndNil(FStyle);
   inherited Destroy;
 end;
 
